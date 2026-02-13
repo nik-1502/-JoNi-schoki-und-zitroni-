@@ -47,89 +47,49 @@
             margin-top: 5px;
         }
 
-        /* Anpassung der Malfelder (kleiner und kartenartig) */
-        .game-container {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        /* Remove brown border from canvas wrappers on this page */
-        .paint-page .field-with-dot .canvas-wrapper {
-            border: none;
-        }
-
-        /* Override fullscreen style for this page to remove borders/shadows */
-        /* We want the canvas to be large and centered but static in flow, not fixed covering everything */
-        .paint-page.mode-fullscreen .game-container {
-            flex: 1; /* Let it grow to fill available space */
-            min-height: 0; /* Prevent overflow issues in flex children */
-            justify-content: flex-start; /* Malfeld oben ausrichten */
-            margin-bottom: 15px; /* Gap above controls */
-        }
-
-        .paint-page .canvas-wrapper.fullscreen {
-            position: static !important;
-            transform: none !important;
-            width: 12vh !important; /* Nochmals kleiner */
-            height: auto !important; /* Automatisch für perfektes Quadrat */
-            max-width: 90%; /* Ensure it doesn't touch the sides */
-            aspect-ratio: 1 / 1;
-            margin: 0 auto; /* Nur horizontal zentrieren, oben halten */
-            border: none !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            z-index: 10;
-        }
-        .field-with-dot {
-            width: 80px; /* Nochmals kleiner */
-            max-width: 90vw; /* Damit es auch auf kleinen Handys passt */
-            height: auto; /* Höhe automatisch für perfektes Quadrat */
-            aspect-ratio: 1 / 1;
-            border: 4px solid transparent; /* Platzhalter für Border */
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-            transition: transform 0.2s, border-color 0.2s;
-            cursor: pointer;
-            background-color: white;
-            position: relative;
-        }
-        .field-with-dot:hover {
-            transform: scale(1.02);
-        }
-        .field-with-dot.active-field {
-            border-color: rgb(255, 103, 0);
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(255, 103, 0, 0.4);
-        }
-        /* Style for the container when a field is active */
-        .field-with-dot.active-field {
-            width: 100%; /* Take full width to center content */
-            height: auto;
-            border: none;
-            box-shadow: none;
-            background: transparent;
-            cursor: default;
-        }
-        .field-with-dot.active-field:hover {
-            transform: none;
+        /* Mobile Styles (kopiert von index.html für Konsistenz) */
+        @media (max-width: 768px) {
+            body:not(.mode-fullscreen) #color-btn { display: none !important; }
+            body:not(.mode-fullscreen) #color-panel { display: none !important; }
+            body:not(.mode-fullscreen) #brush-btn { display: none !important; }
+            body:not(.mode-fullscreen) #brush-panel { display: none !important; }
+            .canvas-wrapper {
+                height: auto !important;
+                aspect-ratio: 1 / 1 !important;
+            }
+            .field-with-dot {
+                flex-direction: column !important;
+            }
+            .field-with-dot .status-dot {
+                order: 2 !important;
+                margin: 10px auto 0 auto !important;
+            }
+            .field-with-dot .canvas-wrapper {
+                order: 1 !important;
+                width: 100% !important;
+            }
         }
         
-        /* Namen über den Feldern */
-        .player-label {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            color: #333;
-            z-index: 10;
+        /* Fullscreen Layout Styles für Paint Seite */
+        .fullscreen-top-bar {
+            position: fixed; top: 20px; left: 0; width: 100%;
+            display: flex; justify-content: center; gap: 15px; z-index: 200;
             pointer-events: none;
         }
+        .fullscreen-top-bar button { pointer-events: auto; }
+        
+        .fullscreen-bottom-bar {
+            position: fixed; bottom: 20px; left: 0; width: 100%;
+            display: flex; justify-content: center; flex-wrap: nowrap; gap: 10px; z-index: 200;
+            pointer-events: none;
+            padding: 0 10px; box-sizing: border-box;
+        }
+        .fullscreen-bottom-bar button { 
+            pointer-events: auto; 
+            flex: 1; 
+            padding: 12px 0 !important;
+        }
+        .fullscreen-top-bar button { width: 120px; padding: 12px 0 !important; }
     </style>
 </head>
 <body class="paint-page">
@@ -141,31 +101,41 @@
             <div id="daily-animal-text" class="daily-animal">Lade...</div>
         </div>
 
-        <div class="game-container" id="game-container">
-            <!-- Jovelyn's Area -->
-            <div class="field-with-dot" onclick="activatePaintField(event, this)" ontouchstart="activatePaintField(event, this)">
-                <div class="player-label">Jovelyn</div>
-                <div class="canvas-wrapper" id="wrapper-jovelyn">
-                    <canvas id="jovelyn-canvas"></canvas>
+        <div class="row" id="game-container">
+            <div class="col">
+                <div class="name-button">Jovelyn</div>
+                <div class="field-with-dot">
+                    <span class="status-dot red" id="jovelyn-status"></span>
+                    <div class="canvas-wrapper" id="wrapper-jovelyn">
+                        <canvas id="jovelyn-canvas"></canvas>
+                    </div>
                 </div>
             </div>
-
-            <!-- Niklas's Area -->
-            <div class="field-with-dot" onclick="activatePaintField(event, this)" ontouchstart="activatePaintField(event, this)">
-                <div class="player-label">Niklas</div>
-                <div class="canvas-wrapper" id="wrapper-niklas">
-                    <canvas id="niklas-canvas"></canvas>
+            <div class="col">
+                <div class="name-button">Niklas</div>
+                <div class="field-with-dot">
+                    <div class="canvas-wrapper" id="wrapper-niklas">
+                        <canvas id="niklas-canvas"></canvas>
+                    </div>
+                    <span class="status-dot red" id="niklas-status"></span>
                 </div>
             </div>
         </div>
 
-        <!-- Controls are hidden via CSS and shown when a canvas is active -->
-        <div class="controls" id="paint-controls">
-            <button id="brush-btn" class="control-button">Pinsel</button>
-            <button id="color-btn" class="control-button">Farbe</button>
+        <!-- Controls are hidden via CSS and shown when a canvas is active via JS helper below -->
+        <div class="controls" id="paint-controls" style="display: none;"></div>
+
+        <div class="fullscreen-top-bar" style="display: none;">
             <button id="save-btn" class="control-button">Speichern</button>
             <button id="clear-btn" class="control-button">Löschen</button>
-            <button id="close-fullscreen-btn" class="control-button" style="background-color: rgb(74, 119, 60);">Fertig</button>
+            <button id="close-fullscreen-btn" class="control-button">Fertig</button>
+        </div>
+
+        <div class="fullscreen-bottom-bar" style="display: none;">
+            <button id="color-btn" class="control-button">Farbe</button>
+            <button id="brush-btn" class="control-button">Pinsel</button>
+            <button id="undo-btn" class="control-button">↩</button>
+            <button id="redo-btn" class="control-button">↪</button>
         </div>
     </div>
 
@@ -173,7 +143,7 @@
     <div id="brush-panel" class="panel hidden">
         <div class="panel-header">
             <h3>Pinseleinstellungen</h3>
-            <button id="brush-back-btn" class="back-button">Zurück</button>
+            <button id="brush-back-btn" class="back-button">Schließen</button>
         </div>
         <div class="panel-content">
             <div class="setting">
@@ -193,10 +163,11 @@
     <div id="color-panel" class="panel hidden">
         <div class="panel-header">
             <h3>Farbauswahl</h3>
-            <button id="color-back-btn" class="back-button">Zurück</button>
+            <button id="color-back-btn" class="back-button">Schließen</button>
         </div>
-        <div id="color-palette" class="panel-content">
-            <!-- Farben werden dynamisch mit JavaScript generiert -->
+        <div class="panel-content">
+            <div class="setting" style="justify-content: center; margin-bottom: 15px;"><label for="custom-color">Eigene Farbe:</label><input type="color" id="custom-color" value="#000000"></div>
+            <div id="color-palette"></div>
         </div>
     </div>
 
@@ -215,29 +186,26 @@
         const dayIndex = (today.getDate() + today.getMonth() * 31 + today.getFullYear()) % animals.length;
         document.getElementById('daily-animal-text').innerText = animals[dayIndex];
 
-        // Logik für die Auswahl der Malfelder
-        function activatePaintField(event, element) {
-            // Verhindert Ghost-Clicks bei Touch
-            if (event.type === 'touchstart') event.preventDefault();
-
-            // Hide other elements before zooming
-            const fields = document.querySelectorAll('.field-with-dot');
-            fields.forEach(f => {
-                if (f !== element) {
-                    f.style.display = 'none';
+        // Helper to toggle bars based on body class (similar to index.html)
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === "class") {
+                    const isFullscreen = document.body.classList.contains('mode-fullscreen');
+                    const topBar = document.querySelector('.fullscreen-top-bar');
+                    const bottomBar = document.querySelector('.fullscreen-bottom-bar');
+                    if (topBar && bottomBar) {
+                        topBar.style.display = isFullscreen ? 'flex' : 'none';
+                        bottomBar.style.display = isFullscreen ? 'flex' : 'none';
+                    }
+                    // Panels schließen, wenn Vollbild verlassen wird
+                    if (!isFullscreen) {
+                        document.getElementById('brush-panel').classList.add('hidden');
+                        document.getElementById('color-panel').classList.add('hidden');
+                    }
                 }
             });
-            
-            element.classList.add('active-field');
-
-            // Nur klicken, wenn das Event nicht bereits vom Wrapper kam (verhindert Endlosschleife)
-            if (!event.target.closest('.canvas-wrapper')) {
-                const wrapper = element.querySelector('.canvas-wrapper');
-                if (wrapper) {
-                    wrapper.click();
-                }
-            }
-        }
+        });
+        observer.observe(document.body, { attributes: true });
     </script>
 </body>
 </html>

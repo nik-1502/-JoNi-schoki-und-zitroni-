@@ -86,12 +86,20 @@ function initPaintApp() {
     let brushOpacity = 1;
     let brushColor = '#000000';
 
+    // --- History für Undo/Redo ---
+    const history = {
+        niklas: { undo: [], redo: [] },
+        jovelyn: { undo: [], redo: [] }
+    };
+
     // --- DOM-Elemente ---
     const brushBtn = document.getElementById('brush-btn');
     const colorBtn = document.getElementById('color-btn');
     const saveBtn = document.getElementById('save-btn');
     const clearBtn = document.getElementById('clear-btn');
     const closeFullscreenBtn = document.getElementById('close-fullscreen-btn');
+    const undoBtn = document.getElementById('undo-btn');
+    const redoBtn = document.getElementById('redo-btn');
     const brushPanel = document.getElementById('brush-panel');
     const colorPanel = document.getElementById('color-panel');
     const brushBackBtn = document.getElementById('brush-back-btn');
@@ -101,6 +109,7 @@ function initPaintApp() {
     const brushOpacitySlider = document.getElementById('brush-opacity');
     const brushOpacityValue = document.getElementById('brush-opacity-value');
     const colorPalette = document.getElementById('color-palette');
+    const customColorPicker = document.getElementById('custom-color');
 
     // --- Zeichenfunktionen ---
     function getEventPosition(canvas, e) {
@@ -131,6 +140,14 @@ function initPaintApp() {
         const canvas = e.target; // Das Canvas, auf das geklickt wurde
         const pos = getEventPosition(canvas, e);
         [lastX, lastY] = [pos.x, pos.y];
+
+        // Zustand speichern für Undo (bevor der neue Strich beginnt)
+        if (activeUser) {
+            // Begrenzen auf z.B. 20 Schritte um Speicher zu sparen
+            if (history[activeUser].undo.length > 20) history[activeUser].undo.shift();
+            history[activeUser].undo.push(canvas.toDataURL());
+            history[activeUser].redo = []; // Redo-Stack leeren bei neuer Aktion
+        }
     }
 
     function draw(e) {
@@ -179,8 +196,10 @@ function initPaintApp() {
         if (isMobile) {
             if (show) {
                 panel.classList.remove('hidden');
+                document.body.classList.add('has-open-panel');
             } else {
                 panel.classList.add('hidden');
+                document.body.classList.remove('has-open-panel');
             }
         } else { // Desktop
             document.querySelectorAll('.panel').forEach(p => {
@@ -208,6 +227,48 @@ function initPaintApp() {
     addTouchBtn(brushBackBtn, () => togglePanel(brushPanel, false));
     addTouchBtn(colorBackBtn, () => togglePanel(colorPanel, false));
     
+    // --- Undo / Redo Funktionen ---
+    function performUndo() {
+        if (!activeUser || history[activeUser].undo.length === 0) return;
+        
+        const canvas = (activeUser === 'niklas') ? myCanvas : friendCanvas;
+        const ctx = canvas.getContext('2d');
+        
+        // Aktuellen Stand in Redo speichern
+        history[activeUser].redo.push(canvas.toDataURL());
+        
+        // Letzten Stand aus Undo holen
+        const prevState = history[activeUser].undo.pop();
+        const img = new Image();
+        img.src = prevState;
+        img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+    }
+
+    function performRedo() {
+        if (!activeUser || history[activeUser].redo.length === 0) return;
+
+        const canvas = (activeUser === 'niklas') ? myCanvas : friendCanvas;
+        const ctx = canvas.getContext('2d');
+
+        // Aktuellen Stand in Undo speichern
+        history[activeUser].undo.push(canvas.toDataURL());
+
+        // Letzten Stand aus Redo holen
+        const nextState = history[activeUser].redo.pop();
+        const img = new Image();
+        img.src = nextState;
+        img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+    }
+
+    if (undoBtn) addTouchBtn(undoBtn, performUndo);
+    if (redoBtn) addTouchBtn(redoBtn, performRedo);
+
     document.body.addEventListener('click', (e) => {
         if (window.innerWidth >= 768) {
             if (!e.target.closest('.panel')) {
@@ -227,6 +288,16 @@ function initPaintApp() {
         brushOpacity = parseFloat(e.target.value);
         brushOpacityValue.textContent = brushOpacity.toFixed(1);
     });
+
+    // --- Custom Color Picker ---
+    if (customColorPicker) {
+        customColorPicker.addEventListener('input', (e) => {
+            brushColor = e.target.value;
+            // Markierung von Presets entfernen
+            const currentSelected = colorPalette.querySelector('.selected');
+            if (currentSelected) currentSelected.classList.remove('selected');
+        });
+    }
 
     // --- Farbpaletten-Generierung ---
     function generateColors() {
@@ -268,6 +339,7 @@ function initPaintApp() {
                     const currentSelected = colorPalette.querySelector('.selected');
                     if (currentSelected) currentSelected.classList.remove('selected');
                     swatch.classList.add('selected');
+                    if (customColorPicker) customColorPicker.value = brushColor; // Picker aktualisieren
                     if (window.innerWidth < 768) togglePanel(colorPanel, false);
                 };
 
@@ -338,12 +410,15 @@ function initPaintApp() {
     
     function clearCanvas() {
         if (!activeUser) return;
-        if (confirm('Möchtest du deine Zeichnung wirklich löschen?')) {
-            const canvas = (activeUser === 'niklas') ? myCanvas : friendCanvas;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            saveData(); // Speichert den leeren Zustand
-        }
+        
+        const canvas = (activeUser === 'niklas') ? myCanvas : friendCanvas;
+        // Zustand speichern für Undo
+        if (history[activeUser].undo.length > 20) history[activeUser].undo.shift();
+        history[activeUser].undo.push(canvas.toDataURL());
+        history[activeUser].redo = [];
+
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
     
     function updateStatusDots() {

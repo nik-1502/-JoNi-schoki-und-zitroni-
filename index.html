@@ -6,6 +6,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Herz in Menschenform</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        @media (max-width: 768px) {
+            body:not(.mode-fullscreen) #color-btn { display: none !important; }
+            body:not(.mode-fullscreen) #color-panel { display: none !important; }
+            body:not(.mode-fullscreen) #brush-btn { display: none !important; }
+            body:not(.mode-fullscreen) #brush-panel { display: none !important; }
+            .canvas-wrapper {
+                height: auto !important;
+                aspect-ratio: 1 / 1 !important;
+            }
+            .chat-input {
+                height: auto !important;
+                aspect-ratio: 1 / 1 !important;
+                text-align: center !important;
+            }
+            .field-with-dot {
+                flex-direction: column !important;
+            }
+            .field-with-dot .status-dot {
+                order: 2 !important;
+                margin: 10px auto 0 auto !important;
+            }
+            .field-with-dot .canvas-wrapper {
+                order: 1 !important;
+                width: 100% !important;
+            }
+            /* Fullscreen Layout für Mobile */
+            .fullscreen-top-bar {
+                position: fixed; top: 20px; left: 0; width: 100%;
+                display: flex; justify-content: center; gap: 15px; z-index: 200;
+                pointer-events: none; /* Damit Klicks durchgehen, Buttons aktivieren pointer-events wieder */
+            }
+            .fullscreen-top-bar button { pointer-events: auto; }
+            
+            .fullscreen-bottom-bar {
+                position: fixed; bottom: 20px; left: 0; width: 100%;
+                display: flex; justify-content: center; flex-wrap: nowrap; gap: 10px; z-index: 200;
+                pointer-events: none;
+                padding: 0 10px; box-sizing: border-box;
+            }
+            .fullscreen-bottom-bar button { 
+                pointer-events: auto; 
+                flex: 1; 
+                padding: 12px 0 !important;
+            }
+            .fullscreen-top-bar button { width: 120px; padding: 12px 0 !important; }
+        }
+    </style>
 </head>
 <body class="home-page">
     <div class="container">
@@ -57,23 +105,61 @@
         </div>
     </div>
 
-    <!-- Versteckte Controls für Fullscreen Modus (Wichtig für JS) -->
-    <div class="controls">
-        <button id="brush-btn" class="control-button">Pinsel</button>
-        <button id="color-btn" class="control-button">Farbe</button>
+    <!-- Controls: Standardmäßig versteckt, werden per JS/CSS im Fullscreen angezeigt -->
+    <!-- Alte .controls Klasse behalten wir für Desktop-Kompatibilität, aber im Mobile-Fullscreen nutzen wir die neuen Container -->
+    <div class="controls" style="display: none;"></div>
+
+    <!-- Neue Struktur für Fullscreen -->
+    <div class="fullscreen-top-bar" style="display: none;">
         <button id="save-btn" class="control-button">Speichern</button>
         <button id="clear-btn" class="control-button">Löschen</button>
-        <button id="close-fullscreen-btn" class="control-button" style="background-color: rgb(74, 119, 60);">Fertig</button>
+        <button id="close-fullscreen-btn" class="control-button">Fertig</button>
+    </div>
+
+    <div class="fullscreen-bottom-bar" style="display: none;">
+        <button id="color-btn" class="control-button">Farbe</button>
+        <button id="brush-btn" class="control-button">Pinsel</button>
+        <button id="undo-btn" class="control-button">↩</button>
+        <button id="redo-btn" class="control-button">↪</button>
+        <!-- Löschen Button optional, falls noch gewünscht: <button id="clear-btn" class="control-button">Löschen</button> -->
     </div>
 
     <!-- Panels (Pinsel/Farbe) bleiben gleich, werden per JS gesteuert -->
     <div id="brush-panel" class="panel hidden">
         <!-- Inhalt wird per JS gefüllt oder ist statisch in script.js referenziert, hier Struktur beibehalten -->
-        <div class="panel-header"><h3>Pinsel</h3><button id="brush-back-btn" class="back-button">Zurück</button></div>
+        <div class="panel-header"><h3>Pinsel</h3><button id="brush-back-btn" class="back-button">Schließen</button></div>
         <div class="panel-content"><div class="setting"><label>Größe:</label><input type="range" id="brush-size" min="1" max="100" value="5"><span id="brush-size-value">5</span></div><div class="setting"><label>Transparenz:</label><input type="range" id="brush-opacity" min="0.1" max="1" step="0.1" value="1"><span id="brush-opacity-value">1.0</span></div></div>
     </div>
-    <div id="color-panel" class="panel hidden"><div class="panel-header"><h3>Farbe</h3><button id="color-back-btn" class="back-button">Zurück</button></div><div id="color-palette" class="panel-content"></div></div>
+    <div id="color-panel" class="panel hidden">
+        <div class="panel-header"><h3>Farbe</h3><button id="color-back-btn" class="back-button">Schließen</button></div>
+        <div class="panel-content">
+            <div class="setting" style="justify-content: center; margin-bottom: 15px;"><label for="custom-color">Eigene Farbe:</label><input type="color" id="custom-color" value="#000000"></div>
+            <div id="color-palette"></div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
+    <script>
+        // Kleines Script, um die Sichtbarkeit der neuen Bars zu steuern, da wir script.js nicht bearbeiten
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === "class") {
+                    const isFullscreen = document.body.classList.contains('mode-fullscreen');
+                    const topBar = document.querySelector('.fullscreen-top-bar');
+                    const bottomBar = document.querySelector('.fullscreen-bottom-bar');
+                    if (topBar && bottomBar) {
+                        topBar.style.display = isFullscreen ? 'flex' : 'none';
+                        bottomBar.style.display = isFullscreen ? 'flex' : 'none';
+                    }
+                    // Panels müssen im Fullscreen auch sichtbar sein, wenn aktiviert
+                    if (!isFullscreen) {
+                        document.getElementById('brush-panel').classList.add('hidden');
+                        document.getElementById('color-panel').classList.add('hidden');
+                    }
+                }
+            });
+        });
+        observer.observe(document.body, { attributes: true });
+    </script>
 </body>
 </html>
