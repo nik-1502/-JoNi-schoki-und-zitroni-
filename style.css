@@ -18,7 +18,8 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh; /* Mindesthöhe, um Scrollen zu ermöglichen */
-    /* overflow: hidden; entfernt, um Scrollen zu erlauben */
+    width: 100vw; /* Volle Breite */
+    overflow-x: hidden; /* Verhindert horizontales Scrollen (rechter Teil weg) */
 }
 
 /* Seiten-spezifische Hintergründe */
@@ -28,12 +29,12 @@ body.home-page {
 
 body.games-page {
     /* Background moved to container */
-    background-color: #00BFFF;
+    background-color: var(--white);
 }
 
 body.quiz-page {
     /* Background moved to container */
-    background-color: #00BFFF;
+    background-color: rgb(90, 20, 190);
 }
 
 /* Blue background for fullscreen painting */
@@ -58,7 +59,7 @@ body.paint-page {
 }
 
 /* Shared styles for framed pages */
-body.games-page, body.quiz-page {
+body.games-page {
     height: 100vh;
     overflow: hidden; /* Prevent body scroll, scroll happens in container */
     padding: 74px; /* Verkleinert um ca. 0,3cm (11px) */
@@ -66,16 +67,15 @@ body.games-page, body.quiz-page {
 }
 
 /* Container styles for framed pages */
-body.games-page .container,
-body.quiz-page .container {
+body.games-page .container {
     width: 100%;
     height: 100%;
     border: 1px solid black; /* Inner border 0.25mm (~1px) */
     border-radius: 20px; /* Rounded corners */
     /* Multiple borders using box-shadow: 
        1. 20px white (0.5cm)
-       2. 30px black (20px white + 10px outer black 0.25cm) */
-    box-shadow: 0 0 0 20px white, 0 0 0 30px black;
+       2. 30px black (REMOVED) */
+    box-shadow: 0 0 0 20px white;
     overflow-y: auto; /* Scroll inside the frame */
     padding: 20px;
     box-sizing: border-box;
@@ -83,7 +83,26 @@ body.quiz-page .container {
 }
 
 body.games-page .container { background-color: rgb(255, 140, 0); }
-body.quiz-page .container { background-color: rgb(90, 20, 190); }
+
+/* Quiz Page Specifics - Fullscreen Purple, No Frame */
+body.quiz-page {
+    height: 100vh;
+    overflow: hidden;
+    padding: 0;
+    background-color: rgb(90, 20, 190);
+}
+body.quiz-page .container {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background-color: rgb(90, 20, 190);
+}
+
+/* Controls Leiste auf der Quiz-Seite transparent machen */
+body.quiz-page .controls {
+    background-color: transparent;
+    box-shadow: none;
+}
 
 /* Inhalt der Quiz-Seite verkleinern (35% kleiner) */
 .quiz-page .container > div:not(.controls):not(#quiz-modal) {
@@ -608,5 +627,41 @@ body.mode-fullscreen .control-button {
     body.has-open-panel .fullscreen-top-bar,
     body.has-open-panel .fullscreen-bottom-bar {
         display: none !important;
+    }
+
+    /* Mobile Anpassungen für Layout & Größen */
+    h1 {
+        font-size: 3.5rem; /* Überschrift auf Startseite verkleinern */
+    }
+
+    /* Padding auf Games/Quiz Seiten reduzieren, damit mehr Platz ist */
+    body.games-page {
+        padding: 20px;
+    }
+
+    /* Spiele-Buttons auf Handy kleiner machen */
+    .games-page .button {
+        width: 140px;
+        height: 140px;
+        font-size: 1.8rem;
+    }
+    
+    .game-selection-container {
+        gap: 20px;
+    }
+}
+    body.games-page {
+        padding: 20px;
+    }
+
+    /* Spiele-Buttons auf Handy kleiner machen */
+    .games-page .button {
+        width: 140px;
+        height: 140px;
+        font-size: 1.8rem;
+    }
+    
+    .game-selection-container {
+        gap: 20px;
     }
 }
