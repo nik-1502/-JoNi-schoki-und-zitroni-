@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<!-- SEITE 3: Malen -->
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gemeinsam Malen</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Change container background to brown */
+        body.paint-page .container {
+            background-color: rgb(205, 170, 125); /* BurlyWood brown */
+        }
+
+        /* Spezifische Styles für die Paint-Seite, um das Design zu verschönern */
+        .paint-page .container {
+            justify-content: flex-start; /* Inhalt oben beginnen lassen */
+            padding-top: 10px;
+        }
+
+        /* Hide controls by default on this page */
+        .paint-page .controls {
+            display: none;
+        }
+
+        /* Tages-Challenge Box */
+        .daily-challenge-container {
+            background-color: rgb(255, 230, 180);
+            border: none; /* Border removed as requested */
+            border-radius: 15px;
+            padding: 15px 30px;
+            text-align: center;
+            margin-bottom: 20px; /* Abstand vervierfacht */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            max-width: 90%;
+        }
+        .daily-challenge-title {
+            font-family: 'Dancing Script', cursive;
+            color: rgb(111, 71, 48);
+            font-size: 2rem;
+            margin: 0;
+        }
+        .daily-animal {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: rgb(200, 80, 20);
+            margin-top: 5px;
+        }
+
+        /* Anpassung der Malfelder (kleiner und kartenartig) */
+        .game-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Remove brown border from canvas wrappers on this page */
+        .paint-page .field-with-dot .canvas-wrapper {
+            border: none;
+        }
+
+        /* Override fullscreen style for this page to remove borders/shadows */
+        /* We want the canvas to be large and centered but static in flow, not fixed covering everything */
+        .paint-page.mode-fullscreen .game-container {
+            flex: 1; /* Let it grow to fill available space */
+            min-height: 0; /* Prevent overflow issues in flex children */
+            justify-content: flex-start; /* Malfeld oben ausrichten */
+            margin-bottom: 15px; /* Gap above controls */
+        }
+
+        .paint-page .canvas-wrapper.fullscreen {
+            position: static !important;
+            transform: none !important;
+            width: 12vh !important; /* Nochmals kleiner */
+            height: auto !important; /* Automatisch für perfektes Quadrat */
+            max-width: 90%; /* Ensure it doesn't touch the sides */
+            aspect-ratio: 1 / 1;
+            margin: 0 auto; /* Nur horizontal zentrieren, oben halten */
+            border: none !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        .field-with-dot {
+            width: 80px; /* Nochmals kleiner */
+            max-width: 90vw; /* Damit es auch auf kleinen Handys passt */
+            height: auto; /* Höhe automatisch für perfektes Quadrat */
+            aspect-ratio: 1 / 1;
+            border: 4px solid transparent; /* Platzhalter für Border */
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transition: transform 0.2s, border-color 0.2s;
+            cursor: pointer;
+            background-color: white;
+            position: relative;
+        }
+        .field-with-dot:hover {
+            transform: scale(1.02);
+        }
+        .field-with-dot.active-field {
+            border-color: rgb(255, 103, 0);
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255, 103, 0, 0.4);
+        }
+        /* Style for the container when a field is active */
+        .field-with-dot.active-field {
+            width: 100%; /* Take full width to center content */
+            height: auto;
+            border: none;
+            box-shadow: none;
+            background: transparent;
+            cursor: default;
+        }
+        .field-with-dot.active-field:hover {
+            transform: none;
+        }
+        
+        /* Namen über den Feldern */
+        .player-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #333;
+            z-index: 10;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="paint-page">
+    <div class="container">
+        
+        <!-- Neuer Bereich: Tages-Challenge -->
+        <div class="daily-challenge-container">
+            <h2 class="daily-challenge-title">Das heutige Tier ist:</h2>
+            <div id="daily-animal-text" class="daily-animal">Lade...</div>
+        </div>
+
+        <div class="game-container" id="game-container">
+            <!-- Jovelyn's Area -->
+            <div class="field-with-dot" onclick="activatePaintField(event, this)" ontouchstart="activatePaintField(event, this)">
+                <div class="player-label">Jovelyn</div>
+                <div class="canvas-wrapper" id="wrapper-jovelyn">
+                    <canvas id="jovelyn-canvas"></canvas>
+                </div>
+            </div>
+
+            <!-- Niklas's Area -->
+            <div class="field-with-dot" onclick="activatePaintField(event, this)" ontouchstart="activatePaintField(event, this)">
+                <div class="player-label">Niklas</div>
+                <div class="canvas-wrapper" id="wrapper-niklas">
+                    <canvas id="niklas-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls are hidden via CSS and shown when a canvas is active -->
+        <div class="controls" id="paint-controls">
+            <button id="brush-btn" class="control-button">Pinsel</button>
+            <button id="color-btn" class="control-button">Farbe</button>
+            <button id="save-btn" class="control-button">Speichern</button>
+            <button id="clear-btn" class="control-button">Löschen</button>
+            <button id="close-fullscreen-btn" class="control-button" style="background-color: rgb(74, 119, 60);">Fertig</button>
+        </div>
+    </div>
+
+    <!-- Brush Settings Panel -->
+    <div id="brush-panel" class="panel hidden">
+        <div class="panel-header">
+            <h3>Pinseleinstellungen</h3>
+            <button id="brush-back-btn" class="back-button">Zurück</button>
+        </div>
+        <div class="panel-content">
+            <div class="setting">
+                <label for="brush-size">Pinselstärke:</label>
+                <input type="range" id="brush-size" min="1" max="100" value="5">
+                <span id="brush-size-value">5</span>
+            </div>
+            <div class="setting">
+                <label for="brush-opacity">Transparenz:</label>
+                <input type="range" id="brush-opacity" min="0.1" max="1" step="0.1" value="1">
+                <span id="brush-opacity-value">1.0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Color Picker Panel -->
+    <div id="color-panel" class="panel hidden">
+        <div class="panel-header">
+            <h3>Farbauswahl</h3>
+            <button id="color-back-btn" class="back-button">Zurück</button>
+        </div>
+        <div id="color-palette" class="panel-content">
+            <!-- Farben werden dynamisch mit JavaScript generiert -->
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Logik für das Tages-Tier
+        const animals = [
+            "Elefant", "Giraffe", "Löwe", "Tiger", "Zebra", "Pinguin", "Koala", "Panda", 
+            "Känguru", "Fuchs", "Eule", "Schmetterling", "Schildkröte", "Delfin", "Einhorn", 
+            "Drache", "Katze", "Hund", "Hase", "Eichhörnchen", "Flamingo", "Papagei", 
+            "Qualle", "Seepferdchen", "Faultier", "Igel", "Marienkäfer", "Biene", "Wolf", "Bär"
+        ];
+        
+        // Wähle ein Tier basierend auf dem Datum (damit es den ganzen Tag gleich bleibt)
+        const today = new Date();
+        const dayIndex = (today.getDate() + today.getMonth() * 31 + today.getFullYear()) % animals.length;
+        document.getElementById('daily-animal-text').innerText = animals[dayIndex];
+
+        // Logik für die Auswahl der Malfelder
+        function activatePaintField(event, element) {
+            // Verhindert Ghost-Clicks bei Touch
+            if (event.type === 'touchstart') event.preventDefault();
+
+            // Hide other elements before zooming
+            const fields = document.querySelectorAll('.field-with-dot');
+            fields.forEach(f => {
+                if (f !== element) {
+                    f.style.display = 'none';
+                }
+            });
+            
+            element.classList.add('active-field');
+
+            // Nur klicken, wenn das Event nicht bereits vom Wrapper kam (verhindert Endlosschleife)
+            if (!event.target.closest('.canvas-wrapper')) {
+                const wrapper = element.querySelector('.canvas-wrapper');
+                if (wrapper) {
+                    wrapper.click();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

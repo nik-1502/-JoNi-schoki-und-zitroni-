@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<!-- SEITE 1: Startseite -->
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Herz in Menschenform</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="home-page">
+    <div class="container">
+        
+        <div class="dashboard">
+            <div class="hero-container">
+                <div class="image-wrapper">
+                    <h1>Herz in Menschenform</h1>
+                    <button style="padding: 0; border: none; background: none; width: 100%; display: block; margin: -1.35cm auto 80px auto; cursor: pointer;">
+                        <img src="C:/Users/sasch/Pictures/webApp/zitro.png" alt="Zitrone" style="width: 100%; height: auto; border-radius: 8px; display: block;">
+                    </button>
+                </div>
+            </div>
+
+            <!-- Spielen Button als Teil des Rasters -->
+            <a href="games.html" class="button" style="width: 150px; height: 150px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto; background-color: rgb(255, 180, 80); color: #333; border: 6px solid #8B4513; font-size: 2.5rem; font-family: 'Dancing Script', cursive;">Spielen</a>
+
+            <!-- Text Bereich -->
+            <div class="row text-row">
+                <div class="col">
+                    <div class="name-button">Jovelyn</div>
+                    <textarea id="jovelyn-text" class="chat-input"></textarea>
+                </div>
+                <div class="col">
+                    <div class="name-button">Niklas</div>
+                    <textarea id="niklas-text" class="chat-input"></textarea>
+                </div>
+            </div>
+
+            <!-- Mal Bereich (Bilder) -->
+            <div class="row canvas-row" id="game-container">
+                <div class="col">
+                    <div class="field-with-dot">
+                        <span class="status-dot red" id="jovelyn-status"></span>
+                        <div class="canvas-wrapper" id="wrapper-jovelyn">
+                            <canvas id="jovelyn-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="field-with-dot">
+                        <div class="canvas-wrapper" id="wrapper-niklas">
+                            <canvas id="niklas-canvas"></canvas>
+                        </div>
+                        <span class="status-dot red" id="niklas-status"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Versteckte Controls für Fullscreen Modus (Wichtig für JS) -->
+    <div class="controls">
+        <button id="brush-btn" class="control-button">Pinsel</button>
+        <button id="color-btn" class="control-button">Farbe</button>
+        <button id="save-btn" class="control-button">Speichern</button>
+        <button id="clear-btn" class="control-button">Löschen</button>
+        <button id="close-fullscreen-btn" class="control-button" style="background-color: rgb(74, 119, 60);">Fertig</button>
+    </div>
+
+    <!-- Panels (Pinsel/Farbe) bleiben gleich, werden per JS gesteuert -->
+    <div id="brush-panel" class="panel hidden">
+        <!-- Inhalt wird per JS gefüllt oder ist statisch in script.js referenziert, hier Struktur beibehalten -->
+        <div class="panel-header"><h3>Pinsel</h3><button id="brush-back-btn" class="back-button">Zurück</button></div>
+        <div class="panel-content"><div class="setting"><label>Größe:</label><input type="range" id="brush-size" min="1" max="100" value="5"><span id="brush-size-value">5</span></div><div class="setting"><label>Transparenz:</label><input type="range" id="brush-opacity" min="0.1" max="1" step="0.1" value="1"><span id="brush-opacity-value">1.0</span></div></div>
+    </div>
+    <div id="color-panel" class="panel hidden"><div class="panel-header"><h3>Farbe</h3><button id="color-back-btn" class="back-button">Zurück</button></div><div id="color-palette" class="panel-content"></div></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

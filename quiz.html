@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!-- SEITE 4: Quiz -->
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Tägliches Quiz</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="quiz-page">
+    <div class="container" style="justify-content: flex-start; padding-top: 60px;">
+        <!-- Header Bereich mit Bild und Text -->
+        <div style="display: flex; align-items: center; justify-content: center; width: 100%; margin-bottom: 20px;">
+            <div style="flex: 1; text-align: right;"><span style="font-family: 'Dancing Script', cursive; color: rgb(255, 230, 180); font-size: 12rem; margin-right: 15px;">Tages</span></div>
+            <img src="C:/Users/sasch/Pictures/webApp/Unbenanntes_Projekt (5).png" alt="Quiz" style="max-width: 40%; height: auto; border-radius: 8px; display: block;">
+            <div style="flex: 1; text-align: left;"><span style="font-family: 'Dancing Script', cursive; color: rgb(255, 230, 180); font-size: 12rem; margin-left: 15px;">Quiz</span></div>
+        </div>
+
+        <div class="game-container" style="width: 100%; max-width: 800px; align-items: center;">
+            <!-- Jovelyn's Quiz Area -->
+            <div class="quiz-col">
+                <div class="name-button">Jovelyn</div>
+                <div class="canvas-wrapper" id="quiz-wrapper-jovelyn" style="aspect-ratio: 1 / 1; height: auto;">
+                    <div class="quiz-question-container" id="quiz-container-jovelyn">
+                        <p class="quiz-click-text">Klicke hier</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Niklas's Quiz Area -->
+            <div class="quiz-col">
+                <div class="name-button">Niklas</div>
+                <div class="canvas-wrapper" id="quiz-wrapper-niklas" style="aspect-ratio: 1 / 1; height: auto;">
+                    <div class="quiz-question-container" id="quiz-container-niklas">
+                        <p class="quiz-click-text">Klicke hier</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="modal hidden">
+        <div class="modal-content" style="aspect-ratio: 1 / 1; width: 80%; max-width: 450px; height: auto; justify-content: center;">
+            <h3 id="quiz-question-text" style="margin: 0;">Frage...</h3>
+            <textarea id="quiz-answer-input" class="quiz-answer-input" style="height: 100px; width: 100%; box-sizing: border-box;" placeholder="Deine Antwort..."></textarea>
+            <button id="quiz-done-btn" class="control-button" style="background-color: rgb(255, 103, 0); margin: 0;">Fertig</button>
+        </div>
+    </div>
+
+    <div class="controls" style="display: flex; position: fixed; bottom: 0; width: 100%;">
+        <a href="games.html" class="control-button back-link" style="background-color: #6c757d;">Zurück</a>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
