@@ -39,6 +39,17 @@ function initDashboard() {
             if (textAreas[user]) loadText(user);
         }
     });
+
+    // --- NEU: Regelmäßiges Neuladen (Polling) ---
+    // Prüft alle 2 Sekunden auf neue Texte, falls die 'storage' Events klemmen (häufig bei iOS PWAs)
+    setInterval(() => {
+        Object.keys(textAreas).forEach(user => {
+            // Nur aktualisieren, wenn man gerade NICHT selbst in dieses Feld schreibt
+            if (document.activeElement !== textAreas[user]) {
+                loadText(user);
+            }
+        });
+    }, 2000);
 }
 
 function initPaintApp() {
@@ -49,6 +60,10 @@ function initPaintApp() {
     const wrapperJovelyn = document.getElementById('wrapper-jovelyn');
     const myCtx = myCanvas.getContext('2d');
     const friendCtx = friendCanvas.getContext('2d');
+
+    // Unterscheidung: Startseite vs. Tier-des-Tages (getrennte Speicherung)
+    const isDailyPage = document.body.classList.contains('paint-page');
+    const keySuffix = isDailyPage ? '_daily' : '';
 
     // --- Zoom Helper & State ---
     let isZooming = false;
@@ -128,6 +143,9 @@ function initPaintApp() {
     let eraserSize = 20;
     let eraserOpacity = 1;
     let isEraserFillMode = false;
+
+    // Cache für den letzten Zeichenstatus, um Flackern beim Neuladen zu verhindern
+    const lastDrawState = { niklas: null, jovelyn: null };
 
     // --- History für Undo/Redo ---
     const history = {
@@ -318,7 +336,7 @@ function initPaintApp() {
         [lastX, lastY] = [pos.x, pos.y];
     }
 
-    function stopDrawing() {
+    function stopDrawing(e) {
         if (isZooming && (!e.touches || e.touches.length < 2)) {
             isZooming = false;
             return;
@@ -650,21 +668,26 @@ function initPaintApp() {
         if (!activeUser) return;
         const canvas = (activeUser === 'niklas') ? myCanvas : friendCanvas;
         const dataURL = canvas.toDataURL();
-        localStorage.setItem(`${activeUser}_drawing`, dataURL);
+        localStorage.setItem(`${activeUser}_drawing${keySuffix}`, dataURL);
         
         // Status auf ROT setzen und mich als letzten Editor speichern
-        localStorage.setItem(`${activeUser}_status`, 'red');
-        localStorage.setItem(`${activeUser}_last_editor`, deviceId);
+        localStorage.setItem(`${activeUser}_status${keySuffix}`, 'red');
+        localStorage.setItem(`${activeUser}_last_editor${keySuffix}`, deviceId);
         updateStatusDots();
         
         alert('Bild gespeichert und für die andere Person sichtbar!');
     }
 
-    function drawFromStorage(user) {
+    function drawFromStorage(user, force = false) {
         const canvas = (user === 'niklas') ? myCanvas : friendCanvas;
         const ctx = (user === 'niklas') ? myCtx : friendCtx;
-        const dataURL = localStorage.getItem(`${user}_drawing`);
+        const dataURL = localStorage.getItem(`${user}_drawing${keySuffix}`);
         
+        // Optimierung: Nur neu zeichnen, wenn sich die Daten geändert haben (oder force=true)
+        // Das verhindert Flackern beim automatischen Neuladen
+        if (!force && dataURL === lastDrawState[user]) return;
+        lastDrawState[user] = dataURL;
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         if (dataURL) {
             const img = new Image();
@@ -689,15 +712,15 @@ function initPaintApp() {
     }
     
     function updateStatusDots() {
-        const niklasStatus = localStorage.getItem('niklas_status') || 'red';
-        const jovelynStatus = localStorage.getItem('jovelyn_status') || 'red';
+        const niklasStatus = localStorage.getItem(`niklas_status${keySuffix}`) || 'red';
+        const jovelynStatus = localStorage.getItem(`jovelyn_status${keySuffix}`) || 'red';
         document.getElementById('niklas-status').className = `status-dot ${niklasStatus}`;
         document.getElementById('jovelyn-status').className = `status-dot ${jovelynStatus}`;
     }
     
     function markAsSeen() {
         // Wir markieren einfach alles als gesehen, wenn die App öffnet (optional)
-        localStorage.setItem('niklas_status', 'green');
+        localStorage.setItem(`niklas_status${keySuffix}`, 'green');
         updateStatusDots();
     }
 
@@ -710,9 +733,9 @@ function initPaintApp() {
         document.body.classList.add('mode-fullscreen');
         
         // Status-Logik: Nur auf Grün setzen, wenn ich NICHT der letzte Editor war
-        const lastEditor = localStorage.getItem(`${user}_last_editor`);
+        const lastEditor = localStorage.getItem(`${user}_last_editor${keySuffix}`);
         if (lastEditor && lastEditor !== deviceId) {
-            localStorage.setItem(`${user}_status`, 'green');
+            localStorage.setItem(`${user}_status${keySuffix}`, 'green');
             updateStatusDots();
         }
         
@@ -748,10 +771,21 @@ function initPaintApp() {
     addTouchBtn(clearBtn, clearCanvas);
 
     window.addEventListener('storage', (e) => {
-        if (e.key === 'jovelyn_drawing') drawFromStorage('jovelyn');
-        if (e.key === 'niklas_drawing') drawFromStorage('niklas');
-        if (e.key.endsWith('_status')) updateStatusDots();
+        if (e.key === `jovelyn_drawing${keySuffix}`) drawFromStorage('jovelyn', true);
+        if (e.key === `niklas_drawing${keySuffix}`) drawFromStorage('niklas', true);
+        if (e.key.endsWith(`_status${keySuffix}`)) updateStatusDots();
     });
+
+    // --- NEU: Automatisches Neuladen (Polling) ---
+    // Aktualisiert die Bilder alle 2 Sekunden, falls Änderungen vorliegen
+    setInterval(() => {
+        // Nicht aktualisieren, während man selbst malt oder zoomt (vermeidet Ruckler)
+        if (!isDrawing && !isZooming) {
+            drawFromStorage('niklas');
+            drawFromStorage('jovelyn');
+            updateStatusDots();
+        }
+    }, 2000);
 
     // --- Initialisierung ---
     resizeCanvases();
