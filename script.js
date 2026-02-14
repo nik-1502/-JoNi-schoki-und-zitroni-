@@ -7,6 +7,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('quiz-wrapper-niklas')) {
         initQuizApp();
     }
+
+    // Logik für den globalen Refresh-Button
+    const globalRefreshBtn = document.getElementById('global-refresh-btn');
+    if (globalRefreshBtn) {
+        globalRefreshBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Wenn wir NICHT auf einer Mal-Seite sind (kein Canvas), machen wir einen normalen Reload
+            if (!document.getElementById('niklas-canvas')) {
+                location.reload();
+            }
+            // Falls Canvas existiert, wird das Event in initPaintApp abgefangen und smart synchronisiert
+        });
+    }
 });
 
 function initDashboard() {
@@ -171,6 +184,7 @@ function initPaintApp() {
     const clearBtn = document.getElementById('clear-btn');
     const closeFullscreenBtn = document.getElementById('close-fullscreen-btn');
     const refreshBtn = document.getElementById('refresh-btn');
+    const globalRefreshBtn = document.getElementById('global-refresh-btn');
     const undoBtn = document.getElementById('undo-btn');
     const redoBtn = document.getElementById('redo-btn');
     const brushPanel = document.getElementById('brush-panel');
@@ -783,6 +797,15 @@ function initPaintApp() {
     
     if (refreshBtn) {
         addTouchBtn(refreshBtn, (e) => {
+            e.stopPropagation();
+            drawFromStorage('niklas', true);
+            drawFromStorage('jovelyn', true);
+            updateStatusDots();
+        });
+    }
+    
+    if (globalRefreshBtn) {
+        addTouchBtn(globalRefreshBtn, (e) => {
             e.stopPropagation();
             drawFromStorage('niklas', true);
             drawFromStorage('jovelyn', true);

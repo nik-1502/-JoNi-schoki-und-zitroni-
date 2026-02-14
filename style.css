@@ -70,7 +70,7 @@ body.games-page {
 body.games-page .container {
     width: 100%;
     height: 100%;
-    border: 1px solid black; /* Inner border 0.25mm (~1px) */
+    border: none; /* Inner border removed */
     border-radius: 20px; /* Rounded corners */
     /* Multiple borders using box-shadow: 
        1. 20px white (0.5cm)
@@ -651,18 +651,53 @@ body.mode-fullscreen .control-button {
         gap: 20px;
     }
 }
-    body.games-page {
-        padding: 20px;
-    }
 
-    /* Spiele-Buttons auf Handy kleiner machen */
-    .games-page .button {
-        width: 140px;
-        height: 140px;
-        font-size: 1.8rem;
-    }
-    
-    .game-selection-container {
-        gap: 20px;
-    }
+/* Globaler schwebender Refresh-Button */
+.floating-refresh-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #89CFF0; /* Fallback */
+    color: white;
+    border: none !important;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    font-size: 17px;
+    cursor: pointer;
+    box-shadow: none !important;
+    outline: none;
+    z-index: 999; /* Hoch genug, aber unter Modals */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.floating-refresh-btn:hover {
+    background-color: #5CA3C4; /* Etwas dunkler beim Hover */
+    transform: scale(1.1);
+}
+
+/* Im Fullscreen-Modus ausblenden, da dort eigene Controls existieren */
+body.mode-fullscreen .floating-refresh-btn {
+    display: none;
+}
+}
+
+/* Anpassung an die Hintergrundfarbe der jeweiligen Seite */
+body.home-page .floating-refresh-btn {
+    background-color: #00BFFF; /* DeepSkyBlue - wie Hintergrund */
+}
+
+body.paint-page .floating-refresh-btn {
+    background-color: rgb(205, 170, 125); /* BurlyWood - wie Hintergrund */
+}
+
+body.quiz-page .floating-refresh-btn {
+    background-color: rgb(90, 20, 190); /* Lila - wie Hintergrund */
+}
+
+body.games-page .floating-refresh-btn {
+    background-color: rgb(255, 140, 0); /* Orange - passend zum Container-Inhalt */
 }
