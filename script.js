@@ -50,18 +50,56 @@ function initPaintApp() {
     const myCtx = myCanvas.getContext('2d');
     const friendCtx = friendCanvas.getContext('2d');
 
+    // --- Zoom Helper & State ---
+    let isZooming = false;
+    let zoomState = { startDist: 0, startScale: 1, startX: 0, startY: 0, initialTx: 0, initialTy: 0 };
+
+    function getDistance(touches) {
+        const dx = touches[0].clientX - touches[1].clientX;
+        const dy = touches[0].clientY - touches[1].clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function getCenter(touches) {
+        return {
+            x: (touches[0].clientX + touches[1].clientX) / 2,
+            y: (touches[0].clientY + touches[1].clientY) / 2
+        };
+    }
+
+    function updateCanvasTransform(canvas, x, y, scale) {
+        canvas.style.transformOrigin = '0 0';
+        canvas.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+        canvas.dataset.scale = scale;
+        canvas.dataset.tx = x;
+        canvas.dataset.ty = y;
+    }
+
+    function resetZoom(canvas) {
+        canvas.style.transform = '';
+        delete canvas.dataset.scale;
+        delete canvas.dataset.tx;
+        delete canvas.dataset.ty;
+    }
+
     // Canvas-Größe an den Container anpassen
     function resizeCanvases() {
+        const pixelRatio = 2; // Erhöhte Auflösung für feineres Malen
+
         [myCanvas, friendCanvas].forEach(canvas => {
             const wrapper = canvas.parentElement;
             const infoHeight = canvas.previousElementSibling ? canvas.previousElementSibling.offsetHeight : 0;
-            const newWidth = wrapper.clientWidth;
-            const newHeight = wrapper.clientHeight - infoHeight;
+            
+            const displayWidth = wrapper.clientWidth;
+            const displayHeight = wrapper.clientHeight - infoHeight;
 
-            // Nur neu zeichnen, wenn sich die Größe ändert, um Flackern zu vermeiden
+            const newWidth = Math.floor(displayWidth * pixelRatio);
+            const newHeight = Math.floor(displayHeight * pixelRatio);
+
             if (canvas.width !== newWidth || canvas.height !== newHeight) {
                 canvas.width = newWidth;
                 canvas.height = newHeight;
+                resetZoom(canvas); // Zoom zurücksetzen bei Größenänderung
             }
         });
         // Gespeicherte Bilder nach Größenänderung neu laden
@@ -85,6 +123,11 @@ function initPaintApp() {
     let brushSize = 5;
     let brushOpacity = 1;
     let brushColor = '#000000';
+    let isFillMode = false;
+    let isEraser = false;
+    let eraserSize = 20;
+    let eraserOpacity = 1;
+    let isEraserFillMode = false;
 
     // --- History für Undo/Redo ---
     const history = {
@@ -94,6 +137,7 @@ function initPaintApp() {
 
     // --- DOM-Elemente ---
     const brushBtn = document.getElementById('brush-btn');
+    const eraserBtn = document.getElementById('eraser-btn');
     const colorBtn = document.getElementById('color-btn');
     const saveBtn = document.getElementById('save-btn');
     const clearBtn = document.getElementById('clear-btn');
@@ -101,13 +145,21 @@ function initPaintApp() {
     const undoBtn = document.getElementById('undo-btn');
     const redoBtn = document.getElementById('redo-btn');
     const brushPanel = document.getElementById('brush-panel');
+    const eraserPanel = document.getElementById('eraser-panel');
     const colorPanel = document.getElementById('color-panel');
     const brushBackBtn = document.getElementById('brush-back-btn');
+    const eraserBackBtn = document.getElementById('eraser-back-btn');
     const colorBackBtn = document.getElementById('color-back-btn');
     const brushSizeSlider = document.getElementById('brush-size');
     const brushSizeValue = document.getElementById('brush-size-value');
     const brushOpacitySlider = document.getElementById('brush-opacity');
     const brushOpacityValue = document.getElementById('brush-opacity-value');
+    const fillToggle = document.getElementById('fill-toggle');
+    const eraserSizeSlider = document.getElementById('eraser-size');
+    const eraserSizeValue = document.getElementById('eraser-size-value');
+    const eraserOpacitySlider = document.getElementById('eraser-opacity');
+    const eraserOpacityValue = document.getElementById('eraser-opacity-value');
+    const eraserFillToggle = document.getElementById('eraser-fill-toggle');
     const colorPalette = document.getElementById('color-palette');
     const customColorPicker = document.getElementById('custom-color');
 
@@ -136,9 +188,44 @@ function initPaintApp() {
         // Nur malen, wenn wir im Fullscreen sind und auf dem richtigen Canvas
         if (!document.body.classList.contains('mode-fullscreen')) return;
         
-        isDrawing = true;
+        // --- Zoom Start (2 Finger) ---
+        if (e.touches && e.touches.length === 2) {
+            isDrawing = false;
+            isZooming = true;
+            
+            const dist = getDistance(e.touches);
+            const center = getCenter(e.touches);
+            const canvas = e.target;
+            
+            const currentScale = parseFloat(canvas.dataset.scale) || 1;
+            const currentTx = parseFloat(canvas.dataset.tx) || 0;
+            const currentTy = parseFloat(canvas.dataset.ty) || 0;
+            
+            zoomState.startDist = dist;
+            zoomState.startScale = currentScale;
+            zoomState.startX = center.x;
+            zoomState.startY = center.y;
+            zoomState.initialTx = currentTx;
+            zoomState.initialTy = currentTy;
+            return;
+        }
+        if (isZooming) return; // Nicht malen, wenn gezoomt wird
+
         const canvas = e.target; // Das Canvas, auf das geklickt wurde
         const pos = getEventPosition(canvas, e);
+
+        // Füll-Modus Logik
+        if ((!isEraser && isFillMode) || (isEraser && isEraserFillMode)) {
+            if (activeUser) {
+                if (history[activeUser].undo.length > 20) history[activeUser].undo.shift();
+                history[activeUser].undo.push(canvas.toDataURL());
+                history[activeUser].redo = [];
+            }
+            floodFill(canvas, Math.floor(pos.x), Math.floor(pos.y), brushColor, isEraser);
+            return; // Nicht zeichnen, wenn gefüllt wird
+        }
+
+        isDrawing = true;
         [lastX, lastY] = [pos.x, pos.y];
 
         // Zustand speichern für Undo (bevor der neue Strich beginnt)
@@ -151,6 +238,35 @@ function initPaintApp() {
     }
 
     function draw(e) {
+        // --- Zoom Move ---
+        if (isZooming && e.touches && e.touches.length === 2) {
+            e.preventDefault();
+            const dist = getDistance(e.touches);
+            const center = getCenter(e.touches);
+            const canvas = e.target;
+            
+            const scaleMultiplier = dist / zoomState.startDist;
+            let newScale = zoomState.startScale * scaleMultiplier;
+            newScale = Math.max(1, Math.min(newScale, 5)); // Limit 1x - 5x
+            
+            // Berechnung der Verschiebung, damit der Punkt zwischen den Fingern fix bleibt
+            const startCenterCanvasX = (zoomState.startX - zoomState.initialTx) / zoomState.startScale;
+            const startCenterCanvasY = (zoomState.startY - zoomState.initialTy) / zoomState.startScale;
+            
+            let newTx = center.x - startCenterCanvasX * newScale;
+            let newTy = center.y - startCenterCanvasY * newScale;
+            
+            // Zurücksetzen auf 100% wenn nahe dran
+            if (newScale < 1.05) {
+                newScale = 1;
+                newTx = 0;
+                newTy = 0;
+            }
+            
+            updateCanvasTransform(canvas, newTx, newTy, newScale);
+            return;
+        }
+
         if (!isDrawing) return;
         e.preventDefault(); // Verhindert Scrollen während des Zeichnens
 
@@ -158,24 +274,127 @@ function initPaintApp() {
         const ctx = canvas.getContext('2d');
         const pos = getEventPosition(canvas, e);
         
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineTo(pos.x, pos.y);
+        // Harte Kanten Logik (Pixel-Art Style)
+        const x1 = lastX;
+        const y1 = lastY;
+        const x2 = pos.x;
+        const y2 = pos.y;
         
-        ctx.strokeStyle = brushColor;
-        ctx.lineWidth = brushSize;
-        ctx.globalAlpha = brushOpacity;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const distance = Math.sqrt(dx * dx + dy * dy);
         
-        ctx.stroke();
+        ctx.save(); // Zustand speichern (für Composite Operation)
+        
+        if (isEraser) {
+            ctx.globalCompositeOperation = 'destination-out'; // Radieren (Transparent machen)
+        }
+
+        ctx.fillStyle = brushColor;
+        ctx.globalAlpha = isEraser ? eraserOpacity : brushOpacity;
+        // Bei Radierer ist die Farbe egal, aber Alpha steuert wie stark radiert wird
+
+        // Interpolation: Wir zeichnen Quadrate entlang der Strecke
+        const steps = Math.max(Math.ceil(distance), 1);
+        const xInc = dx / steps;
+        const yInc = dy / steps;
+        
+        const currentSize = isEraser ? eraserSize : brushSize;
+
+        for (let i = 0; i <= steps; i++) {
+            const x = x1 + xInc * i;
+            const y = y1 + yInc * i;
+            
+            // fillRect erzeugt harte Kanten (kein Anti-Aliasing)
+            ctx.fillRect(
+                Math.round(x - currentSize / 2), 
+                Math.round(y - currentSize / 2), 
+                currentSize, 
+                currentSize
+            );
+        }
+        
+        ctx.restore(); // Zustand wiederherstellen (damit nächstes Mal normal gemalt wird)
         [lastX, lastY] = [pos.x, pos.y];
     }
 
     function stopDrawing() {
+        if (isZooming && (!e.touches || e.touches.length < 2)) {
+            isZooming = false;
+            return;
+        }
         if (!isDrawing) return;
         isDrawing = false;
         // Pfad beenden nicht zwingend nötig bei dieser Logik, aber sauber
+    }
+
+    // --- Flood Fill Algorithmus ---
+    function floodFill(canvas, startX, startY, colorHex, erase = false) {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const data = imageData.data;
+
+        // Hex zu RGB + Opacity
+        const r = parseInt(colorHex.slice(1, 3), 16);
+        const g = parseInt(colorHex.slice(3, 5), 16);
+        const b = parseInt(colorHex.slice(5, 7), 16);
+        const a = Math.round((erase ? eraserOpacity : brushOpacity) * 255);
+
+        // Startfarbe ermitteln
+        const startPos = (startY * width + startX) * 4;
+        const startR = data[startPos];
+        const startG = data[startPos + 1];
+        const startB = data[startPos + 2];
+        const startA = data[startPos + 3];
+
+        // Abbruch, wenn Farbe identisch
+        if (!erase && startR === r && startG === g && startB === b && startA === a) return;
+        if (erase && startA === 0) return; // Bereits transparent
+
+        // Toleranz für Anti-Aliasing (Lücken vermeiden)
+        const tolerance = 60; 
+
+        const stack = [[startX, startY]];
+        const visited = new Uint8Array(width * height); // Verhindert Endlosschleifen
+        
+        while (stack.length) {
+            const [x, y] = stack.pop();
+            const pixelIndex = y * width + x;
+            
+            if (visited[pixelIndex]) continue;
+            
+            const pos = pixelIndex * 4;
+
+            if (x < 0 || x >= width || y < 0 || y >= height) continue;
+            
+            // Prüfen ob Pixel innerhalb der Toleranz zur Startfarbe liegt
+            const matchesStartColor = Math.abs(data[pos] - startR) <= tolerance &&
+                Math.abs(data[pos + 1] - startG) <= tolerance &&
+                Math.abs(data[pos + 2] - startB) <= tolerance &&
+                Math.abs(data[pos + 3] - startA) <= tolerance;
+
+            if (matchesStartColor) {
+                
+                if (erase) {
+                    data[pos + 3] = 0; // Transparent machen
+                } else {
+                    data[pos] = r;
+                    data[pos + 1] = g;
+                    data[pos + 2] = b;
+                    data[pos + 3] = a;
+                }
+                
+                visited[pixelIndex] = 1;
+
+                stack.push([x + 1, y]);
+                stack.push([x - 1, y]);
+                stack.push([x, y + 1]);
+                stack.push([x, y - 1]);
+            }
+        }
+        ctx.putImageData(imageData, 0, 0);
     }
 
     // --- Event-Listener für das Zeichnen ---
@@ -222,9 +441,33 @@ function initPaintApp() {
         }, { passive: false });
     }
 
-    addTouchBtn(brushBtn, (e) => { e.stopPropagation(); togglePanel(brushPanel, true); });
+    addTouchBtn(brushBtn, (e) => { 
+        e.stopPropagation(); 
+        isEraser = false; // Zurück zum Pinsel-Modus
+        togglePanel(brushPanel, true); 
+        if (eraserPanel) togglePanel(eraserPanel, false);
+        if (colorPanel) togglePanel(colorPanel, false);
+        // Optional: Visuelles Feedback entfernen
+        if (eraserBtn) eraserBtn.style.backgroundColor = '';
+        brushBtn.style.backgroundColor = '#ccc';
+    });
+
+    if (eraserBtn) {
+        addTouchBtn(eraserBtn, (e) => {
+            e.stopPropagation();
+            isEraser = true; // Radierer aktivieren
+            togglePanel(eraserPanel, true);
+            togglePanel(brushPanel, false);
+            togglePanel(colorPanel, false);
+            // Visuelles Feedback
+            eraserBtn.style.backgroundColor = '#ccc';
+            brushBtn.style.backgroundColor = '';
+        });
+    }
+
     addTouchBtn(colorBtn, (e) => { e.stopPropagation(); togglePanel(colorPanel, true); });
     addTouchBtn(brushBackBtn, () => togglePanel(brushPanel, false));
+    if (eraserBackBtn) addTouchBtn(eraserBackBtn, () => togglePanel(eraserPanel, false));
     addTouchBtn(colorBackBtn, () => togglePanel(colorPanel, false));
     
     // --- Undo / Redo Funktionen ---
@@ -273,6 +516,7 @@ function initPaintApp() {
         if (window.innerWidth >= 768) {
             if (!e.target.closest('.panel')) {
                 togglePanel(brushPanel, false);
+                if (eraserPanel) togglePanel(eraserPanel, false);
                 togglePanel(colorPanel, false);
             }
         }
@@ -288,6 +532,31 @@ function initPaintApp() {
         brushOpacity = parseFloat(e.target.value);
         brushOpacityValue.textContent = brushOpacity.toFixed(1);
     });
+
+    // --- Radierer-Einstellungen ---
+    if (eraserSizeSlider) {
+        eraserSizeSlider.addEventListener('input', (e) => {
+            eraserSize = e.target.value;
+            eraserSizeValue.textContent = eraserSize;
+        });
+    }
+    if (eraserOpacitySlider) {
+        eraserOpacitySlider.addEventListener('input', (e) => {
+            eraserOpacity = parseFloat(e.target.value);
+            eraserOpacityValue.textContent = eraserOpacity.toFixed(1);
+        });
+    }
+
+    if (fillToggle) {
+        fillToggle.addEventListener('change', (e) => {
+            isFillMode = e.target.checked;
+        });
+    }
+    if (eraserFillToggle) {
+        eraserFillToggle.addEventListener('change', (e) => {
+            isEraserFillMode = e.target.checked;
+        });
+    }
 
     // --- Custom Color Picker ---
     if (customColorPicker) {
@@ -457,6 +726,9 @@ function initPaintApp() {
         activeUser = null;
         document.querySelectorAll('.canvas-wrapper').forEach(el => el.classList.remove('fullscreen'));
         document.body.classList.remove('mode-fullscreen');
+
+        // Zoom zurücksetzen beim Verlassen des Vollbilds
+        [myCanvas, friendCanvas].forEach(c => resetZoom(c));
 
         // NEU: Logik zum Wiederherstellen der Ansicht auf der paint.html Seite
         if (document.body.classList.contains('paint-page')) {
