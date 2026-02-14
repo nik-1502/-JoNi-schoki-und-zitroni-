@@ -50,6 +50,16 @@ function initDashboard() {
             }
         });
     }, 2000);
+
+    // Update beim Wechseln des Tabs oder Öffnen der App
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            Object.keys(textAreas).forEach(user => loadText(user));
+        }
+    });
+    window.addEventListener('focus', () => {
+        Object.keys(textAreas).forEach(user => loadText(user));
+    });
 }
 
 function initPaintApp() {
@@ -160,6 +170,7 @@ function initPaintApp() {
     const saveBtn = document.getElementById('save-btn');
     const clearBtn = document.getElementById('clear-btn');
     const closeFullscreenBtn = document.getElementById('close-fullscreen-btn');
+    const refreshBtn = document.getElementById('refresh-btn');
     const undoBtn = document.getElementById('undo-btn');
     const redoBtn = document.getElementById('redo-btn');
     const brushPanel = document.getElementById('brush-panel');
@@ -769,6 +780,15 @@ function initPaintApp() {
 
     addTouchBtn(saveBtn, saveData);
     addTouchBtn(clearBtn, clearCanvas);
+    
+    if (refreshBtn) {
+        addTouchBtn(refreshBtn, (e) => {
+            e.stopPropagation();
+            drawFromStorage('niklas', true);
+            drawFromStorage('jovelyn', true);
+            updateStatusDots();
+        });
+    }
 
     window.addEventListener('storage', (e) => {
         if (e.key === `jovelyn_drawing${keySuffix}`) drawFromStorage('jovelyn', true);
@@ -786,6 +806,20 @@ function initPaintApp() {
             updateStatusDots();
         }
     }, 2000);
+
+    // Update beim Wechseln des Tabs oder Öffnen der App (Wichtig für Mobile!)
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            drawFromStorage('niklas', true);
+            drawFromStorage('jovelyn', true);
+            updateStatusDots();
+        }
+    });
+    window.addEventListener('focus', () => {
+        drawFromStorage('niklas', true);
+        drawFromStorage('jovelyn', true);
+        updateStatusDots();
+    });
 
     // --- Initialisierung ---
     resizeCanvases();
