@@ -148,6 +148,7 @@ body.home-page h1 {
     cursor: pointer;
     transition: background-color 0.3s ease;
     text-align: center;
+    touch-action: manipulation; /* Verbessert Touch-Reaktion auf Handys */
 }
 
 .button:hover, .control-button:hover {

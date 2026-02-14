@@ -435,10 +435,8 @@ function initPaintApp() {
     // Helper für Touch-Support auf Buttons
     function addTouchBtn(elem, callback) {
         elem.addEventListener('click', callback);
-        elem.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Verhindert Maus-Emulation und macht es snappier
-            callback(e);
-        }, { passive: false });
+        // touchstart entfernt, da dies auf iOS oft zu Problemen führt.
+        // 'click' ist dank user-scalable=no schnell genug und zuverlässiger.
     }
 
     addTouchBtn(brushBtn, (e) => { 
