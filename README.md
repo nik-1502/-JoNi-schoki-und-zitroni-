@@ -8,14 +8,12 @@ Diese Version synchronisiert Texte, Quiz-Antworten und Zeichnungen zwischen Gera
 - PostgreSQL (z. B. Supabase)
 - Environment Variables:
   - `DATABASE_URL`
-  - `APP_PASSCODE`
 
 ## Lokal starten
 
 ```bash
 npm install
 set DATABASE_URL=postgres://USER:PASS@HOST:5432/DB
-set APP_PASSCODE=dein_geheimer_code
 npm start
 ```
 
@@ -29,19 +27,16 @@ Browser: `http://localhost:3000`
 4. Start Command: `npm start`
 5. Environment Variables setzen:
    - `DATABASE_URL`
-   - `APP_PASSCODE`
 
 Danach laufen Frontend und API auf derselben Domain.
 
 ## API
 
 - `GET /api/state` -> kompletter Zustand (ohne Passcode lesbar)
-- `PUT /api/state/:key` -> schreibt genau einen Key (Passcode erforderlich)
-  - Header: `x-app-passcode: <APP_PASSCODE>`
+- `PUT /api/state/:key` -> schreibt genau einen Key
 - `GET /health` -> Healthcheck inkl. DB-Check
 
 ## Sicherheit
 
-- Schreibzugriffe ohne oder mit falschem Passcode liefern `401`.
 - Soft-Rate-Limit fuer Writes: 60 Requests/Minute/IP.
 - Groesse pro Value ist auf 20 MB begrenzt.

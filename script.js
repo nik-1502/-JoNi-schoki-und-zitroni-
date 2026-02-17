@@ -8,8 +8,6 @@ const Cloud = {
     pollTimer: null,
     pollMs: 1500,
     serverEnabled: false,
-    passcodeStorageKey: 'app_passcode',
-    passcodePromptShown: false,
     init: async function() {
         await this.pullFromServer();
         this.startPolling();
@@ -18,26 +16,12 @@ const Cloud = {
         const strValue = String(value);
         localStorage.setItem(key, strValue);
         this.notify(key, strValue);
-        const passcode = this.getPasscode();
-        if (!passcode) return;
         fetch(`${this.apiBase}/${encodeURIComponent(key)}`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-app-passcode': passcode
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ value: strValue })
         })
             .then((res) => {
-                if (res.status === 401) {
-                    this.clearPasscode();
-                    if (!this.passcodePromptShown) {
-                        this.passcodePromptShown = true;
-                        alert('Passcode falsch oder fehlt. Bitte erneut eingeben.');
-                        this.passcodePromptShown = false;
-                    }
-                    return;
-                }
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 this.serverEnabled = true;
             })
@@ -82,19 +66,6 @@ const Cloud = {
         this.pollTimer = setInterval(() => {
             this.pullFromServer();
         }, this.pollMs);
-    },
-    getPasscode: function() {
-        const existing = localStorage.getItem(this.passcodeStorageKey);
-        if (existing) return existing;
-
-        const input = prompt('Bitte gib euren gemeinsamen Passcode ein:');
-        if (!input) return null;
-
-        localStorage.setItem(this.passcodeStorageKey, input);
-        return input;
-    },
-    clearPasscode: function() {
-        localStorage.removeItem(this.passcodeStorageKey);
     }
 };
 

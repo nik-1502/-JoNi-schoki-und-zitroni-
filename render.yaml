@@ -8,5 +8,3 @@ services:
     envVars:
       - key: DATABASE_URL
         sync: false
-      - key: APP_PASSCODE
-        sync: false

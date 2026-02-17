@@ -4,16 +4,10 @@ const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const APP_PASSCODE = process.env.APP_PASSCODE;
 const DATABASE_URL = process.env.DATABASE_URL;
 const WRITE_LIMIT_PER_MINUTE = 60;
 const writeWindowMs = 60 * 1000;
 const writeRate = new Map();
-
-if (!APP_PASSCODE) {
-    console.error('Missing APP_PASSCODE environment variable.');
-    process.exit(1);
-}
 
 if (!DATABASE_URL) {
     console.error('Missing DATABASE_URL environment variable.');
@@ -52,14 +46,6 @@ function writeRateLimit(req, res, next) {
 
     kept.push(now);
     writeRate.set(ip, kept);
-    next();
-}
-
-function requirePasscode(req, res, next) {
-    const passcode = req.header('x-app-passcode');
-    if (!passcode || passcode !== APP_PASSCODE) {
-        return res.status(401).json({ error: 'Invalid passcode.' });
-    }
     next();
 }
 
@@ -112,7 +98,7 @@ app.get('/api/state', async (_req, res, next) => {
     }
 });
 
-app.put('/api/state/:key', writeRateLimit, requirePasscode, validateStateInput, async (req, res, next) => {
+app.put('/api/state/:key', writeRateLimit, validateStateInput, async (req, res, next) => {
     const key = req.params.key;
     const value = req.body.value;
 
