@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: webapp-sync
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: APP_PASSCODE
+        sync: false

@@ -1,4 +1,106 @@
+// --- SERVER KONFIGURATION ---
+// Damit die Synchronisation über Geräte hinweg funktioniert:
+// Synchronisierung laeuft ueber die API unter /api/state.
+// Frontend und API werden gemeinsam vom Render-Webservice ausgeliefert.
+const Cloud = {
+    apiBase: '/api/state',
+    listeners: new Map(),
+    pollTimer: null,
+    pollMs: 1500,
+    serverEnabled: false,
+    passcodeStorageKey: 'app_passcode',
+    passcodePromptShown: false,
+    init: async function() {
+        await this.pullFromServer();
+        this.startPolling();
+    },
+    set: function(key, value) {
+        const strValue = String(value);
+        localStorage.setItem(key, strValue);
+        this.notify(key, strValue);
+        const passcode = this.getPasscode();
+        if (!passcode) return;
+        fetch(`${this.apiBase}/${encodeURIComponent(key)}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-app-passcode': passcode
+            },
+            body: JSON.stringify({ value: strValue })
+        })
+            .then((res) => {
+                if (res.status === 401) {
+                    this.clearPasscode();
+                    if (!this.passcodePromptShown) {
+                        this.passcodePromptShown = true;
+                        alert('Passcode falsch oder fehlt. Bitte erneut eingeben.');
+                        this.passcodePromptShown = false;
+                    }
+                    return;
+                }
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                this.serverEnabled = true;
+            })
+            .catch(() => {
+                this.serverEnabled = false;
+            });
+    },
+    on: function(key, callback) {
+        if (!this.listeners.has(key)) {
+            this.listeners.set(key, new Set());
+        }
+        this.listeners.get(key).add(callback);
+        const localVal = localStorage.getItem(key);
+        if (localVal !== null) callback(localVal);
+    },
+    notify: function(key, value) {
+        const callbacks = this.listeners.get(key);
+        if (!callbacks) return;
+        callbacks.forEach((cb) => cb(value));
+    },
+    pullFromServer: async function() {
+        try {
+            const response = await fetch(this.apiBase, { cache: 'no-store' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const payload = await response.json();
+            const state = payload && payload.state ? payload.state : {};
+            Object.keys(state).forEach((key) => {
+                const serverValue = String(state[key]);
+                const localValue = localStorage.getItem(key);
+                if (localValue !== serverValue) {
+                    localStorage.setItem(key, serverValue);
+                    this.notify(key, serverValue);
+                }
+            });
+            this.serverEnabled = true;
+        } catch (err) {
+            this.serverEnabled = false;
+        }
+    },
+    startPolling: function() {
+        if (this.pollTimer) return;
+        this.pollTimer = setInterval(() => {
+            this.pullFromServer();
+        }, this.pollMs);
+    },
+    getPasscode: function() {
+        const existing = localStorage.getItem(this.passcodeStorageKey);
+        if (existing) return existing;
+
+        const input = prompt('Bitte gib euren gemeinsamen Passcode ein:');
+        if (!input) return null;
+
+        localStorage.setItem(this.passcodeStorageKey, input);
+        return input;
+    },
+    clearPasscode: function() {
+        localStorage.removeItem(this.passcodeStorageKey);
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+    Cloud.init(); // Server-Sync starten
+
     // Führe die App aus, wenn Canvas vorhanden ist (jetzt auf index.html)
     if (document.getElementById('niklas-canvas')) {
         initPaintApp();
@@ -32,6 +134,7 @@ function initDashboard() {
     function saveText(user) {
         const text = textAreas[user].value;
         localStorage.setItem(`${user}_text`, text);
+        Cloud.set(`${user}_text`, text); // Cloud Save
     }
 
     function loadText(user) {
@@ -43,6 +146,14 @@ function initDashboard() {
     Object.keys(textAreas).forEach(user => {
         textAreas[user].addEventListener('input', () => saveText(user));
         loadText(user); // Beim Start laden
+        
+        // Live-Update aus der Cloud empfangen
+        Cloud.on(`${user}_text`, (val) => {
+            // Nur updaten, wenn wir nicht selbst tippen
+            if (document.activeElement !== textAreas[user]) {
+                textAreas[user].value = val;
+            }
+        });
     });
 
     // --- Storage Event für Live-Sync (Text & GIFs) ---
@@ -227,6 +338,18 @@ function initPaintApp() {
         };
     }
 
+    function syncDrawingSilently() {
+        const canvas = (activeUser === 'niklas') ? myCanvas : friendCanvas;
+        const dataURL = canvas.toDataURL();
+        localStorage.setItem(`${activeUser}_drawing${keySuffix}`, dataURL);
+        Cloud.set(`${activeUser}_drawing${keySuffix}`, dataURL);
+
+        localStorage.setItem(`${activeUser}_status${keySuffix}`, 'red');
+        Cloud.set(`${activeUser}_status${keySuffix}`, 'red');
+        localStorage.setItem(`${activeUser}_last_editor${keySuffix}`, deviceId);
+        updateStatusDots();
+    }
+
     function startDrawing(e) {
         // Nur malen, wenn wir im Fullscreen sind und auf dem richtigen Canvas
         if (!document.body.classList.contains('mode-fullscreen')) return;
@@ -265,6 +388,7 @@ function initPaintApp() {
                 history[activeUser].redo = [];
             }
             floodFill(canvas, Math.floor(pos.x), Math.floor(pos.y), brushColor, isEraser);
+            syncDrawingSilently();
             return; // Nicht zeichnen, wenn gefüllt wird
         }
 
@@ -368,6 +492,7 @@ function initPaintApp() {
         }
         if (!isDrawing) return;
         isDrawing = false;
+        syncDrawingSilently();
         // Pfad beenden nicht zwingend nötig bei dieser Logik, aber sauber
     }
 
@@ -528,6 +653,7 @@ function initPaintApp() {
         img.onload = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            syncDrawingSilently();
         };
     }
 
@@ -547,6 +673,7 @@ function initPaintApp() {
         img.onload = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            syncDrawingSilently();
         };
     }
 
@@ -690,16 +817,7 @@ function initPaintApp() {
 
     // --- Speichern, Laden und Löschen ---
     function saveData() {
-        if (!activeUser) return;
-        const canvas = (activeUser === 'niklas') ? myCanvas : friendCanvas;
-        const dataURL = canvas.toDataURL();
-        localStorage.setItem(`${activeUser}_drawing${keySuffix}`, dataURL);
-        
-        // Status auf ROT setzen und mich als letzten Editor speichern
-        localStorage.setItem(`${activeUser}_status${keySuffix}`, 'red');
-        localStorage.setItem(`${activeUser}_last_editor${keySuffix}`, deviceId);
-        updateStatusDots();
-        
+        syncDrawingSilently();
         alert('Bild gespeichert und für die andere Person sichtbar!');
     }
 
@@ -734,6 +852,9 @@ function initPaintApp() {
 
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Leeres Bild + Status speichern
+        syncDrawingSilently();
     }
     
     function updateStatusDots() {
@@ -746,6 +867,7 @@ function initPaintApp() {
     function markAsSeen() {
         // Wir markieren einfach alles als gesehen, wenn die App öffnet (optional)
         localStorage.setItem(`niklas_status${keySuffix}`, 'green');
+        Cloud.set(`niklas_status${keySuffix}`, 'green'); // Cloud Save
         updateStatusDots();
     }
 
@@ -761,6 +883,7 @@ function initPaintApp() {
         const lastEditor = localStorage.getItem(`${user}_last_editor${keySuffix}`);
         if (lastEditor && lastEditor !== deviceId) {
             localStorage.setItem(`${user}_status${keySuffix}`, 'green');
+            Cloud.set(`${user}_status${keySuffix}`, 'green'); // Cloud Save
             updateStatusDots();
         }
         
@@ -818,6 +941,12 @@ function initPaintApp() {
         if (e.key === `niklas_drawing${keySuffix}`) drawFromStorage('niklas', true);
         if (e.key.endsWith(`_status${keySuffix}`)) updateStatusDots();
     });
+    
+    // --- Cloud Listener für Bilder & Status ---
+    Cloud.on(`jovelyn_drawing${keySuffix}`, () => drawFromStorage('jovelyn', true));
+    Cloud.on(`niklas_drawing${keySuffix}`, () => drawFromStorage('niklas', true));
+    Cloud.on(`niklas_status${keySuffix}`, updateStatusDots);
+    Cloud.on(`jovelyn_status${keySuffix}`, updateStatusDots);
 
     // --- NEU: Automatisches Neuladen (Polling) ---
     // Aktualisiert die Bilder alle 2 Sekunden, falls Änderungen vorliegen
@@ -914,6 +1043,7 @@ function initQuizApp() {
         if (currentQuizUser) {
             const savedAnswerKey = `quiz_answer_${currentQuizUser}_${dateString}`;
             localStorage.setItem(savedAnswerKey, e.target.value);
+            Cloud.set(savedAnswerKey, e.target.value); // Cloud Save
         }
     });
 
@@ -928,6 +1058,16 @@ function initQuizApp() {
     Object.keys(wrappers).forEach(user => {
         wrappers[user].addEventListener('click', () => {
             openQuizModal(user);
+        });
+    });
+    
+    // Cloud Listener für Quiz
+    Object.keys(wrappers).forEach(user => {
+        const key = `quiz_answer_${user}_${dateString}`;
+        Cloud.on(key, (val) => {
+            if (currentQuizUser === user && document.activeElement !== modalInput) {
+                modalInput.value = val || '';
+            }
         });
     });
 
