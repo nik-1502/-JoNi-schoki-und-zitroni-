@@ -255,7 +255,24 @@ function initPaintApp() {
 
     // --- Zoom Helper & State ---
     let isZooming = false;
-    let zoomState = { startDist: 0, startScale: 1, startX: 0, startY: 0, initialTx: 0, initialTy: 0, startAngle: 0, startRotation: 0 };
+    let zoomState = {
+        startDist: 0,
+        startScale: 1,
+        startX: 0,
+        startY: 0,
+        initialTx: 0,
+        initialTy: 0,
+        startAngle: 0,
+        startRotation: 0,
+        lastDist: 0,
+        lastAngle: 0,
+        lastCenterX: 0,
+        lastCenterY: 0
+    };
+    let isRightDragging = false;
+    let rightDragCanvas = null;
+    let rightDragStartMouse = { x: 0, y: 0 };
+    let rightDragStartTransform = { tx: 0, ty: 0, scale: 1, rotation: 0 };
 
     function getDistance(touches) {
         const dx = touches[0].clientX - touches[1].clientX;
@@ -276,13 +293,69 @@ function initPaintApp() {
         };
     }
 
+    function getTransformedBounds(width, height, tx, ty, scale, rotationDeg) {
+        const rad = rotationDeg * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const a = scale * cos;
+        const b = scale * sin;
+        const c = -scale * sin;
+        const d = scale * cos;
+
+        const p1x = tx;
+        const p1y = ty;
+        const p2x = tx + a * width;
+        const p2y = ty + b * width;
+        const p3x = tx + c * height;
+        const p3y = ty + d * height;
+        const p4x = tx + a * width + c * height;
+        const p4y = ty + b * width + d * height;
+
+        const minX = Math.min(p1x, p2x, p3x, p4x);
+        const maxX = Math.max(p1x, p2x, p3x, p4x);
+        const minY = Math.min(p1y, p2y, p3y, p4y);
+        const maxY = Math.max(p1y, p2y, p3y, p4y);
+        return { minX, maxX, minY, maxY };
+    }
+
+    function clampTransformToWrapper(canvas, tx, ty, scale, rotation) {
+        const wrapper = canvas.parentElement;
+        if (!wrapper) return { tx, ty };
+
+        const wrapperW = wrapper.clientWidth;
+        const wrapperH = wrapper.clientHeight;
+        if (!wrapperW || !wrapperH) return { tx, ty };
+
+        const cssW = canvas.clientWidth || wrapperW;
+        const cssH = canvas.clientHeight || wrapperH;
+        const minVisible = 36;
+        const maxLeft = wrapperW - minVisible;
+        const maxTop = wrapperH - minVisible;
+
+        const bounds = getTransformedBounds(cssW, cssH, tx, ty, scale, rotation);
+        let shiftX = 0;
+        let shiftY = 0;
+
+        // Horizontal: nie komplett außerhalb lassen
+        if (bounds.maxX < minVisible) shiftX = minVisible - bounds.maxX;
+        else if (bounds.minX > maxLeft) shiftX = maxLeft - bounds.minX;
+
+        // Vertikal: nie komplett außerhalb lassen
+        if (bounds.maxY < minVisible) shiftY = minVisible - bounds.maxY;
+        else if (bounds.minY > maxTop) shiftY = maxTop - bounds.minY;
+
+        return { tx: tx + shiftX, ty: ty + shiftY };
+    }
+
     function updateCanvasTransform(canvas, x, y, scale, rotation = 0) {
+        const clamped = clampTransformToWrapper(canvas, x, y, scale, rotation);
         canvas.style.transformOrigin = '0 0';
-        canvas.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`;
+        canvas.style.transform = `translate(${clamped.tx}px, ${clamped.ty}px) rotate(${rotation}deg) scale(${scale})`;
         canvas.dataset.scale = scale;
-        canvas.dataset.tx = x;
-        canvas.dataset.ty = y;
+        canvas.dataset.tx = clamped.tx;
+        canvas.dataset.ty = clamped.ty;
         canvas.dataset.rotation = rotation;
+        syncGridVisualForCanvas(canvas);
     }
 
     function resetZoom(canvas) {
@@ -291,6 +364,7 @@ function initPaintApp() {
         delete canvas.dataset.tx;
         delete canvas.dataset.ty;
         delete canvas.dataset.rotation;
+        syncGridVisualForCanvas(canvas);
     }
 
     function getCanvasTransform(canvas) {
@@ -300,6 +374,98 @@ function initPaintApp() {
             ty: parseFloat(canvas.dataset.ty) || 0,
             rotation: parseFloat(canvas.dataset.rotation) || 0
         };
+    }
+
+    function rotateCanvasAroundViewportCenter(canvas, deltaDeg) {
+        const { scale, tx, ty, rotation } = getCanvasTransform(canvas);
+        const wrapper = canvas.parentElement;
+        const cx = wrapper.clientWidth / 2;
+        const cy = wrapper.clientHeight / 2;
+
+        const rotRad = rotation * Math.PI / 180;
+        const cos = Math.cos(rotRad);
+        const sin = Math.sin(rotRad);
+        const a = scale * cos;
+        const b = scale * sin;
+        const c = -scale * sin;
+        const d = scale * cos;
+        const det = a * d - b * c || 1;
+
+        // Punkt unter der sichtbaren Mitte vor Rotation bestimmen
+        const px = ((cx - tx) * d - (cy - ty) * c) / det;
+        const py = (-(cx - tx) * b + (cy - ty) * a) / det;
+
+        const newRotation = rotation + deltaDeg;
+        const newRad = newRotation * Math.PI / 180;
+        const newCos = Math.cos(newRad);
+        const newSin = Math.sin(newRad);
+        const na = scale * newCos;
+        const nb = scale * newSin;
+        const nc = -scale * newSin;
+        const nd = scale * newCos;
+
+        // Translation so setzen, dass dieser Punkt in der sichtbaren Mitte bleibt
+        const newTx = cx - (na * px + nc * py);
+        const newTy = cy - (nb * px + nd * py);
+        updateCanvasTransform(canvas, newTx, newTy, scale, newRotation);
+    }
+
+    function getCenteredTranslation(canvas, scale, rotation) {
+        const wrapper = canvas.parentElement;
+        const cssWidth = canvas.clientWidth || wrapper.clientWidth || 1;
+        const cssHeight = canvas.clientHeight || wrapper.clientHeight || 1;
+        const cx = wrapper.clientWidth / 2;
+        const cy = wrapper.clientHeight / 2;
+
+        const rad = rotation * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const a = scale * cos;
+        const b = scale * sin;
+        const c = -scale * sin;
+        const d = scale * cos;
+
+        const midX = cssWidth / 2;
+        const midY = cssHeight / 2;
+        const tx = cx - (a * midX + c * midY);
+        const ty = cy - (b * midX + d * midY);
+        return { tx, ty };
+    }
+
+    function zoomCanvasAroundViewportPoint(canvas, zoomFactor, viewX, viewY) {
+        const { scale, tx, ty, rotation } = getCanvasTransform(canvas);
+        let newScale = Math.max(1, Math.min(5, scale * zoomFactor));
+
+        // Local point under cursor before zoom (inverse transform)
+        const rotRad = rotation * Math.PI / 180;
+        const cos = Math.cos(rotRad);
+        const sin = Math.sin(rotRad);
+        const a = scale * cos;
+        const b = scale * sin;
+        const c = -scale * sin;
+        const d = scale * cos;
+        const det = a * d - b * c || 1;
+        const px = ((viewX - tx) * d - (viewY - ty) * c) / det;
+        const py = (-(viewX - tx) * b + (viewY - ty) * a) / det;
+
+        // New translation so cursor keeps pointing to the same local point
+        const newCos = Math.cos(rotRad);
+        const newSin = Math.sin(rotRad);
+        const na = newScale * newCos;
+        const nb = newScale * newSin;
+        const nc = -newScale * newSin;
+        const nd = newScale * newCos;
+        let newTx = viewX - (na * px + nc * py);
+        let newTy = viewY - (nb * px + nd * py);
+
+        if (newScale < 1.02) {
+            newScale = 1;
+            const centered = getCenteredTranslation(canvas, newScale, rotation);
+            newTx = centered.tx;
+            newTy = centered.ty;
+        }
+
+        updateCanvasTransform(canvas, newTx, newTy, newScale, rotation);
     }
 
     // Canvas-Größe an den Container anpassen
@@ -328,6 +494,8 @@ function initPaintApp() {
         // Gespeicherte Bilder nach Größenänderung neu laden
         drawFromStorage('niklas', resized);
         drawFromStorage('jovelyn', resized);
+        syncGridVisualForCanvas(myCanvas);
+        syncGridVisualForCanvas(friendCanvas);
     }
 
     window.addEventListener('resize', resizeCanvases);
@@ -394,6 +562,9 @@ function initPaintApp() {
     const brushOpacitySlider = document.getElementById('brush-opacity');
     const brushOpacityValue = document.getElementById('brush-opacity-value');
     const fillToggle = document.getElementById('fill-toggle');
+    const gridToggle = document.getElementById('grid-toggle');
+    const gridSizeSlider = document.getElementById('grid-size');
+    const gridSizeValue = document.getElementById('grid-size-value');
     const eraserSizeSlider = document.getElementById('eraser-size');
     const eraserSizeValue = document.getElementById('eraser-size-value');
     const eraserOpacitySlider = document.getElementById('eraser-opacity');
@@ -403,6 +574,89 @@ function initPaintApp() {
     const customColorPicker = document.getElementById('custom-color');
     const archiveStoragePrefix = `draw_archive${keySuffix}`;
     const savedSnapshotSuffix = `_saved_snapshot${keySuffix}`;
+    let gridEnabled = false;
+    let gridSize = 24;
+    const gridVisuals = { niklas: null, jovelyn: null };
+
+    function getUserFromCanvas(canvas) {
+        return canvas === myCanvas ? 'niklas' : 'jovelyn';
+    }
+
+    function ensureGridVisual(user, canvas, wrapper) {
+        if (gridVisuals[user]) return gridVisuals[user];
+        const overlay = document.createElement('div');
+        overlay.className = 'grid-overlay hidden';
+        overlay.setAttribute('aria-hidden', 'true');
+
+        const dot = document.createElement('div');
+        dot.className = 'grid-anchor-dot hidden';
+        dot.setAttribute('aria-hidden', 'true');
+
+        wrapper.appendChild(overlay);
+        wrapper.appendChild(dot);
+        gridVisuals[user] = { overlay, dot, canvas, wrapper };
+        return gridVisuals[user];
+    }
+
+    function updateGridPattern(user) {
+        const visual = gridVisuals[user];
+        if (!visual) return;
+        visual.overlay.style.backgroundImage =
+            'linear-gradient(rgba(20,20,20,0.22) 1px, transparent 1px), linear-gradient(90deg, rgba(20,20,20,0.22) 1px, transparent 1px)';
+        visual.overlay.style.backgroundSize = `${gridSize}px ${gridSize}px`;
+    }
+
+    function updateGridDotPosition(user) {
+        const visual = gridVisuals[user];
+        if (!visual || !gridEnabled) return;
+        const { canvas, dot, wrapper } = visual;
+        const cssWidth = canvas.clientWidth || 1;
+        const cssHeight = canvas.clientHeight || 1;
+        const { scale, tx, ty, rotation } = getCanvasTransform(canvas);
+        const margin = 8;
+        const maxX = Math.max(margin, wrapper.clientWidth - margin);
+        const maxY = Math.max(margin, wrapper.clientHeight - margin);
+        const m = new DOMMatrix()
+            .translate(tx, ty)
+            .rotate(rotation)
+            .scale(scale);
+        const anchorLocal = new DOMPoint(cssWidth / 2, Math.max(cssHeight - 8, 0));
+        const p = anchorLocal.matrixTransform(m);
+        let x = p.x;
+        let y = p.y;
+
+        x = Math.max(margin, Math.min(maxX, x));
+        y = Math.max(margin, Math.min(maxY, y));
+        dot.style.left = `${x}px`;
+        dot.style.top = `${y}px`;
+    }
+
+    function syncGridVisualForCanvas(canvas) {
+        const user = getUserFromCanvas(canvas);
+        const visual = gridVisuals[user];
+        if (!visual) return;
+
+        visual.overlay.style.transformOrigin = '0 0';
+        visual.overlay.style.transform = canvas.style.transform || '';
+        updateGridPattern(user);
+        updateGridDotPosition(user);
+    }
+
+    function updateGridVisibility() {
+        Object.keys(gridVisuals).forEach((user) => {
+            const visual = gridVisuals[user];
+            if (!visual) return;
+            visual.overlay.classList.toggle('hidden', !gridEnabled);
+            visual.dot.classList.toggle('hidden', !gridEnabled);
+            if (gridEnabled) {
+                updateGridPattern(user);
+                syncGridVisualForCanvas(visual.canvas);
+            }
+        });
+        if (gridToggle) gridToggle.checked = gridEnabled;
+        if (gridSizeSlider) gridSizeSlider.value = String(gridSize);
+        if (gridSizeValue) gridSizeValue.textContent = String(gridSize);
+    }
 
     function updateToolButtonStates() {
         if (brushBtn) brushBtn.classList.toggle('is-tool-active', !isEraser);
@@ -414,6 +668,9 @@ function initPaintApp() {
         if (fillToggle) fillToggle.checked = isFillMode;
         if (eraserFillToggle) eraserFillToggle.checked = isFillMode;
     }
+
+    ensureGridVisual('niklas', myCanvas, wrapperNiklas);
+    ensureGridVisual('jovelyn', friendCanvas, wrapperJovelyn);
 
     function getArchiveKey(user) {
         return `${archiveStoragePrefix}_${user}`;
@@ -729,10 +986,6 @@ function initPaintApp() {
 
     // --- Zeichenfunktionen ---
     function getEventPosition(canvas, e) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        
         let clientX, clientY;
         if (e.touches) {
             clientX = e.touches[0].clientX;
@@ -741,11 +994,57 @@ function initPaintApp() {
             clientX = e.clientX;
             clientY = e.clientY;
         }
-        
-        return {
-            x: (clientX - rect.left) * scaleX,
-            y: (clientY - rect.top) * scaleY
-        };
+
+        // Bei transformiertem Canvas (Zoom/Rotation) den Punkt per inverser Matrix zurückrechnen.
+        const rect = canvas.getBoundingClientRect();
+        const cssWidth = canvas.clientWidth || rect.width || 1;
+        const cssHeight = canvas.clientHeight || rect.height || 1;
+        const styleTransform = window.getComputedStyle(canvas).transform;
+
+        if (!styleTransform || styleTransform === 'none') {
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        try {
+            const m = new DOMMatrix(styleTransform);
+            if (!m.is2D || m.a === 0 || m.d === 0) throw new Error('invalid-matrix');
+
+            const corners = [
+                new DOMPoint(0, 0).matrixTransform(m),
+                new DOMPoint(cssWidth, 0).matrixTransform(m),
+                new DOMPoint(0, cssHeight).matrixTransform(m),
+                new DOMPoint(cssWidth, cssHeight).matrixTransform(m)
+            ];
+            const minX = Math.min(...corners.map((p) => p.x));
+            const minY = Math.min(...corners.map((p) => p.y));
+
+            const layoutLeft = rect.left - minX;
+            const layoutTop = rect.top - minY;
+
+            const localInViewport = new DOMPoint(clientX - layoutLeft, clientY - layoutTop);
+            const localCss = localInViewport.matrixTransform(m.inverse());
+
+            const x = (localCss.x / cssWidth) * canvas.width;
+            const y = (localCss.y / cssHeight) * canvas.height;
+
+            return {
+                x: Math.max(0, Math.min(canvas.width, x)),
+                y: Math.max(0, Math.min(canvas.height, y))
+            };
+        } catch (_err) {
+            // Fallback falls Matrix-Berechnung auf einem Gerät nicht unterstützt ist.
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
     }
 
     function persistDrawingLocally(user) {
@@ -792,6 +1091,7 @@ function initPaintApp() {
     function startDrawing(e) {
         // Nur malen, wenn wir im Fullscreen sind und auf dem richtigen Canvas
         if (!document.body.classList.contains('mode-fullscreen')) return;
+        if (e.type === 'mousedown' && e.button !== 0) return; // Nur Linksklick zeichnet
         
         // --- Zoom/Rotation Start (2 Finger) ---
         if (e.touches && e.touches.length === 2) {
@@ -814,6 +1114,10 @@ function initPaintApp() {
             zoomState.initialTy = currentTy;
             zoomState.startAngle = angle;
             zoomState.startRotation = currentRotation;
+            zoomState.lastDist = dist;
+            zoomState.lastAngle = angle;
+            zoomState.lastCenterX = center.x;
+            zoomState.lastCenterY = center.y;
             return;
         }
         if (isZooming) return; // Nicht malen, wenn gezoomt wird
@@ -845,31 +1149,45 @@ function initPaintApp() {
             const center = getCenter(e.touches);
             const angle = getAngle(e.touches);
             const canvas = e.target;
-            
-            const scaleMultiplier = dist / zoomState.startDist;
-            let newScale = zoomState.startScale * scaleMultiplier;
-            newScale = Math.max(1, Math.min(newScale, 5)); // Limit 1x - 5x
-            let newRotation = zoomState.startRotation + ((angle - zoomState.startAngle) * 180 / Math.PI);
-            if (newRotation > 180) newRotation -= 360;
-            if (newRotation < -180) newRotation += 360;
-            if (Math.abs(newRotation) < 4) newRotation = 0; // Automatisch gerade ausrichten
-            
-            // Berechnung der Verschiebung, damit der Punkt zwischen den Fingern fix bleibt
-            const startCenterCanvasX = (zoomState.startX - zoomState.initialTx) / zoomState.startScale;
-            const startCenterCanvasY = (zoomState.startY - zoomState.initialTy) / zoomState.startScale;
-            
-            let newTx = center.x - startCenterCanvasX * newScale;
-            let newTy = center.y - startCenterCanvasY * newScale;
-            
-            // Zurücksetzen auf 100% wenn nahe dran
-            if (newScale < 1.05) {
-                newScale = 1;
-                newTx = 0;
-                newTy = 0;
-                if (Math.abs(newRotation) < 12) newRotation = 0;
+
+            const prevDist = zoomState.lastDist || dist;
+            const prevAngle = zoomState.lastAngle || angle;
+            const prevCenterX = zoomState.lastCenterX || center.x;
+            const prevCenterY = zoomState.lastCenterY || center.y;
+
+            // 1) Zwei-Finger-Verschieben (Pan)
+            const panDx = center.x - prevCenterX;
+            const panDy = center.y - prevCenterY;
+            if (panDx !== 0 || panDy !== 0) {
+                const t = getCanvasTransform(canvas);
+                updateCanvasTransform(canvas, t.tx + panDx, t.ty + panDy, t.scale, t.rotation);
             }
-            
-            updateCanvasTransform(canvas, newTx, newTy, newScale, newRotation);
+
+            // 2) Zoom um Finger-Mittelpunkt
+            const zoomFactor = prevDist > 0 ? dist / prevDist : 1;
+            if (Math.abs(zoomFactor - 1) > 0.0001) {
+                zoomCanvasAroundViewportPoint(canvas, zoomFactor, center.x, center.y);
+            }
+
+            // 3) Rotation (gleiches Prinzip wie Desktop: um sichtbare Feldmitte)
+            let deltaRad = angle - prevAngle;
+            if (deltaRad > Math.PI) deltaRad -= 2 * Math.PI;
+            if (deltaRad < -Math.PI) deltaRad += 2 * Math.PI;
+            const deltaDeg = deltaRad * 180 / Math.PI;
+            if (Math.abs(deltaDeg) > 0.05) {
+                rotateCanvasAroundViewportCenter(canvas, deltaDeg);
+            }
+
+            // optionales leichtes Einrasten nahe 0°
+            const tAfter = getCanvasTransform(canvas);
+            if (Math.abs(tAfter.rotation) < 1) {
+                updateCanvasTransform(canvas, tAfter.tx, tAfter.ty, tAfter.scale, 0);
+            }
+
+            zoomState.lastDist = dist;
+            zoomState.lastAngle = angle;
+            zoomState.lastCenterX = center.x;
+            zoomState.lastCenterY = center.y;
             return;
         }
 
@@ -1019,7 +1337,17 @@ function initPaintApp() {
     }
 
     // --- Event-Listener für das Zeichnen ---
+    [wrapperNiklas, wrapperJovelyn].forEach((wrapper) => {
+        wrapper.addEventListener('contextmenu', (e) => e.preventDefault());
+    });
+    document.addEventListener('contextmenu', (e) => {
+        if (e.target && e.target.closest && e.target.closest('.canvas-wrapper')) {
+            e.preventDefault();
+        }
+    }, true);
+
     [myCanvas, friendCanvas].forEach(canvas => {
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
@@ -1028,28 +1356,67 @@ function initPaintApp() {
         canvas.addEventListener('touchstart', startDrawing, { passive: false });
         canvas.addEventListener('touchmove', draw, { passive: false });
         canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('mousedown', (e) => {
+            if (!document.body.classList.contains('mode-fullscreen')) return;
+            if (e.button !== 2) return; // Nur Rechtsklick
+            const hoveredUser = (canvas === myCanvas) ? 'niklas' : 'jovelyn';
+            if (activeUser !== hoveredUser) return;
+
+            e.preventDefault();
+            isDrawing = false;
+            isRightDragging = true;
+            rightDragCanvas = canvas;
+            rightDragStartMouse = { x: e.clientX, y: e.clientY };
+            const t = getCanvasTransform(canvas);
+            rightDragStartTransform = { tx: t.tx, ty: t.ty, scale: t.scale, rotation: t.rotation };
+        });
         canvas.addEventListener('wheel', (e) => {
             if (!document.body.classList.contains('mode-fullscreen')) return;
             const hoveredUser = (canvas === myCanvas) ? 'niklas' : 'jovelyn';
             if (activeUser !== hoveredUser) return;
 
             e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const cursorX = e.clientX - rect.left;
-            const cursorY = e.clientY - rect.top;
-            const { scale, tx, ty, rotation } = getCanvasTransform(canvas);
-            const factor = e.deltaY < 0 ? 1.08 : 0.92;
-            let newScale = Math.max(1, Math.min(5, scale * factor));
-
-            let newTx = cursorX - ((cursorX - tx) / scale) * newScale;
-            let newTy = cursorY - ((cursorY - ty) / scale) * newScale;
-            if (newScale < 1.02) {
-                newScale = 1;
-                newTx = 0;
-                newTy = 0;
+            if (isRightDragging && rightDragCanvas === canvas) {
+                const step = 6;
+                rotateCanvasAroundViewportCenter(canvas, e.deltaY < 0 ? step : -step);
+                const t = getCanvasTransform(canvas);
+                rightDragStartTransform = { tx: t.tx, ty: t.ty, scale: t.scale, rotation: t.rotation };
+                rightDragStartMouse = { x: e.clientX, y: e.clientY };
+                return;
             }
-            updateCanvasTransform(canvas, newTx, newTy, newScale, rotation);
+            const wrapperRect = canvas.parentElement.getBoundingClientRect();
+            const cursorX = e.clientX - wrapperRect.left;
+            const cursorY = e.clientY - wrapperRect.top;
+            const factor = e.deltaY < 0 ? 1.08 : 0.92;
+            zoomCanvasAroundViewportPoint(canvas, factor, cursorX, cursorY);
         }, { passive: false });
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isRightDragging || !rightDragCanvas) return;
+        if ((e.buttons & 2) !== 2) return;
+        e.preventDefault();
+        const dx = e.clientX - rightDragStartMouse.x;
+        const dy = e.clientY - rightDragStartMouse.y;
+        // Gleichgerichtet: Maus nach links => Bild nach links
+        const newTx = rightDragStartTransform.tx + dx;
+        const newTy = rightDragStartTransform.ty + dy;
+        updateCanvasTransform(
+            rightDragCanvas,
+            newTx,
+            newTy,
+            rightDragStartTransform.scale,
+            rightDragStartTransform.rotation
+        );
+        rightDragStartTransform.tx = newTx;
+        rightDragStartTransform.ty = newTy;
+        rightDragStartMouse = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mouseup', (e) => {
+        if (e.button !== 2) return;
+        isRightDragging = false;
+        rightDragCanvas = null;
     });
 
     // --- Panel-Sichtbarkeit ---
@@ -1226,6 +1593,18 @@ function initPaintApp() {
             updateFillButtonState();
         });
     }
+    if (gridToggle) {
+        gridToggle.addEventListener('change', (e) => {
+            gridEnabled = e.target.checked;
+            updateGridVisibility();
+        });
+    }
+    if (gridSizeSlider) {
+        gridSizeSlider.addEventListener('input', (e) => {
+            gridSize = parseInt(e.target.value, 10) || 24;
+            updateGridVisibility();
+        });
+    }
     if (eraserFillToggle) {
         eraserFillToggle.addEventListener('change', (e) => {
             isEraserFillMode = e.target.checked;
@@ -1398,6 +1777,7 @@ function initPaintApp() {
         document.body.classList.add('mode-fullscreen');
         updateToolButtonStates();
         updateFillButtonState();
+        updateGridVisibility();
         
         // Status-Logik: Nur auf Grün setzen, wenn ich NICHT der letzte Editor war
         const lastEditor = localStorage.getItem(`${user}_last_editor${keySuffix}`);
@@ -1414,8 +1794,11 @@ function initPaintApp() {
     function exitFullscreen() {
         closeSaveGalleryModal();
         activeUser = null;
+        isRightDragging = false;
+        rightDragCanvas = null;
         document.querySelectorAll('.canvas-wrapper').forEach(el => el.classList.remove('fullscreen'));
         document.body.classList.remove('mode-fullscreen');
+        updateGridVisibility();
 
         // Zoom zurücksetzen beim Verlassen des Vollbilds
         [myCanvas, friendCanvas].forEach(c => resetZoom(c));
@@ -1504,6 +1887,7 @@ function initPaintApp() {
     generateColors();
     updateToolButtonStates();
     updateFillButtonState();
+    updateGridVisibility();
     updateStatusDots();
     markAsSeen();
 }

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Gemeinsam Malen</title>
-    <link rel="stylesheet" href="style.css?v=20260218e">
+    <link rel="stylesheet" href="style.css?v=20260218i">
     <link rel="apple-touch-icon" href="images/home-Icon.png">
     <style>
         /* Change container background to brown */
@@ -167,6 +167,15 @@
                 <input type="checkbox" id="fill-toggle" style="width: 24px; height: 24px;">
             </div>
             <div class="setting">
+                <label for="grid-toggle">Raster:</label>
+                <input type="checkbox" id="grid-toggle" style="width: 24px; height: 24px;">
+            </div>
+            <div class="setting">
+                <label for="grid-size">Rastergröße:</label>
+                <input type="range" id="grid-size" min="8" max="80" value="24">
+                <span id="grid-size-value">24</span>
+            </div>
+            <div class="setting">
                 <label for="brush-size">Stiftdicke:</label>
                 <input type="range" id="brush-size" min="1" max="100" value="5">
                 <span id="brush-size-value">5</span>
@@ -207,7 +216,7 @@
     <!-- Globaler Refresh Button -->
     <button id="global-refresh-btn" class="floating-refresh-btn">◆</button>
 
-    <script src="script.js?v=20260218v"></script>
+    <script src="script.js?v=20260218am"></script>
     <script>
         // Logik für das Tages-Tier
         const animals = [
@@ -246,6 +255,24 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

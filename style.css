@@ -295,8 +295,32 @@ canvas {
     height: 100%;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
-    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0v24M0 12h24" stroke="black" stroke-width="2"/></svg>') 12 12, crosshair;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0v24M0 12h24" stroke="black" stroke-width="4" stroke-linecap="round"/><path d="M12 0v24M0 12h24" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>') 12 12, crosshair;
     touch-action: none; /* Verhindert Page-Scrolling beim Malen auf Touch-Geräten */
+}
+
+.grid-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 12;
+}
+
+.grid-anchor-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(30, 30, 30, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 30;
+}
+
+.grid-overlay.hidden,
+.grid-anchor-dot.hidden {
+    display: none !important;
 }
 
 /* Steuerungsleiste */

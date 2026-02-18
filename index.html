@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Herz in Menschenform</title>
-    <link rel="stylesheet" href="style.css?v=20260218e">
+    <link rel="stylesheet" href="style.css?v=20260218i">
     <link rel="apple-touch-icon" href="images/home-Icon.png">
     <style>
         /* Fullscreen-Leisten auch auf Laptop/iPad sichtbar machen */
@@ -181,6 +181,8 @@
         <div class="panel-header"><h3>Pinsel</h3><button id="brush-back-btn" class="back-button">Schließen</button></div>
         <div class="panel-content">
             <div class="setting"><label for="fill-toggle">Füllen:</label><input type="checkbox" id="fill-toggle" style="width: 24px; height: 24px;"></div>
+            <div class="setting"><label for="grid-toggle">Raster:</label><input type="checkbox" id="grid-toggle" style="width: 24px; height: 24px;"></div>
+            <div class="setting"><label>Rastergröße:</label><input type="range" id="grid-size" min="8" max="80" value="24"><span id="grid-size-value">24</span></div>
             <div class="setting"><label>Größe:</label><input type="range" id="brush-size" min="1" max="100" value="5"><span id="brush-size-value">5</span></div>
             <div class="setting"><label>Transparenz:</label><input type="range" id="brush-opacity" min="0.1" max="1" step="0.1" value="1"><span id="brush-opacity-value">1.0</span></div>
         </div>
@@ -204,7 +206,7 @@
     <!-- Globaler Refresh Button -->
     <button id="global-refresh-btn" class="floating-refresh-btn">◆</button>
 
-    <script src="script.js?v=20260218v"></script>
+    <script src="script.js?v=20260218am"></script>
     <script>
         // Kleines Script, um die Sichtbarkeit der neuen Bars zu steuern, da wir script.js nicht bearbeiten
         const observer = new MutationObserver((mutations) => {
@@ -230,6 +232,24 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
