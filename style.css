@@ -559,6 +559,185 @@ body.mode-fullscreen .control-button {
     border-color: rgb(38, 26, 60);
 }
 
+/* Speicher-Galerie */
+.save-gallery-content {
+    width: min(92vw, 760px);
+    max-height: 88vh;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.save-gallery-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.save-gallery-header h3 {
+    margin: 0;
+}
+
+.save-gallery-name-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.save-gallery-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.save-gallery-hint {
+    margin: 0;
+    color: #444;
+    font-size: 0.95rem;
+}
+
+.save-gallery-list {
+    display: block;
+    overflow-y: auto;
+    max-height: 52vh;
+    padding-right: 4px;
+}
+
+.save-gallery-list.hidden,
+.save-gallery-detail.hidden {
+    display: none !important;
+}
+
+.save-gallery-empty {
+    margin: 0;
+    color: #666;
+}
+
+.save-gallery-item {
+    display: block;
+    border: 1px solid #e7ddcc;
+    border-radius: 12px;
+    padding: 0;
+    background: linear-gradient(180deg, #fffdfa 0%, #fff7ec 100%);
+    box-shadow: 0 3px 10px rgba(80, 50, 20, 0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    overflow: hidden;
+    min-height: 108px;
+    flex-shrink: 0;
+    margin-bottom: 12px;
+}
+
+.save-gallery-item:last-child {
+    margin-bottom: 0;
+}
+
+.save-gallery-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(80, 50, 20, 0.16);
+}
+
+.save-gallery-item-main {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    gap: 10px;
+    text-align: left;
+    cursor: pointer;
+    align-items: center;
+}
+
+.save-gallery-thumb {
+    width: 84px;
+    height: 84px;
+    min-width: 84px;
+    min-height: 84px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+    background: #fafafa;
+    align-self: start;
+}
+
+.save-gallery-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.save-gallery-meta span {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.save-gallery-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.save-gallery-detail-image {
+    width: 100%;
+    max-height: 42vh;
+    object-fit: contain;
+    border-radius: 12px;
+    border: 1px solid #ddc9aa;
+    background: #fff;
+}
+
+.save-gallery-detail-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.save-gallery-detail-meta span {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.save-gallery-detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.save-gallery-detail-actions .control-button {
+    flex: 1 1 calc(50% - 8px);
+    min-width: 140px;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .save-gallery-item-main {
+        grid-template-columns: 72px 1fr;
+    }
+    .save-gallery-item {
+        min-height: 96px;
+    }
+    .save-gallery-thumb {
+        width: 72px;
+        height: 72px;
+        min-width: 72px;
+        min-height: 72px;
+    }
+    .save-gallery-detail-image {
+        max-height: 34vh;
+    }
+    .save-gallery-detail-actions {
+        display: flex;
+        flex-direction: column;
+    }
+    .save-gallery-detail-actions .control-button {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
 /* Abstände auf der Quiz-Seite anpassen (0,4cm visuell) */
 .quiz-page .game-container {
     gap: 30px; /* Erhöht auf 30px, damit abzüglich der Schatten ca. 15px (0,4cm) sichtbar bleiben */

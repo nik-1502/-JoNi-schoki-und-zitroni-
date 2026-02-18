@@ -5,29 +5,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Herz in Menschenform</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20260218a">
     <link rel="apple-touch-icon" href="images/home-Icon.png">
     <style>
         /* Fullscreen-Leisten auch auf Laptop/iPad sichtbar machen */
         .fullscreen-top-bar {
             position: fixed; top: 20px; left: 0; width: 100%;
-            display: flex; justify-content: center; gap: 15px; z-index: 200;
+            display: flex; justify-content: center; gap: 8px; z-index: 200;
             pointer-events: auto;
+            padding: 0 10px; box-sizing: border-box;
         }
         .fullscreen-top-bar button { pointer-events: auto; }
 
         .fullscreen-bottom-bar {
             position: fixed; bottom: 20px; left: 0; width: 100%;
-            display: flex; justify-content: center; flex-wrap: nowrap; gap: 10px; z-index: 200;
+            display: flex; justify-content: center; flex-wrap: nowrap; gap: 8px; z-index: 200;
             pointer-events: auto;
             padding: 0 10px; box-sizing: border-box;
         }
+        .fullscreen-top-bar button,
         .fullscreen-bottom-bar button {
             pointer-events: auto;
-            flex: 1;
-            padding: 12px 0 !important;
+            flex: 1 1 0;
+            width: auto !important;
+            min-width: 0;
+            height: 46px;
+            margin: 0 !important;
+            padding: 0 8px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.1;
         }
-        .fullscreen-top-bar button { width: 120px; padding: 12px 0 !important; }
 
         @media (max-width: 768px) {
             body:not(.mode-fullscreen) #color-btn { display: none !important; }
@@ -57,23 +68,34 @@
             /* Fullscreen Layout für Mobile */
             .fullscreen-top-bar {
                 position: fixed; top: 20px; left: 0; width: 100%;
-                display: flex; justify-content: center; gap: 15px; z-index: 200;
+                display: flex; justify-content: center; gap: 8px; z-index: 200;
                 pointer-events: auto; /* Damit Klicks durchgehen, Buttons aktivieren pointer-events wieder */
+                padding: 0 10px; box-sizing: border-box;
             }
             .fullscreen-top-bar button { pointer-events: auto; }
             
             .fullscreen-bottom-bar {
                 position: fixed; bottom: 20px; left: 0; width: 100%;
-                display: flex; justify-content: center; flex-wrap: nowrap; gap: 10px; z-index: 200;
+                display: flex; justify-content: center; flex-wrap: nowrap; gap: 8px; z-index: 200;
                 pointer-events: auto;
                 padding: 0 10px; box-sizing: border-box;
             }
+            .fullscreen-top-bar button,
             .fullscreen-bottom-bar button { 
                 pointer-events: auto; 
-                flex: 1; 
-                padding: 12px 0 !important;
+                flex: 1 1 0;
+                width: auto !important;
+                min-width: 0;
+                height: 46px;
+                margin: 0 !important;
+                padding: 0 8px !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                font-size: 13px;
+                line-height: 1.1;
             }
-            .fullscreen-top-bar button { width: 120px; padding: 12px 0 !important; }
             .image-wrapper button {
                 margin-bottom: 350px !important;
             }
@@ -137,6 +159,7 @@
     <!-- Neue Struktur für Fullscreen -->
     <div class="fullscreen-top-bar" style="display: none;">
         <button id="save-btn" class="control-button">Speichern</button>
+        <button id="archive-btn" class="control-button">Archiv</button>
         <button id="clear-btn" class="control-button">Löschen</button>
         <button id="refresh-btn" class="control-button">◆</button>
         <button id="close-fullscreen-btn" class="control-button">Fertig</button>
@@ -180,7 +203,7 @@
     <!-- Globaler Refresh Button -->
     <button id="global-refresh-btn" class="floating-refresh-btn">◆</button>
 
-    <script src="script.js?v=20260218d"></script>
+    <script src="script.js?v=20260218q"></script>
     <script>
         // Kleines Script, um die Sichtbarkeit der neuen Bars zu steuern, da wir script.js nicht bearbeiten
         const observer = new MutationObserver((mutations) => {
@@ -206,6 +229,20 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

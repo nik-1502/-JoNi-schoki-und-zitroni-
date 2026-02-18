@@ -38,6 +38,9 @@ const Cloud = {
     holdLocalValue: function(key, value) {
         this.pendingWrites.set(key, { value: String(value), at: Date.now(), localOnly: true });
     },
+    clearPending: function(key) {
+        this.pendingWrites.delete(key);
+    },
     on: function(key, callback) {
         if (!this.listeners.has(key)) {
             this.listeners.set(key, new Set());
@@ -242,12 +245,18 @@ function initPaintApp() {
 
     // --- Zoom Helper & State ---
     let isZooming = false;
-    let zoomState = { startDist: 0, startScale: 1, startX: 0, startY: 0, initialTx: 0, initialTy: 0 };
+    let zoomState = { startDist: 0, startScale: 1, startX: 0, startY: 0, initialTx: 0, initialTy: 0, startAngle: 0, startRotation: 0 };
 
     function getDistance(touches) {
         const dx = touches[0].clientX - touches[1].clientX;
         const dy = touches[0].clientY - touches[1].clientY;
         return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function getAngle(touches) {
+        const dx = touches[1].clientX - touches[0].clientX;
+        const dy = touches[1].clientY - touches[0].clientY;
+        return Math.atan2(dy, dx);
     }
 
     function getCenter(touches) {
@@ -257,12 +266,13 @@ function initPaintApp() {
         };
     }
 
-    function updateCanvasTransform(canvas, x, y, scale) {
+    function updateCanvasTransform(canvas, x, y, scale, rotation = 0) {
         canvas.style.transformOrigin = '0 0';
-        canvas.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+        canvas.style.transform = `translate(${x}px, ${y}px) rotate(${rotation}deg) scale(${scale})`;
         canvas.dataset.scale = scale;
         canvas.dataset.tx = x;
         canvas.dataset.ty = y;
+        canvas.dataset.rotation = rotation;
     }
 
     function resetZoom(canvas) {
@@ -270,6 +280,16 @@ function initPaintApp() {
         delete canvas.dataset.scale;
         delete canvas.dataset.tx;
         delete canvas.dataset.ty;
+        delete canvas.dataset.rotation;
+    }
+
+    function getCanvasTransform(canvas) {
+        return {
+            scale: parseFloat(canvas.dataset.scale) || 1,
+            tx: parseFloat(canvas.dataset.tx) || 0,
+            ty: parseFloat(canvas.dataset.ty) || 0,
+            rotation: parseFloat(canvas.dataset.rotation) || 0
+        };
     }
 
     // Canvas-Größe an den Container anpassen
@@ -332,11 +352,19 @@ function initPaintApp() {
         jovelyn: { undo: [], redo: [] }
     };
 
+    function pushUndoSnapshot(user, canvas) {
+        if (!user || !canvas) return;
+        if (history[user].undo.length > 20) history[user].undo.shift();
+        history[user].undo.push(canvas.toDataURL());
+        history[user].redo = [];
+    }
+
     // --- DOM-Elemente ---
     const brushBtn = document.getElementById('brush-btn');
     const eraserBtn = document.getElementById('eraser-btn');
     const colorBtn = document.getElementById('color-btn');
     const saveBtn = document.getElementById('save-btn');
+    const archiveBtn = document.getElementById('archive-btn');
     const clearBtn = document.getElementById('clear-btn');
     const closeFullscreenBtn = document.getElementById('close-fullscreen-btn');
     const refreshBtn = document.getElementById('refresh-btn');
@@ -361,6 +389,320 @@ function initPaintApp() {
     const eraserFillToggle = document.getElementById('eraser-fill-toggle');
     const colorPalette = document.getElementById('color-palette');
     const customColorPicker = document.getElementById('custom-color');
+    const archiveStoragePrefix = `draw_archive${keySuffix}`;
+    const savedSnapshotSuffix = `_saved_snapshot${keySuffix}`;
+
+    function getArchiveKey(user) {
+        return `${archiveStoragePrefix}_${user}`;
+    }
+
+    function getSavedSnapshotKey(user) {
+        return `${user}${savedSnapshotSuffix}`;
+    }
+
+    function getArchiveItems(user) {
+        try {
+            const raw = localStorage.getItem(getArchiveKey(user));
+            const parsed = raw ? JSON.parse(raw) : [];
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (err) {
+            return [];
+        }
+    }
+
+    function setArchiveItems(user, items) {
+        localStorage.setItem(getArchiveKey(user), JSON.stringify(items));
+    }
+
+    function formatArchiveDate(ts) {
+        const dt = new Date(ts);
+        return dt.toLocaleString('de-DE');
+    }
+
+    function makeArchiveName() {
+        const now = new Date();
+        const datePart = now.toLocaleDateString('de-DE');
+        const timePart = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+        if (isDailyPage) {
+            const animalEl = document.getElementById('daily-animal-text');
+            const animalName = animalEl ? animalEl.textContent.trim() : '';
+            if (animalName && animalName.toLowerCase() !== 'lade...') {
+                return `${animalName} - ${datePart} ${timePart}`;
+            }
+        }
+        return `Bild ${datePart} ${timePart}`;
+    }
+
+    function dataUrlToBlob(dataUrl) {
+        const parts = dataUrl.split(',');
+        const mime = (parts[0].match(/:(.*?);/) || [])[1] || 'image/png';
+        const binary = atob(parts[1] || '');
+        const len = binary.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return new Blob([bytes], { type: mime });
+    }
+
+    function downloadDataUrl(dataUrl, filename) {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function sanitizeFileName(name) {
+        return (name || 'bild')
+            .replace(/[\\/:*?"<>|]/g, '-')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    async function shareArchiveImage(item) {
+        const safeName = sanitizeFileName(item.name) || 'bild';
+        const filename = `${safeName}.png`;
+        const blob = dataUrlToBlob(item.dataURL);
+        const file = new File([blob], filename, { type: 'image/png' });
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                title: item.name,
+                text: 'Gemaltes Bild',
+                files: [file]
+            });
+            return;
+        }
+        if (navigator.share) {
+            await navigator.share({
+                title: item.name,
+                text: 'Bild zum Speichern',
+                url: item.dataURL
+            });
+            return;
+        }
+        downloadDataUrl(item.dataURL, filename);
+    }
+
+    let saveGalleryModal = null;
+    let saveGalleryNameInput = null;
+    let saveGalleryList = null;
+    let saveGalleryHint = null;
+    let saveGalleryDetail = null;
+    let saveGalleryDetailImage = null;
+    let saveGalleryDetailTitle = null;
+    let saveGalleryDetailDate = null;
+    let saveGallerySelectedId = null;
+
+    function ensureSaveGalleryModal() {
+        if (saveGalleryModal) return;
+
+        const modal = document.createElement('div');
+        modal.id = 'save-gallery-modal';
+        modal.className = 'modal hidden save-gallery-modal';
+        modal.innerHTML = `
+            <div class="modal-content save-gallery-content">
+                <div class="save-gallery-header">
+                    <h3>Bild speichern</h3>
+                    <button id="save-gallery-close-btn" class="back-button">Schließen</button>
+                </div>
+                <input id="save-gallery-name-input" class="save-gallery-name-input" type="text" placeholder="Name für das Bild">
+                <div class="save-gallery-actions">
+                    <button id="save-gallery-store-btn" class="control-button">Im Archiv speichern</button>
+                </div>
+                <p id="save-gallery-hint" class="save-gallery-hint"></p>
+                <div id="save-gallery-list" class="save-gallery-list"></div>
+                <div id="save-gallery-detail" class="save-gallery-detail hidden">
+                    <button id="save-gallery-back-btn" class="back-button">Zurück</button>
+                    <img id="save-gallery-detail-image" class="save-gallery-detail-image" alt="Archivbild">
+                    <div class="save-gallery-detail-meta">
+                        <strong id="save-gallery-detail-title"></strong>
+                        <span id="save-gallery-detail-date"></span>
+                    </div>
+                    <div class="save-gallery-detail-actions">
+                        <button id="save-gallery-detail-load-btn" class="control-button">Laden</button>
+                        <button id="save-gallery-detail-share-btn" class="control-button">Teilen</button>
+                        <button id="save-gallery-detail-download-btn" class="control-button">Herunterladen</button>
+                        <button id="save-gallery-detail-delete-btn" class="control-button">Löschen</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        saveGalleryModal = modal;
+        saveGalleryNameInput = modal.querySelector('#save-gallery-name-input');
+        saveGalleryList = modal.querySelector('#save-gallery-list');
+        saveGalleryHint = modal.querySelector('#save-gallery-hint');
+        saveGalleryDetail = modal.querySelector('#save-gallery-detail');
+        saveGalleryDetailImage = modal.querySelector('#save-gallery-detail-image');
+        saveGalleryDetailTitle = modal.querySelector('#save-gallery-detail-title');
+        saveGalleryDetailDate = modal.querySelector('#save-gallery-detail-date');
+
+        const closeBtn = modal.querySelector('#save-gallery-close-btn');
+        const storeBtn = modal.querySelector('#save-gallery-store-btn');
+        const backBtn = modal.querySelector('#save-gallery-back-btn');
+        const loadBtn = modal.querySelector('#save-gallery-detail-load-btn');
+        const shareBtn = modal.querySelector('#save-gallery-detail-share-btn');
+        const downloadBtn = modal.querySelector('#save-gallery-detail-download-btn');
+        const deleteBtn = modal.querySelector('#save-gallery-detail-delete-btn');
+
+        closeBtn.addEventListener('click', closeSaveGalleryModal);
+        storeBtn.addEventListener('click', saveCurrentDrawingToArchive);
+        backBtn.addEventListener('click', showSaveGalleryListView);
+        loadBtn.addEventListener('click', () => loadArchiveImageToCanvas(saveGallerySelectedId));
+        shareBtn.addEventListener('click', () => shareArchiveImageById(saveGallerySelectedId));
+        downloadBtn.addEventListener('click', () => downloadArchiveImageById(saveGallerySelectedId));
+        deleteBtn.addEventListener('click', () => deleteArchiveImageById(saveGallerySelectedId));
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeSaveGalleryModal();
+        });
+    }
+
+    function showSaveGalleryListView() {
+        saveGallerySelectedId = null;
+        if (saveGalleryDetail) saveGalleryDetail.classList.add('hidden');
+        if (saveGalleryList) saveGalleryList.classList.remove('hidden');
+    }
+
+    function showSaveGalleryDetailView(item) {
+        if (!item) return;
+        saveGallerySelectedId = item.id;
+        saveGalleryDetailImage.src = item.dataURL;
+        saveGalleryDetailTitle.textContent = item.name;
+        saveGalleryDetailDate.textContent = formatArchiveDate(item.createdAt);
+        saveGalleryList.classList.add('hidden');
+        saveGalleryDetail.classList.remove('hidden');
+    }
+
+    function renderSaveGalleryList() {
+        ensureSaveGalleryModal();
+        if (!activeUser) {
+            saveGalleryList.innerHTML = '<p class="save-gallery-empty">Kein Malfeld aktiv.</p>';
+            showSaveGalleryListView();
+            return;
+        }
+
+        const items = getArchiveItems(activeUser).sort((a, b) => b.createdAt - a.createdAt);
+        if (!items.length) {
+            saveGalleryList.innerHTML = '<p class="save-gallery-empty">Noch keine gespeicherten Bilder.</p>';
+            showSaveGalleryListView();
+            return;
+        }
+
+        saveGalleryList.innerHTML = items.map((item) => `
+            <article class="save-gallery-item" data-id="${item.id}">
+                <button class="save-gallery-item-main" type="button">
+                    <img src="${item.dataURL}" alt="${escapeHtml(item.name)}" class="save-gallery-thumb">
+                    <div class="save-gallery-meta">
+                        <strong>${escapeHtml(item.name)}</strong>
+                    </div>
+                </button>
+            </article>
+        `).join('');
+
+        saveGalleryList.querySelectorAll('.save-gallery-item').forEach((card) => {
+            const id = card.dataset.id;
+            const open = () => showSaveGalleryDetailView(getArchiveItemById(id));
+            card.querySelector('.save-gallery-item-main').addEventListener('click', open);
+        });
+        showSaveGalleryListView();
+    }
+
+    function openSaveGalleryModal() {
+        ensureSaveGalleryModal();
+        saveGalleryHint.textContent = activeUser ? `Aktives Feld: ${activeUser}` : 'Bitte zuerst ein Feld öffnen.';
+        saveGalleryNameInput.value = makeArchiveName();
+        renderSaveGalleryList();
+        saveGalleryModal.classList.remove('hidden');
+    }
+
+    function closeSaveGalleryModal() {
+        if (!saveGalleryModal) return;
+        saveGalleryModal.classList.add('hidden');
+        showSaveGalleryListView();
+    }
+
+    function saveCurrentDrawingToArchive() {
+        if (!activeUser) return;
+
+        persistDrawingLocally(activeUser);
+        syncDrawingToCloud(activeUser);
+
+        const dataURL = localStorage.getItem(`${activeUser}_drawing${keySuffix}`);
+        if (!dataURL) return;
+
+        const items = getArchiveItems(activeUser);
+        const nextItem = {
+            id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            name: (saveGalleryNameInput.value || '').trim() || makeArchiveName(),
+            createdAt: Date.now(),
+            dataURL
+        };
+        items.unshift(nextItem);
+        setArchiveItems(activeUser, items.slice(0, 120));
+        renderSaveGalleryList();
+        saveGalleryHint.textContent = 'Bild gespeichert und synchronisiert.';
+    }
+
+    function getArchiveItemById(id) {
+        if (!activeUser) return null;
+        return getArchiveItems(activeUser).find((item) => item.id === id) || null;
+    }
+
+    function loadArchiveImageToCanvas(id) {
+        const item = getArchiveItemById(id);
+        if (!item || !activeUser) return;
+
+        const canvas = (activeUser === 'niklas') ? myCanvas : friendCanvas;
+        const ctx = canvas.getContext('2d');
+        pushUndoSnapshot(activeUser, canvas); // Vorherigen Stand für Undo sichern
+        const img = new Image();
+        img.src = item.dataURL;
+        img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            persistDrawingLocally(activeUser);
+            saveGalleryHint.textContent = 'Bild ins Malfeld geladen.';
+            closeSaveGalleryModal();
+        };
+    }
+
+    async function shareArchiveImageById(id) {
+        const item = getArchiveItemById(id);
+        if (!item) return;
+        try {
+            await shareArchiveImage(item);
+        } catch (err) {
+            // Abbruch durch User oder fehlende Plattformunterstützung
+        }
+    }
+
+    function downloadArchiveImageById(id) {
+        const item = getArchiveItemById(id);
+        if (!item) return;
+        const safeName = sanitizeFileName(item.name) || 'bild';
+        downloadDataUrl(item.dataURL, `${safeName}.png`);
+    }
+
+    function deleteArchiveImageById(id) {
+        if (!activeUser) return;
+        const items = getArchiveItems(activeUser).filter((item) => item.id !== id);
+        setArchiveItems(activeUser, items);
+        renderSaveGalleryList();
+        saveGalleryHint.textContent = 'Bild wurde aus dem Archiv gelöscht.';
+    }
 
     // --- Zeichenfunktionen ---
     function getEventPosition(canvas, e) {
@@ -402,25 +744,44 @@ function initPaintApp() {
         const dataURL = localStorage.getItem(`${user}_drawing${keySuffix}`) || '';
         Cloud.set(`${user}_drawing${keySuffix}`, dataURL);
         Cloud.set(`${user}_status${keySuffix}`, 'red');
+        localStorage.setItem(getSavedSnapshotKey(user), dataURL);
         drawingDirty[user] = false;
+    }
+
+    function rememberCurrentAsSavedSnapshot(user) {
+        const dataURL = localStorage.getItem(`${user}_drawing${keySuffix}`) || '';
+        localStorage.setItem(getSavedSnapshotKey(user), dataURL);
+    }
+
+    function discardUnsavedChanges(user) {
+        if (!user || !drawingDirty[user]) return;
+        const snapshot = localStorage.getItem(getSavedSnapshotKey(user));
+        if (snapshot === null) return;
+
+        localStorage.setItem(`${user}_drawing${keySuffix}`, snapshot);
+        lastDrawState[user] = null;
+        Cloud.clearPending(`${user}_drawing${keySuffix}`);
+        Cloud.clearPending(`${user}_status${keySuffix}`);
+        drawingDirty[user] = false;
+        drawFromStorage(user, true);
     }
 
     function startDrawing(e) {
         // Nur malen, wenn wir im Fullscreen sind und auf dem richtigen Canvas
         if (!document.body.classList.contains('mode-fullscreen')) return;
         
-        // --- Zoom Start (2 Finger) ---
+        // --- Zoom/Rotation Start (2 Finger) ---
         if (e.touches && e.touches.length === 2) {
+            e.preventDefault();
             isDrawing = false;
             isZooming = true;
             
             const dist = getDistance(e.touches);
             const center = getCenter(e.touches);
+            const angle = getAngle(e.touches);
             const canvas = e.target;
             
-            const currentScale = parseFloat(canvas.dataset.scale) || 1;
-            const currentTx = parseFloat(canvas.dataset.tx) || 0;
-            const currentTy = parseFloat(canvas.dataset.ty) || 0;
+            const { scale: currentScale, tx: currentTx, ty: currentTy, rotation: currentRotation } = getCanvasTransform(canvas);
             
             zoomState.startDist = dist;
             zoomState.startScale = currentScale;
@@ -428,20 +789,19 @@ function initPaintApp() {
             zoomState.startY = center.y;
             zoomState.initialTx = currentTx;
             zoomState.initialTy = currentTy;
+            zoomState.startAngle = angle;
+            zoomState.startRotation = currentRotation;
             return;
         }
         if (isZooming) return; // Nicht malen, wenn gezoomt wird
+        if (e.touches && e.touches.length !== 1) return;
 
         const canvas = e.target; // Das Canvas, auf das geklickt wurde
         const pos = getEventPosition(canvas, e);
 
         // Füll-Modus Logik
         if ((!isEraser && isFillMode) || (isEraser && isEraserFillMode)) {
-            if (activeUser) {
-                if (history[activeUser].undo.length > 20) history[activeUser].undo.shift();
-                history[activeUser].undo.push(canvas.toDataURL());
-                history[activeUser].redo = [];
-            }
+            pushUndoSnapshot(activeUser, canvas);
             floodFill(canvas, Math.floor(pos.x), Math.floor(pos.y), brushColor, isEraser);
             persistDrawingLocally(activeUser);
             return; // Nicht zeichnen, wenn gefüllt wird
@@ -451,25 +811,25 @@ function initPaintApp() {
         [lastX, lastY] = [pos.x, pos.y];
 
         // Zustand speichern für Undo (bevor der neue Strich beginnt)
-        if (activeUser) {
-            // Begrenzen auf z.B. 20 Schritte um Speicher zu sparen
-            if (history[activeUser].undo.length > 20) history[activeUser].undo.shift();
-            history[activeUser].undo.push(canvas.toDataURL());
-            history[activeUser].redo = []; // Redo-Stack leeren bei neuer Aktion
-        }
+        pushUndoSnapshot(activeUser, canvas);
     }
 
     function draw(e) {
-        // --- Zoom Move ---
+        // --- Zoom/Rotation Move ---
         if (isZooming && e.touches && e.touches.length === 2) {
             e.preventDefault();
             const dist = getDistance(e.touches);
             const center = getCenter(e.touches);
+            const angle = getAngle(e.touches);
             const canvas = e.target;
             
             const scaleMultiplier = dist / zoomState.startDist;
             let newScale = zoomState.startScale * scaleMultiplier;
             newScale = Math.max(1, Math.min(newScale, 5)); // Limit 1x - 5x
+            let newRotation = zoomState.startRotation + ((angle - zoomState.startAngle) * 180 / Math.PI);
+            if (newRotation > 180) newRotation -= 360;
+            if (newRotation < -180) newRotation += 360;
+            if (Math.abs(newRotation) < 4) newRotation = 0; // Automatisch gerade ausrichten
             
             // Berechnung der Verschiebung, damit der Punkt zwischen den Fingern fix bleibt
             const startCenterCanvasX = (zoomState.startX - zoomState.initialTx) / zoomState.startScale;
@@ -483,9 +843,10 @@ function initPaintApp() {
                 newScale = 1;
                 newTx = 0;
                 newTy = 0;
+                if (Math.abs(newRotation) < 12) newRotation = 0;
             }
             
-            updateCanvasTransform(canvas, newTx, newTy, newScale);
+            updateCanvasTransform(canvas, newTx, newTy, newScale, newRotation);
             return;
         }
 
@@ -543,6 +904,7 @@ function initPaintApp() {
     function stopDrawing(e) {
         if (isZooming && (!e.touches || e.touches.length < 2)) {
             isZooming = false;
+            isDrawing = false; // Erst nach neuem Touchstart wieder zeichnen
             return;
         }
         if (!isDrawing) return;
@@ -630,6 +992,28 @@ function initPaintApp() {
         canvas.addEventListener('touchstart', startDrawing, { passive: false });
         canvas.addEventListener('touchmove', draw, { passive: false });
         canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('wheel', (e) => {
+            if (!document.body.classList.contains('mode-fullscreen')) return;
+            const hoveredUser = (canvas === myCanvas) ? 'niklas' : 'jovelyn';
+            if (activeUser !== hoveredUser) return;
+
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const cursorX = e.clientX - rect.left;
+            const cursorY = e.clientY - rect.top;
+            const { scale, tx, ty, rotation } = getCanvasTransform(canvas);
+            const factor = e.deltaY < 0 ? 1.08 : 0.92;
+            let newScale = Math.max(1, Math.min(5, scale * factor));
+
+            let newTx = cursorX - ((cursorX - tx) / scale) * newScale;
+            let newTy = cursorY - ((cursorY - ty) / scale) * newScale;
+            if (newScale < 1.02) {
+                newScale = 1;
+                newTx = 0;
+                newTy = 0;
+            }
+            updateCanvasTransform(canvas, newTx, newTy, newScale, rotation);
+        }, { passive: false });
     });
 
     // --- Panel-Sichtbarkeit ---
@@ -879,6 +1263,8 @@ function initPaintApp() {
 
     // --- Speichern, Laden und Löschen ---
     function saveData() {
+        if (!activeUser) return;
+        persistDrawingLocally(activeUser);
         syncDrawingToCloud(activeUser);
         alert('Bild gespeichert und für die andere Person sichtbar!');
     }
@@ -892,6 +1278,9 @@ function initPaintApp() {
         // Das verhindert Flackern beim automatischen Neuladen
         if (!force && dataURL === lastDrawState[user]) return;
         lastDrawState[user] = dataURL;
+        if (!drawingDirty[user]) {
+            rememberCurrentAsSavedSnapshot(user);
+        }
         const token = ++drawRenderToken[user];
 
         if (!dataURL) {
@@ -915,9 +1304,7 @@ function initPaintApp() {
         
         const canvas = (activeUser === 'niklas') ? myCanvas : friendCanvas;
         // Zustand speichern für Undo
-        if (history[activeUser].undo.length > 20) history[activeUser].undo.shift();
-        history[activeUser].undo.push(canvas.toDataURL());
-        history[activeUser].redo = [];
+        pushUndoSnapshot(activeUser, canvas);
 
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -961,6 +1348,7 @@ function initPaintApp() {
     }
 
     function exitFullscreen() {
+        closeSaveGalleryModal();
         activeUser = null;
         document.querySelectorAll('.canvas-wrapper').forEach(el => el.classList.remove('fullscreen'));
         document.body.classList.remove('mode-fullscreen');
@@ -984,13 +1372,12 @@ function initPaintApp() {
     wrapperJovelyn.addEventListener('click', () => { if(!activeUser) enterFullscreen('jovelyn'); });
     addTouchBtn(closeFullscreenBtn, (e) => {
         e.stopPropagation();
-        if (activeUser && drawingDirty[activeUser]) {
-            syncDrawingToCloud(activeUser);
-        }
+        if (activeUser) discardUnsavedChanges(activeUser);
         exitFullscreen();
     });
 
     addTouchBtn(saveBtn, saveData);
+    if (archiveBtn) addTouchBtn(archiveBtn, (e) => { e.stopPropagation(); openSaveGalleryModal(); });
     addTouchBtn(clearBtn, clearCanvas);
     
     if (refreshBtn) {
