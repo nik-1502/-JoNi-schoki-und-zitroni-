@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!-- SEITE 1: Startseite -->
 <html lang="de">
 <head>
@@ -54,7 +54,7 @@
                 order: 1 !important;
                 width: 100% !important;
             }
-            /* Fullscreen Layout für Mobile */
+            /* Fullscreen Layout fÃ¼r Mobile */
             .fullscreen-top-bar {
                 position: fixed; top: 20px; left: 0; width: 100%;
                 display: flex; justify-content: center; gap: 15px; z-index: 200;
@@ -130,15 +130,15 @@
         </div>
     </div>
 
-    <!-- Controls: Standardmäßig versteckt, werden per JS/CSS im Fullscreen angezeigt -->
-    <!-- Alte .controls Klasse behalten wir für Desktop-Kompatibilität, aber im Mobile-Fullscreen nutzen wir die neuen Container -->
+    <!-- Controls: StandardmÃ¤ÃŸig versteckt, werden per JS/CSS im Fullscreen angezeigt -->
+    <!-- Alte .controls Klasse behalten wir fÃ¼r Desktop-KompatibilitÃ¤t, aber im Mobile-Fullscreen nutzen wir die neuen Container -->
     <div class="controls" style="display: none;"></div>
 
-    <!-- Neue Struktur für Fullscreen -->
+    <!-- Neue Struktur fÃ¼r Fullscreen -->
     <div class="fullscreen-top-bar" style="display: none;">
         <button id="save-btn" class="control-button">Speichern</button>
-        <button id="clear-btn" class="control-button">Löschen</button>
-        <button id="refresh-btn" class="control-button">🔄</button>
+        <button id="clear-btn" class="control-button">LÃ¶schen</button>
+        <button id="refresh-btn" class="control-button">◆</button>
         <button id="close-fullscreen-btn" class="control-button">Fertig</button>
     </div>
 
@@ -146,31 +146,31 @@
         <button id="color-btn" class="control-button">Farbe</button>
         <button id="brush-btn" class="control-button">Pinsel</button>
         <button id="eraser-btn" class="control-button">Radierer</button>
-        <button id="undo-btn" class="control-button">↩</button>
-        <button id="redo-btn" class="control-button">↪</button>
-        <!-- Löschen Button optional, falls noch gewünscht: <button id="clear-btn" class="control-button">Löschen</button> -->
+        <button id="undo-btn" class="control-button">â†©</button>
+        <button id="redo-btn" class="control-button">â†ª</button>
+        <!-- LÃ¶schen Button optional, falls noch gewÃ¼nscht: <button id="clear-btn" class="control-button">LÃ¶schen</button> -->
     </div>
 
     <!-- Panels (Pinsel/Farbe) bleiben gleich, werden per JS gesteuert -->
     <div id="brush-panel" class="panel hidden">
-        <!-- Inhalt wird per JS gefüllt oder ist statisch in script.js referenziert, hier Struktur beibehalten -->
-        <div class="panel-header"><h3>Pinsel</h3><button id="brush-back-btn" class="back-button">Schließen</button></div>
+        <!-- Inhalt wird per JS gefÃ¼llt oder ist statisch in script.js referenziert, hier Struktur beibehalten -->
+        <div class="panel-header"><h3>Pinsel</h3><button id="brush-back-btn" class="back-button">SchlieÃŸen</button></div>
         <div class="panel-content">
-            <div class="setting"><label for="fill-toggle">Füllen:</label><input type="checkbox" id="fill-toggle" style="width: 24px; height: 24px;"></div>
-            <div class="setting"><label>Größe:</label><input type="range" id="brush-size" min="1" max="100" value="5"><span id="brush-size-value">5</span></div>
+            <div class="setting"><label for="fill-toggle">FÃ¼llen:</label><input type="checkbox" id="fill-toggle" style="width: 24px; height: 24px;"></div>
+            <div class="setting"><label>GrÃ¶ÃŸe:</label><input type="range" id="brush-size" min="1" max="100" value="5"><span id="brush-size-value">5</span></div>
             <div class="setting"><label>Transparenz:</label><input type="range" id="brush-opacity" min="0.1" max="1" step="0.1" value="1"><span id="brush-opacity-value">1.0</span></div>
         </div>
     </div>
     <div id="eraser-panel" class="panel hidden">
-        <div class="panel-header"><h3>Radierer</h3><button id="eraser-back-btn" class="back-button">Schließen</button></div>
+        <div class="panel-header"><h3>Radierer</h3><button id="eraser-back-btn" class="back-button">SchlieÃŸen</button></div>
         <div class="panel-content">
-            <div class="setting"><label for="eraser-fill-toggle">Bereich löschen:</label><input type="checkbox" id="eraser-fill-toggle" style="width: 24px; height: 24px;"></div>
-            <div class="setting"><label>Größe:</label><input type="range" id="eraser-size" min="1" max="100" value="20"><span id="eraser-size-value">20</span></div>
+            <div class="setting"><label for="eraser-fill-toggle">Bereich lÃ¶schen:</label><input type="checkbox" id="eraser-fill-toggle" style="width: 24px; height: 24px;"></div>
+            <div class="setting"><label>GrÃ¶ÃŸe:</label><input type="range" id="eraser-size" min="1" max="100" value="20"><span id="eraser-size-value">20</span></div>
             <div class="setting"><label>Transparenz:</label><input type="range" id="eraser-opacity" min="0.1" max="1" step="0.1" value="1"><span id="eraser-opacity-value">1.0</span></div>
         </div>
     </div>
     <div id="color-panel" class="panel hidden">
-        <div class="panel-header"><h3>Farbe</h3><button id="color-back-btn" class="back-button">Schließen</button></div>
+        <div class="panel-header"><h3>Farbe</h3><button id="color-back-btn" class="back-button">SchlieÃŸen</button></div>
         <div class="panel-content">
             <div class="setting" style="justify-content: center; margin-bottom: 15px;"><label for="custom-color">Eigene Farbe:</label><input type="color" id="custom-color" value="#000000"></div>
             <div id="color-palette"></div>
@@ -178,7 +178,7 @@
     </div>
 
     <!-- Globaler Refresh Button -->
-    <button id="global-refresh-btn" class="floating-refresh-btn">🔄</button>
+    <button id="global-refresh-btn" class="floating-refresh-btn">◆</button>
 
     <script src="script.js"></script>
     <script>
@@ -193,7 +193,7 @@
                         topBar.style.display = isFullscreen ? 'flex' : 'none';
                         bottomBar.style.display = isFullscreen ? 'flex' : 'none';
                     }
-                    // Panels müssen im Fullscreen auch sichtbar sein, wenn aktiviert
+                    // Panels mÃ¼ssen im Fullscreen auch sichtbar sein, wenn aktiviert
                     if (!isFullscreen) {
                         document.getElementById('brush-panel').classList.add('hidden');
                         document.getElementById('color-panel').classList.add('hidden');
@@ -206,3 +206,5 @@
     </script>
 </body>
 </html>
+
+

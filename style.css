@@ -654,7 +654,7 @@ body.mode-fullscreen .control-button {
     bottom: 20px;
     right: 20px;
     background-color: #89CFF0; /* Fallback */
-    color: white;
+    color: #0b3b52;
     border: none !important;
     border-radius: 50%;
     width: 35px;
@@ -667,11 +667,11 @@ body.mode-fullscreen .control-button {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.2s, background-color 0.2s;
+    transition: transform 0.2s, filter 0.2s;
 }
 
 .floating-refresh-btn:hover {
-    background-color: #5CA3C4; /* Etwas dunkler beim Hover */
+    filter: brightness(0.92);
     transform: scale(1.1);
 }
 
@@ -684,16 +684,20 @@ body.mode-fullscreen .floating-refresh-btn {
 /* Anpassung an die Hintergrundfarbe der jeweiligen Seite */
 body.home-page .floating-refresh-btn {
     background-color: #00BFFF; /* DeepSkyBlue - wie Hintergrund */
+    color: #003b53;
 }
 
 body.paint-page .floating-refresh-btn {
     background-color: rgb(205, 170, 125); /* BurlyWood - wie Hintergrund */
+    color: rgb(90, 55, 30);
 }
 
 body.quiz-page .floating-refresh-btn {
     background-color: rgb(90, 20, 190); /* Lila - wie Hintergrund */
+    color: rgb(245, 230, 255);
 }
 
 body.games-page .floating-refresh-btn {
     background-color: rgb(255, 140, 0); /* Orange - passend zum Container-Inhalt */
+    color: rgb(95, 45, 0);
 }
