@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
 
 /* Generelle Stile */
 :root {
@@ -17,14 +17,14 @@ body {
     background-color: var(--light-grey);
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Mindesthöhe, um Scrollen zu ermöglichen */
+    min-height: 100vh; /* MindesthÃ¶he, um Scrollen zu ermÃ¶glichen */
     width: 100vw; /* Volle Breite */
     overflow-x: hidden; /* Verhindert horizontales Scrollen (rechter Teil weg) */
 }
 
-/* Seiten-spezifische Hintergründe */
+/* Seiten-spezifische HintergrÃ¼nde */
 body.home-page {
-    background-color: #00BFFF; /* Gesättigtes Babyblau (DeepSkyBlue) */
+    background-color: #00BFFF; /* GesÃ¤ttigtes Babyblau (DeepSkyBlue) */
 }
 
 body.games-page {
@@ -38,7 +38,7 @@ body.quiz-page {
 
 /* Blue background for fullscreen painting */
 body.mode-fullscreen {
-    /* Hintergrundfarbe wird jetzt vom Overlay übernommen */
+    /* Hintergrundfarbe wird jetzt vom Overlay Ã¼bernommen */
 }
 
 /* Overlay, das alles andere verdeckt (Buttons, Text, etc.) */
@@ -50,7 +50,7 @@ body.mode-fullscreen::before {
     width: 100%;
     height: 100%;
     background-color: #333333; /* Dunkelgrau */
-    z-index: 35; /* Liegt über dem Inhalt, aber unter dem Malfeld (z-index 40) */
+    z-index: 35; /* Liegt Ã¼ber dem Inhalt, aber unter dem Malfeld (z-index 40) */
 }
 
 body.paint-page {
@@ -109,7 +109,7 @@ body.quiz-page .controls {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between; /* Verteilt Platz gleichmäßig */
+    justify-content: space-between; /* Verteilt Platz gleichmÃ¤ÃŸig */
     height: 100%;
     text-align: center;
     padding: 10px 20px 20px 20px;
@@ -118,11 +118,11 @@ body.quiz-page .controls {
 
 h1 {
     font-family: 'Dancing Script', cursive;
-    color: #00BFFF; /* Gesättigtes Blau */
+    color: #00BFFF; /* GesÃ¤ttigtes Blau */
     font-size: 6rem;
 }
 
-/* Überschrift auf Startseite anpassen, damit sie sichtbar ist */
+/* Ãœberschrift auf Startseite anpassen, damit sie sichtbar ist */
 body.home-page h1 {
     color: var(--white);
     -webkit-text-stroke: 0.08cm black;
@@ -169,8 +169,8 @@ body.home-page h1 {
     width: 100%;
     gap: 15px; /* Abstand zwischen Spalten */
     justify-content: space-between;
-    /* flex: 1; entfernt, um natürliche Höhe zu erlauben */
-    min-height: 0; /* Wichtig für Flexbox-Scaling */
+    /* flex: 1; entfernt, um natÃ¼rliche HÃ¶he zu erlauben */
+    min-height: 0; /* Wichtig fÃ¼r Flexbox-Scaling */
 }
 
 .col {
@@ -205,7 +205,7 @@ body.home-page h1 {
 /* Chat Textarea */
 .chat-input {
     width: 100%;
-    height: 200px; /* Doppelte Höhe */
+    height: 200px; /* Doppelte HÃ¶he */
     border: 6px solid #8B4513; /* Brauner Rahmen (doppelt so breit) */
     border-radius: 8px;
     padding: 8px;
@@ -216,7 +216,7 @@ body.home-page h1 {
 
 .name-button {
     width: 100%;
-    background-color: rgb(0, 180, 0); /* Gesättigtes Grün */
+    background-color: rgb(0, 180, 0); /* GesÃ¤ttigtes GrÃ¼n */
     color: #fff;
     text-align: center;
     padding: 20px;
@@ -228,9 +228,9 @@ body.home-page h1 {
     cursor: default;
 }
 
-/* Dunkelgrüner Rand für die Buttons auf der Startseite */
+/* DunkelgrÃ¼ner Rand fÃ¼r die Buttons auf der Startseite */
 body.home-page .name-button {
-    border: 6px solid #1a3310; /* Dunkelgrün */
+    border: 6px solid #1a3310; /* DunkelgrÃ¼n */
 }
 
 /* Quiz-spezifische Farben */
@@ -239,7 +239,7 @@ body.home-page .name-button {
     font-size: 2.5rem;
 }
 
-/* Umrandung für Quiz-Elemente (angepasst) */
+/* Umrandung fÃ¼r Quiz-Elemente (angepasst) */
 .quiz-page .name-button,
 .quiz-page .canvas-wrapper {
     box-shadow: 0 0 0 7.5px rgb(38, 26, 60);
@@ -248,7 +248,7 @@ body.home-page .name-button {
 /* Spiel-Layout */
 .game-container {
     display: flex;
-    width: 100%; /* Wird jetzt über .row gesteuert */
+    width: 100%; /* Wird jetzt Ã¼ber .row gesteuert */
     gap: 10px; /* Abstand zwischen den Feldern */
     flex-direction: column; /* Standard: Untereinander (Handy) */
 }
@@ -261,7 +261,7 @@ body.home-page .name-button {
     border-radius: 8px; /* Abgerundete Ecken wie bei Nachrichten */
     box-sizing: border-box;
     background: var(--white);
-    height: auto; /* Höhe passt sich der Breite an */
+    height: auto; /* HÃ¶he passt sich der Breite an */
     aspect-ratio: 1 / 1; /* Quadratisch */
     overflow: hidden; /* Damit die Ecken auch beim Canvas rund bleiben */
 }
@@ -294,7 +294,7 @@ canvas {
     width: 100%;
     height: 100%;
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0v24M0 12h24" stroke="black" stroke-width="2"/></svg>') 12 12, crosshair;
-    touch-action: none; /* Verhindert Page-Scrolling beim Malen auf Touch-Geräten */
+    touch-action: none; /* Verhindert Page-Scrolling beim Malen auf Touch-GerÃ¤ten */
 }
 
 /* Steuerungsleiste */
@@ -310,7 +310,7 @@ canvas {
     z-index: 50;
 }
 
-/* Controls auf der Startseite standardmäßig ausblenden */
+/* Controls auf der Startseite standardmÃ¤ÃŸig ausblenden */
 body.home-page .controls {
     display: none;
 }
@@ -391,7 +391,7 @@ body.home-page.mode-fullscreen .controls {
 .color-swatch {
     width: 100%;
     aspect-ratio: 1 / 1; /* Quadratisch */
-    border-radius: 4px; /* Leicht abgerundete Ecken für quadratischen Look */
+    border-radius: 4px; /* Leicht abgerundete Ecken fÃ¼r quadratischen Look */
     cursor: pointer;
     border: 3px solid transparent;
     transition: transform 0.2s, border-color 0.2s;
@@ -449,36 +449,41 @@ body.mode-fullscreen .control-button {
 @media (min-width: 768px) {
     .game-container { flex-direction: row; } /* Nebeneinander auf Desktop */
     .control-button { font-size: 18px; }
-    .back-link { display: none; } /* Zurück-Button auf Desktop ausblenden */
+    .back-link { display: none; } /* ZurÃ¼ck-Button auf Desktop ausblenden */
 
     .panel {
-        width: 450px;
+        position: fixed;
+        width: min(92vw, 450px);
         max-height: 70vh;
+        top: 50%;
         left: 50%;
-        bottom: 80px; /* Position über der Steuerungsleiste */
-        transform: translate(-50%, 120%);
+        bottom: auto;
+        transform: translate(-50%, -50%);
         border-radius: 10px;
         border: 1px solid var(--border-color);
+        z-index: 300;
     }
     .panel.hidden {
-        transform: translate(-50%, 120%);
+        transform: translate(-50%, -50%);
         opacity: 0;
         pointer-events: none;
+        display: none;
     }
     .panel.visible { /* Eigene Klasse für Sichtbarkeit auf Desktop */
-        transform: translate(-50%, 0);
+        transform: translate(-50%, -50%);
         opacity: 1;
         pointer-events: auto;
+        display: flex;
     }
 }
 
-/* Container für Malfeld + Punkt (nebeneinander) */
+/* Container fÃ¼r Malfeld + Punkt (nebeneinander) */
 .field-with-dot {
     display: flex;
     align-items: center;
     width: 100%;
     height: 100%;
-    flex: 1; /* Füllt den verfügbaren Platz */
+    flex: 1; /* FÃ¼llt den verfÃ¼gbaren Platz */
 }
 
 .field-with-dot .canvas-wrapper {
@@ -487,7 +492,7 @@ body.mode-fullscreen .control-button {
 
 .field-with-dot .status-dot {
     margin: 0 10px; /* Abstand zwischen Punkt und Feld */
-    flex-shrink: 0; /* Punkt wird nicht zusammengedrückt */
+    flex-shrink: 0; /* Punkt wird nicht zusammengedrÃ¼ckt */
 }
 
 /* Quiz Spalten Layout */
@@ -539,7 +544,7 @@ body.mode-fullscreen .control-button {
 .modal-content {
     background: var(--white);
     padding: 20px;
-    border: 6px solid #8B4513; /* Brauner Rahmen wie gewünscht */
+    border: 6px solid #8B4513; /* Brauner Rahmen wie gewÃ¼nscht */
     border-radius: 8px;
     width: 90%;
     max-width: 500px;
@@ -554,16 +559,16 @@ body.mode-fullscreen .control-button {
     border-color: rgb(38, 26, 60);
 }
 
-/* Abstände auf der Quiz-Seite anpassen (0,4cm visuell) */
+/* AbstÃ¤nde auf der Quiz-Seite anpassen (0,4cm visuell) */
 .quiz-page .game-container {
-    gap: 30px; /* Erhöht auf 30px, damit abzüglich der Schatten ca. 15px (0,4cm) sichtbar bleiben */
+    gap: 30px; /* ErhÃ¶ht auf 30px, damit abzÃ¼glich der Schatten ca. 15px (0,4cm) sichtbar bleiben */
 }
 
 .quiz-page .name-button {
-    margin-bottom: 30px; /* Erhöht auf 30px für gleichmäßigen visuellen Abstand */
+    margin-bottom: 30px; /* ErhÃ¶ht auf 30px fÃ¼r gleichmÃ¤ÃŸigen visuellen Abstand */
 }
 
-/* Container für die runden Spiel-Buttons */
+/* Container fÃ¼r die runden Spiel-Buttons */
 .game-selection-container {
     display: flex;
     justify-content: center;
@@ -572,13 +577,13 @@ body.mode-fullscreen .control-button {
     flex-wrap: wrap;
 }
 
-/* Spezifisches Design für die Spiele-Seite */
+/* Spezifisches Design fÃ¼r die Spiele-Seite */
 .games-page .button {
     background-color: #007bff; /* Blau */
     width: 200px;
     height: 200px;
     border-radius: 50%; /* rund */
-    font-size: 2.5rem; /* größere Schrift */
+    font-size: 2.5rem; /* grÃ¶ÃŸere Schrift */
     font-family: 'Dancing Script', cursive;
     display: flex;
     align-items: center;
@@ -605,7 +610,7 @@ body.mode-fullscreen .control-button {
         top: 50%;
         left: 50%;
         bottom: auto;
-        transform: translate(-50%, -50%) !important; /* Überschreibt translateY */
+        transform: translate(-50%, -50%) !important; /* Ãœberschreibt translateY */
         width: 85%;
         max-width: 300px;
         height: auto;
@@ -613,22 +618,22 @@ body.mode-fullscreen .control-button {
         border-radius: 15px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         border: 2px solid #8B4513; /* Passend zum Design */
-        z-index: 300; /* Über den Controls */
+        z-index: 300; /* Ãœber den Controls */
     }
     
     .panel.hidden {
         display: none;
     }
     
-    /* Verstecke die Menüleisten, wenn ein Panel offen ist */
+    /* Verstecke die MenÃ¼leisten, wenn ein Panel offen ist */
     body.has-open-panel .fullscreen-top-bar,
     body.has-open-panel .fullscreen-bottom-bar {
         display: none !important;
     }
 
-    /* Mobile Anpassungen für Layout & Größen */
+    /* Mobile Anpassungen fÃ¼r Layout & GrÃ¶ÃŸen */
     h1 {
-        font-size: 3.5rem; /* Überschrift auf Startseite verkleinern */
+        font-size: 3.5rem; /* Ãœberschrift auf Startseite verkleinern */
     }
 
     /* Padding auf Games/Quiz Seiten reduzieren, damit mehr Platz ist */
@@ -679,7 +684,6 @@ body.mode-fullscreen .control-button {
 body.mode-fullscreen .floating-refresh-btn {
     display: none;
 }
-}
 
 /* Anpassung an die Hintergrundfarbe der jeweiligen Seite */
 body.home-page .floating-refresh-btn {
@@ -701,3 +705,4 @@ body.games-page .floating-refresh-btn {
     background-color: rgb(255, 140, 0); /* Orange - passend zum Container-Inhalt */
     color: rgb(95, 45, 0);
 }
+

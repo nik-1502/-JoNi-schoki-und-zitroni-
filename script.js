@@ -1,5 +1,5 @@
-// --- SERVER KONFIGURATION ---
-// Damit die Synchronisation über Geräte hinweg funktioniert:
+﻿// --- SERVER KONFIGURATION ---
+// Damit die Synchronisation Ã¼ber GerÃ¤te hinweg funktioniert:
 // Synchronisierung laeuft ueber die API unter /api/state.
 // Frontend und API werden gemeinsam vom Render-Webservice ausgeliefert.
 const Cloud = {
@@ -72,7 +72,7 @@ const Cloud = {
 document.addEventListener('DOMContentLoaded', () => {
     Cloud.init(); // Server-Sync starten
 
-    // Führe die App aus, wenn Canvas vorhanden ist (jetzt auf index.html)
+    // FÃ¼hre die App aus, wenn Canvas vorhanden ist (jetzt auf index.html)
     if (document.getElementById('niklas-canvas')) {
         initPaintApp();
         initDashboard();
@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initQuizApp();
     }
 
-    // Logik für den globalen Refresh-Button
+    // Logik fÃ¼r den globalen Refresh-Button
     const globalRefreshBtn = document.getElementById('global-refresh-btn');
     if (globalRefreshBtn) {
         globalRefreshBtn.addEventListener('click', (e) => {
@@ -113,7 +113,7 @@ function initDashboard() {
         if (text !== null) textAreas[user].value = text;
     }
 
-    // Event Listener für Text
+    // Event Listener fÃ¼r Text
     Object.keys(textAreas).forEach(user => {
         textAreas[user].addEventListener('input', () => saveText(user));
         loadText(user); // Beim Start laden
@@ -127,7 +127,7 @@ function initDashboard() {
         });
     });
 
-    // --- Storage Event für Live-Sync (Text & GIFs) ---
+    // --- Storage Event fÃ¼r Live-Sync (Text & GIFs) ---
     window.addEventListener('storage', (e) => {
         if (e.key.endsWith('_text')) {
             const user = e.key.split('_')[0];
@@ -135,8 +135,8 @@ function initDashboard() {
         }
     });
 
-    // --- NEU: Regelmäßiges Neuladen (Polling) ---
-    // Prüft alle 2 Sekunden auf neue Texte, falls die 'storage' Events klemmen (häufig bei iOS PWAs)
+    // --- NEU: RegelmÃ¤ÃŸiges Neuladen (Polling) ---
+    // PrÃ¼ft alle 2 Sekunden auf neue Texte, falls die 'storage' Events klemmen (hÃ¤ufig bei iOS PWAs)
     setInterval(() => {
         Object.keys(textAreas).forEach(user => {
             // Nur aktualisieren, wenn man gerade NICHT selbst in dieses Feld schreibt
@@ -146,7 +146,7 @@ function initDashboard() {
         });
     }, 2000);
 
-    // Update beim Wechseln des Tabs oder Öffnen der App
+    // Update beim Wechseln des Tabs oder Ã–ffnen der App
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
             Object.keys(textAreas).forEach(user => loadText(user));
@@ -202,9 +202,9 @@ function initPaintApp() {
         delete canvas.dataset.ty;
     }
 
-    // Canvas-Größe an den Container anpassen
+    // Canvas-GrÃ¶ÃŸe an den Container anpassen
     function resizeCanvases() {
-        const pixelRatio = 2; // Erhöhte Auflösung für feineres Malen
+        const pixelRatio = 2; // ErhÃ¶hte AuflÃ¶sung fÃ¼r feineres Malen
 
         [myCanvas, friendCanvas].forEach(canvas => {
             const wrapper = canvas.parentElement;
@@ -219,10 +219,10 @@ function initPaintApp() {
             if (canvas.width !== newWidth || canvas.height !== newHeight) {
                 canvas.width = newWidth;
                 canvas.height = newHeight;
-                resetZoom(canvas); // Zoom zurücksetzen bei Größenänderung
+                resetZoom(canvas); // Zoom zurÃ¼cksetzen bei GrÃ¶ÃŸenÃ¤nderung
             }
         });
-        // Gespeicherte Bilder nach Größenänderung neu laden
+        // Gespeicherte Bilder nach GrÃ¶ÃŸenÃ¤nderung neu laden
         drawFromStorage('niklas');
         drawFromStorage('jovelyn');
     }
@@ -235,7 +235,7 @@ function initPaintApp() {
     let lastY = 0;
     let activeUser = null; // 'niklas' oder 'jovelyn'
     
-    // Geräte-ID für Status-Logik (Erstellt eine zufällige ID pro Browser)
+    // GerÃ¤te-ID fÃ¼r Status-Logik (Erstellt eine zufÃ¤llige ID pro Browser)
     const deviceId = localStorage.getItem('deviceId') || Math.random().toString(36).substr(2, 9);
     localStorage.setItem('deviceId', deviceId);
 
@@ -249,10 +249,10 @@ function initPaintApp() {
     let eraserOpacity = 1;
     let isEraserFillMode = false;
 
-    // Cache für den letzten Zeichenstatus, um Flackern beim Neuladen zu verhindern
+    // Cache fÃ¼r den letzten Zeichenstatus, um Flackern beim Neuladen zu verhindern
     const lastDrawState = { niklas: null, jovelyn: null };
 
-    // --- History für Undo/Redo ---
+    // --- History fÃ¼r Undo/Redo ---
     const history = {
         niklas: { undo: [], redo: [] },
         jovelyn: { undo: [], redo: [] }
@@ -351,7 +351,7 @@ function initPaintApp() {
         const canvas = e.target; // Das Canvas, auf das geklickt wurde
         const pos = getEventPosition(canvas, e);
 
-        // Füll-Modus Logik
+        // FÃ¼ll-Modus Logik
         if ((!isEraser && isFillMode) || (isEraser && isEraserFillMode)) {
             if (activeUser) {
                 if (history[activeUser].undo.length > 20) history[activeUser].undo.shift();
@@ -360,13 +360,13 @@ function initPaintApp() {
             }
             floodFill(canvas, Math.floor(pos.x), Math.floor(pos.y), brushColor, isEraser);
             syncDrawingSilently();
-            return; // Nicht zeichnen, wenn gefüllt wird
+            return; // Nicht zeichnen, wenn gefÃ¼llt wird
         }
 
         isDrawing = true;
         [lastX, lastY] = [pos.x, pos.y];
 
-        // Zustand speichern für Undo (bevor der neue Strich beginnt)
+        // Zustand speichern fÃ¼r Undo (bevor der neue Strich beginnt)
         if (activeUser) {
             // Begrenzen auf z.B. 20 Schritte um Speicher zu sparen
             if (history[activeUser].undo.length > 20) history[activeUser].undo.shift();
@@ -394,7 +394,7 @@ function initPaintApp() {
             let newTx = center.x - startCenterCanvasX * newScale;
             let newTy = center.y - startCenterCanvasY * newScale;
             
-            // Zurücksetzen auf 100% wenn nahe dran
+            // ZurÃ¼cksetzen auf 100% wenn nahe dran
             if (newScale < 1.05) {
                 newScale = 1;
                 newTx = 0;
@@ -406,7 +406,7 @@ function initPaintApp() {
         }
 
         if (!isDrawing) return;
-        e.preventDefault(); // Verhindert Scrollen während des Zeichnens
+        e.preventDefault(); // Verhindert Scrollen wÃ¤hrend des Zeichnens
 
         const canvas = e.target;
         const ctx = canvas.getContext('2d');
@@ -422,7 +422,7 @@ function initPaintApp() {
         const dy = y2 - y1;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        ctx.save(); // Zustand speichern (für Composite Operation)
+        ctx.save(); // Zustand speichern (fÃ¼r Composite Operation)
         
         if (isEraser) {
             ctx.globalCompositeOperation = 'destination-out'; // Radieren (Transparent machen)
@@ -452,7 +452,7 @@ function initPaintApp() {
             );
         }
         
-        ctx.restore(); // Zustand wiederherstellen (damit nächstes Mal normal gemalt wird)
+        ctx.restore(); // Zustand wiederherstellen (damit nÃ¤chstes Mal normal gemalt wird)
         [lastX, lastY] = [pos.x, pos.y];
     }
 
@@ -464,7 +464,7 @@ function initPaintApp() {
         if (!isDrawing) return;
         isDrawing = false;
         syncDrawingSilently();
-        // Pfad beenden nicht zwingend nötig bei dieser Logik, aber sauber
+        // Pfad beenden nicht zwingend nÃ¶tig bei dieser Logik, aber sauber
     }
 
     // --- Flood Fill Algorithmus ---
@@ -492,7 +492,7 @@ function initPaintApp() {
         if (!erase && startR === r && startG === g && startB === b && startA === a) return;
         if (erase && startA === 0) return; // Bereits transparent
 
-        // Toleranz für Anti-Aliasing (Lücken vermeiden)
+        // Toleranz fÃ¼r Anti-Aliasing (LÃ¼cken vermeiden)
         const tolerance = 60; 
 
         const stack = [[startX, startY]];
@@ -508,7 +508,7 @@ function initPaintApp() {
 
             if (x < 0 || x >= width || y < 0 || y >= height) continue;
             
-            // Prüfen ob Pixel innerhalb der Toleranz zur Startfarbe liegt
+            // PrÃ¼fen ob Pixel innerhalb der Toleranz zur Startfarbe liegt
             const matchesStartColor = Math.abs(data[pos] - startR) <= tolerance &&
                 Math.abs(data[pos + 1] - startG) <= tolerance &&
                 Math.abs(data[pos + 2] - startB) <= tolerance &&
@@ -536,7 +536,7 @@ function initPaintApp() {
         ctx.putImageData(imageData, 0, 0);
     }
 
-    // --- Event-Listener für das Zeichnen ---
+    // --- Event-Listener fÃ¼r das Zeichnen ---
     [myCanvas, friendCanvas].forEach(canvas => {
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
@@ -550,40 +550,49 @@ function initPaintApp() {
 
     // --- Panel-Sichtbarkeit ---
     function togglePanel(panel, show) {
+        if (!panel) return;
+        const allPanels = document.querySelectorAll('.panel');
         const isMobile = window.innerWidth < 768;
         if (isMobile) {
             if (show) {
+                allPanels.forEach((p) => {
+                    if (p !== panel) p.classList.add('hidden');
+                });
                 panel.classList.remove('hidden');
                 document.body.classList.add('has-open-panel');
             } else {
                 panel.classList.add('hidden');
-                document.body.classList.remove('has-open-panel');
+                const hasOpenPanel = document.querySelector('.panel:not(.hidden)');
+                if (!hasOpenPanel) document.body.classList.remove('has-open-panel');
             }
         } else { // Desktop
-            document.querySelectorAll('.panel').forEach(p => {
-                if (p !== panel) p.classList.remove('visible');
-            });
             if (show) {
-                panel.classList.toggle('visible');
+                allPanels.forEach((p) => {
+                    if (p !== panel) {
+                        p.classList.remove('visible');
+                        p.classList.add('hidden');
+                    }
+                });
+                panel.classList.remove('hidden');
+                panel.classList.add('visible');
             } else {
                 panel.classList.remove('visible');
+                panel.classList.add('hidden');
             }
         }
     }
 
-    // Helper für Touch-Support auf Buttons
+    // Helper fÃ¼r Touch-Support auf Buttons
     function addTouchBtn(elem, callback) {
         elem.addEventListener('click', callback);
-        // touchstart entfernt, da dies auf iOS oft zu Problemen führt.
-        // 'click' ist dank user-scalable=no schnell genug und zuverlässiger.
+        // touchstart entfernt, da dies auf iOS oft zu Problemen fÃ¼hrt.
+        // 'click' ist dank user-scalable=no schnell genug und zuverlÃ¤ssiger.
     }
 
     addTouchBtn(brushBtn, (e) => { 
         e.stopPropagation(); 
-        isEraser = false; // Zurück zum Pinsel-Modus
-        togglePanel(brushPanel, true); 
-        if (eraserPanel) togglePanel(eraserPanel, false);
-        if (colorPanel) togglePanel(colorPanel, false);
+        isEraser = false; // ZurÃ¼ck zum Pinsel-Modus
+        togglePanel(brushPanel, true);
         // Optional: Visuelles Feedback entfernen
         if (eraserBtn) eraserBtn.style.backgroundColor = '';
         brushBtn.style.backgroundColor = '#ccc';
@@ -594,8 +603,6 @@ function initPaintApp() {
             e.stopPropagation();
             isEraser = true; // Radierer aktivieren
             togglePanel(eraserPanel, true);
-            togglePanel(brushPanel, false);
-            togglePanel(colorPanel, false);
             // Visuelles Feedback
             eraserBtn.style.backgroundColor = '#ccc';
             brushBtn.style.backgroundColor = '';
@@ -715,7 +722,7 @@ function initPaintApp() {
             '#ff0000', // Rot
             '#ff7f00', // Orange
             '#ffff00', // Gelb
-            '#00ff00', // Grün
+            '#00ff00', // GrÃ¼n
             '#00ffff', // Cyan
             '#0000ff', // Blau
             '#8a2be2', // Violett
@@ -739,7 +746,7 @@ function initPaintApp() {
                 
                 if (color === brushColor) swatch.classList.add('selected');
                 
-                // Touch-Support für Farbfelder
+                // Touch-Support fÃ¼r Farbfelder
                 const selectColor = (e) => {
                     if (e.type === 'touchstart') e.preventDefault();
                     
@@ -766,7 +773,7 @@ function initPaintApp() {
         let b = parseInt(hex.substring(5, 7), 16);
 
         if (factor > 0) {
-            // Aufhellen: Mischung mit Weiß (255)
+            // Aufhellen: Mischung mit WeiÃŸ (255)
             r = Math.round(r + (255 - r) * factor);
             g = Math.round(g + (255 - g) * factor);
             b = Math.round(b + (255 - b) * factor);
@@ -786,10 +793,10 @@ function initPaintApp() {
         return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
     }
 
-    // --- Speichern, Laden und Löschen ---
+    // --- Speichern, Laden und LÃ¶schen ---
     function saveData() {
         syncDrawingSilently();
-        alert('Bild gespeichert und für die andere Person sichtbar!');
+        alert('Bild gespeichert und fÃ¼r die andere Person sichtbar!');
     }
 
     function drawFromStorage(user, force = false) {
@@ -797,7 +804,7 @@ function initPaintApp() {
         const ctx = (user === 'niklas') ? myCtx : friendCtx;
         const dataURL = localStorage.getItem(`${user}_drawing${keySuffix}`);
         
-        // Optimierung: Nur neu zeichnen, wenn sich die Daten geändert haben (oder force=true)
+        // Optimierung: Nur neu zeichnen, wenn sich die Daten geÃ¤ndert haben (oder force=true)
         // Das verhindert Flackern beim automatischen Neuladen
         if (!force && dataURL === lastDrawState[user]) return;
         lastDrawState[user] = dataURL;
@@ -816,7 +823,7 @@ function initPaintApp() {
         if (!activeUser) return;
         
         const canvas = (activeUser === 'niklas') ? myCanvas : friendCanvas;
-        // Zustand speichern für Undo
+        // Zustand speichern fÃ¼r Undo
         if (history[activeUser].undo.length > 20) history[activeUser].undo.shift();
         history[activeUser].undo.push(canvas.toDataURL());
         history[activeUser].redo = [];
@@ -836,7 +843,7 @@ function initPaintApp() {
     }
     
     function markAsSeen() {
-        // Wir markieren einfach alles als gesehen, wenn die App öffnet (optional)
+        // Wir markieren einfach alles als gesehen, wenn die App Ã¶ffnet (optional)
         localStorage.setItem(`niklas_status${keySuffix}`, 'green');
         Cloud.set(`niklas_status${keySuffix}`, 'green'); // Cloud Save
         updateStatusDots();
@@ -850,7 +857,7 @@ function initPaintApp() {
         wrapper.classList.add('fullscreen');
         document.body.classList.add('mode-fullscreen');
         
-        // Status-Logik: Nur auf Grün setzen, wenn ich NICHT der letzte Editor war
+        // Status-Logik: Nur auf GrÃ¼n setzen, wenn ich NICHT der letzte Editor war
         const lastEditor = localStorage.getItem(`${user}_last_editor${keySuffix}`);
         if (lastEditor && lastEditor !== deviceId) {
             localStorage.setItem(`${user}_status${keySuffix}`, 'green');
@@ -867,7 +874,7 @@ function initPaintApp() {
         document.querySelectorAll('.canvas-wrapper').forEach(el => el.classList.remove('fullscreen'));
         document.body.classList.remove('mode-fullscreen');
 
-        // Zoom zurücksetzen beim Verlassen des Vollbilds
+        // Zoom zurÃ¼cksetzen beim Verlassen des Vollbilds
         [myCanvas, friendCanvas].forEach(c => resetZoom(c));
 
         // NEU: Logik zum Wiederherstellen der Ansicht auf der paint.html Seite
@@ -913,16 +920,16 @@ function initPaintApp() {
         if (e.key.endsWith(`_status${keySuffix}`)) updateStatusDots();
     });
     
-    // --- Cloud Listener für Bilder & Status ---
+    // --- Cloud Listener fÃ¼r Bilder & Status ---
     Cloud.on(`jovelyn_drawing${keySuffix}`, () => drawFromStorage('jovelyn', true));
     Cloud.on(`niklas_drawing${keySuffix}`, () => drawFromStorage('niklas', true));
     Cloud.on(`niklas_status${keySuffix}`, updateStatusDots);
     Cloud.on(`jovelyn_status${keySuffix}`, updateStatusDots);
 
     // --- NEU: Automatisches Neuladen (Polling) ---
-    // Aktualisiert die Bilder alle 2 Sekunden, falls Änderungen vorliegen
+    // Aktualisiert die Bilder alle 2 Sekunden, falls Ã„nderungen vorliegen
     setInterval(() => {
-        // Nicht aktualisieren, während man selbst malt oder zoomt (vermeidet Ruckler)
+        // Nicht aktualisieren, wÃ¤hrend man selbst malt oder zoomt (vermeidet Ruckler)
         if (!isDrawing && !isZooming) {
             drawFromStorage('niklas');
             drawFromStorage('jovelyn');
@@ -930,7 +937,7 @@ function initPaintApp() {
         }
     }, 2000);
 
-    // Update beim Wechseln des Tabs oder Öffnen der App (Wichtig für Mobile!)
+    // Update beim Wechseln des Tabs oder Ã–ffnen der App (Wichtig fÃ¼r Mobile!)
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
             drawFromStorage('niklas', true);
@@ -953,16 +960,16 @@ function initPaintApp() {
 
 function initQuizApp() {
     const questions = [
-        "Was war unser schönster gemeinsamer Moment bisher?",
+        "Was war unser schÃ¶nster gemeinsamer Moment bisher?",
         "Was liebst du am meisten an mir?",
-        "Wohin würdest du gerne mit mir reisen?",
+        "Wohin wÃ¼rdest du gerne mit mir reisen?",
         "Welches Lied erinnert dich an uns?",
         "Was ist deine liebste Eigenschaft an mir?",
-        "Was würdest du gerne mal zusammen kochen?",
+        "Was wÃ¼rdest du gerne mal zusammen kochen?",
         "Was bringt dich immer zum Lachen?",
         "Wie sieht dein perfekter Tag mit mir aus?",
-        "Was ist dein größter Traum für unsere Zukunft?",
-        "Welche Kleinigkeit mache ich, die du süß findest?"
+        "Was ist dein grÃ¶ÃŸter Traum fÃ¼r unsere Zukunft?",
+        "Welche Kleinigkeit mache ich, die du sÃ¼ÃŸ findest?"
     ];
 
     // Frage des Tages basierend auf Datum berechnen
@@ -996,7 +1003,7 @@ function initQuizApp() {
         const savedAnswerKey = `quiz_answer_${user}_${dateString}`;
         const savedAnswer = localStorage.getItem(savedAnswerKey) || "";
 
-        // Modal befüllen
+        // Modal befÃ¼llen
         modalQuestion.textContent = currentQuestion;
         modalInput.value = savedAnswer;
         
@@ -1025,14 +1032,14 @@ function initQuizApp() {
         closeQuizModal();
     }, { passive: false });
 
-    // Klick auf die Kacheln öffnet Modal
+    // Klick auf die Kacheln Ã¶ffnet Modal
     Object.keys(wrappers).forEach(user => {
         wrappers[user].addEventListener('click', () => {
             openQuizModal(user);
         });
     });
     
-    // Cloud Listener für Quiz
+    // Cloud Listener fÃ¼r Quiz
     Object.keys(wrappers).forEach(user => {
         const key = `quiz_answer_${user}_${dateString}`;
         Cloud.on(key, (val) => {
@@ -1042,10 +1049,11 @@ function initQuizApp() {
         });
     });
 
-    // Live-Sync für Quiz (optional, damit man sieht wenn der andere schreibt)
+    // Live-Sync fÃ¼r Quiz (optional, damit man sieht wenn der andere schreibt)
     window.addEventListener('storage', (e) => {
         if (e.key.startsWith('quiz_answer_') && e.key.endsWith(dateString)) {
-            // Hier könnte man die Antwort des anderen live aktualisieren, wenn gewünscht
+            // Hier kÃ¶nnte man die Antwort des anderen live aktualisieren, wenn gewÃ¼nscht
         }
     });
 }
+
