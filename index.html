@@ -8,6 +8,27 @@
     <link rel="stylesheet" href="style.css">
     <link rel="apple-touch-icon" href="images/home-Icon.png">
     <style>
+        /* Fullscreen-Leisten auch auf Laptop/iPad sichtbar machen */
+        .fullscreen-top-bar {
+            position: fixed; top: 20px; left: 0; width: 100%;
+            display: flex; justify-content: center; gap: 15px; z-index: 200;
+            pointer-events: none;
+        }
+        .fullscreen-top-bar button { pointer-events: auto; }
+
+        .fullscreen-bottom-bar {
+            position: fixed; bottom: 20px; left: 0; width: 100%;
+            display: flex; justify-content: center; flex-wrap: nowrap; gap: 10px; z-index: 200;
+            pointer-events: none;
+            padding: 0 10px; box-sizing: border-box;
+        }
+        .fullscreen-bottom-bar button {
+            pointer-events: auto;
+            flex: 1;
+            padding: 12px 0 !important;
+        }
+        .fullscreen-top-bar button { width: 120px; padding: 12px 0 !important; }
+
         @media (max-width: 768px) {
             body:not(.mode-fullscreen) #color-btn { display: none !important; }
             body:not(.mode-fullscreen) #color-panel { display: none !important; }

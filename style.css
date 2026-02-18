@@ -28,8 +28,7 @@ body.home-page {
 }
 
 body.games-page {
-    /* Background moved to container */
-    background-color: var(--white);
+    background-color: rgb(255, 140, 0);
 }
 
 body.quiz-page {
@@ -58,24 +57,21 @@ body.paint-page {
     background-color: rgb(205, 170, 125);
 }
 
-/* Shared styles for framed pages */
+/* Games-Seite vollflaechig ohne Rahmen */
 body.games-page {
     height: 100vh;
     overflow: hidden; /* Prevent body scroll, scroll happens in container */
-    padding: 74px; /* Verkleinert um ca. 0,3cm (11px) */
+    padding: 0;
     box-sizing: border-box;
 }
 
-/* Container styles for framed pages */
+/* Container ohne weissen Rand */
 body.games-page .container {
     width: 100%;
     height: 100%;
     border: none; /* Inner border removed */
-    border-radius: 20px; /* Rounded corners */
-    /* Multiple borders using box-shadow: 
-       1. 20px white (0.5cm)
-       2. 30px black (REMOVED) */
-    box-shadow: 0 0 0 20px white;
+    border-radius: 0;
+    box-shadow: none;
     overflow-y: auto; /* Scroll inside the frame */
     padding: 20px;
     box-sizing: border-box;
@@ -637,7 +633,7 @@ body.mode-fullscreen .control-button {
 
     /* Padding auf Games/Quiz Seiten reduzieren, damit mehr Platz ist */
     body.games-page {
-        padding: 20px;
+        padding: 0;
     }
 
     /* Spiele-Buttons auf Handy kleiner machen */
