@@ -231,6 +231,8 @@ function initDashboard() {
 }
 
 function initPaintApp() {
+    const MIN_SCALE = 0.75;
+    const MAX_SCALE = 5;
     // --- Canvas-Setup ---
     const myCanvas = document.getElementById('niklas-canvas');
     const friendCanvas = document.getElementById('jovelyn-canvas');
@@ -462,7 +464,7 @@ function initPaintApp() {
 
     function zoomCanvasAroundViewportPoint(canvas, zoomFactor, viewX, viewY) {
         const { scale, tx, ty, rotation } = getCanvasTransform(canvas);
-        let newScale = Math.max(1, Math.min(5, scale * zoomFactor));
+        let newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale * zoomFactor));
 
         // Local point under cursor before zoom (inverse transform)
         const rotRad = rotation * Math.PI / 180;
@@ -486,11 +488,14 @@ function initPaintApp() {
         let newTx = viewX - (na * px + nc * py);
         let newTy = viewY - (nb * px + nd * py);
 
-        if (newScale < 1.02) {
+        // Wenn wieder maximale Grundgröße erreicht ist, automatisch gerade ausrichten
+        if (newScale >= 0.995) {
             newScale = 1;
-            const centered = getCenteredTranslation(canvas, newScale, rotation);
+            const centered = getCenteredTranslation(canvas, 1, 0);
             newTx = centered.tx;
             newTy = centered.ty;
+            updateCanvasTransform(canvas, newTx, newTy, 1, 0);
+            return;
         }
 
         updateCanvasTransform(canvas, newTx, newTy, newScale, rotation);
@@ -1128,9 +1133,14 @@ function initPaintApp() {
             isZooming = true;
             
             const dist = getDistance(e.touches);
-            const center = getCenter(e.touches);
+            const centerClient = getCenter(e.touches);
             const angle = getAngle(e.touches);
             const canvas = e.target;
+            const wrapperRect = canvas.parentElement.getBoundingClientRect();
+            const center = {
+                x: centerClient.x - wrapperRect.left,
+                y: centerClient.y - wrapperRect.top
+            };
             
             const { scale: currentScale, tx: currentTx, ty: currentTy, rotation: currentRotation } = getCanvasTransform(canvas);
             
@@ -1174,9 +1184,14 @@ function initPaintApp() {
         if (isZooming && e.touches && e.touches.length === 2) {
             e.preventDefault();
             const dist = getDistance(e.touches);
-            const center = getCenter(e.touches);
+            const centerClient = getCenter(e.touches);
             const angle = getAngle(e.touches);
             const canvas = e.target;
+            const wrapperRect = canvas.parentElement.getBoundingClientRect();
+            const center = {
+                x: centerClient.x - wrapperRect.left,
+                y: centerClient.y - wrapperRect.top
+            };
 
             const prevDist = zoomState.lastDist || dist;
             const prevAngle = zoomState.lastAngle || angle;
