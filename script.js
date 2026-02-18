@@ -1082,6 +1082,22 @@ function initPaintApp() {
         }
     }
 
+    function isEventInsideCanvas(canvas, e) {
+        const rect = canvas.getBoundingClientRect();
+        let clientX, clientY;
+        if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else if (e.changedTouches && e.changedTouches.length > 0) {
+            clientX = e.changedTouches[0].clientX;
+            clientY = e.changedTouches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+    }
+
     function persistDrawingLocally(user) {
         if (!user) return;
         const canvas = (user === 'niklas') ? myCanvas : friendCanvas;
@@ -1127,6 +1143,8 @@ function initPaintApp() {
         // Nur malen, wenn wir im Fullscreen sind und auf dem richtigen Canvas
         if (!document.body.classList.contains('mode-fullscreen')) return;
         if (e.type === 'mousedown' && e.button !== 0) return; // Nur Linksklick zeichnet
+        const canvas = e.target;
+        if (!isEventInsideCanvas(canvas, e)) return;
         
         // --- Zoom/Rotation Start (2 Finger) ---
         if (e.touches && e.touches.length === 2) {
@@ -1163,7 +1181,7 @@ function initPaintApp() {
         if (isZooming) return; // Nicht malen, wenn gezoomt wird
         if (e.touches && e.touches.length !== 1) return;
 
-        const canvas = e.target; // Das Canvas, auf das geklickt wurde
+        // Das Canvas, auf das geklickt wurde
         const pos = getEventPosition(canvas, e);
 
         // Füll-Modus Logik
@@ -1235,6 +1253,10 @@ function initPaintApp() {
         e.preventDefault(); // Verhindert Scrollen während des Zeichnens
 
         const canvas = e.target;
+        if (!isEventInsideCanvas(canvas, e)) {
+            isDrawing = false;
+            return;
+        }
         const ctx = canvas.getContext('2d');
         const pos = getEventPosition(canvas, e);
         
@@ -1437,6 +1459,11 @@ function initPaintApp() {
             zoomCanvasAroundViewportPoint(canvas, factor, cursorX, cursorY);
         }, { passive: false });
     });
+
+    // Zeichnen sicher beenden, auch wenn Pointer/Finger außerhalb losgelassen wird.
+    window.addEventListener('mouseup', () => { isDrawing = false; });
+    window.addEventListener('touchend', () => { isDrawing = false; }, { passive: true });
+    window.addEventListener('touchcancel', () => { isDrawing = false; }, { passive: true });
 
     window.addEventListener('mousemove', (e) => {
         if (!isRightDragging || !rightDragCanvas) return;
