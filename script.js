@@ -1180,33 +1180,36 @@ function initPaintApp() {
 
             const prevDist = zoomState.lastDist || dist;
             const prevAngle = zoomState.lastAngle || angle;
-            const anchorX = zoomState.startX;
-            const anchorY = zoomState.startY;
+            const prevCenterX = zoomState.lastCenterX || center.x;
+            const prevCenterY = zoomState.lastCenterY || center.y;
 
-            // Während einer Pinch-Geste bleibt der Start-Anker fix:
-            // gezoomt/rotiert wird immer um den Punkt zwischen den Fingern beim Auflegen.
-            const zoomFactor = prevDist > 0 ? dist / prevDist : 1;
-            if (Math.abs(zoomFactor - 1) > 0.0001) {
-                zoomCanvasAroundViewportPoint(canvas, zoomFactor, anchorX, anchorY);
+            // 1) Pan über Delta des Finger-Mittelpunkts
+            const panDx = center.x - prevCenterX;
+            const panDy = center.y - prevCenterY;
+            if (panDx !== 0 || panDy !== 0) {
+                const t = getCanvasTransform(canvas);
+                updateCanvasTransform(canvas, t.tx + panDx, t.ty + panDy, t.scale, t.rotation);
             }
 
-            // Rotation ebenfalls um den fixen Start-Anker
+            // 2) Zoom um aktuellen Finger-Mittelpunkt (Procreate-ähnlich)
+            const zoomFactor = prevDist > 0 ? dist / prevDist : 1;
+            if (Math.abs(zoomFactor - 1) > 0.0001) {
+                zoomCanvasAroundViewportPoint(canvas, zoomFactor, center.x, center.y);
+            }
+
+            // 3) Rotation ebenfalls um aktuellen Finger-Mittelpunkt
             let deltaRad = angle - prevAngle;
             if (deltaRad > Math.PI) deltaRad -= 2 * Math.PI;
             if (deltaRad < -Math.PI) deltaRad += 2 * Math.PI;
             const deltaDeg = deltaRad * 180 / Math.PI;
             if (Math.abs(deltaDeg) > 0.25) {
-                rotateCanvasAroundViewportPoint(canvas, deltaDeg, anchorX, anchorY);
-            }
-
-            // optionales leichtes Einrasten nahe 0°
-            const tAfter = getCanvasTransform(canvas);
-            if (Math.abs(tAfter.rotation) < 1) {
-                updateCanvasTransform(canvas, tAfter.tx, tAfter.ty, tAfter.scale, 0);
+                rotateCanvasAroundViewportPoint(canvas, deltaDeg, center.x, center.y);
             }
 
             zoomState.lastDist = dist;
             zoomState.lastAngle = angle;
+            zoomState.lastCenterX = center.x;
+            zoomState.lastCenterY = center.y;
             return;
         }
 
