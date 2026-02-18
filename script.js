@@ -239,6 +239,16 @@ function initPaintApp() {
     const myCtx = myCanvas.getContext('2d');
     const friendCtx = friendCanvas.getContext('2d');
 
+    function setCrispRendering(ctx) {
+        if (!ctx) return;
+        ctx.imageSmoothingEnabled = false;
+        ctx.mozImageSmoothingEnabled = false;
+        ctx.webkitImageSmoothingEnabled = false;
+        ctx.msImageSmoothingEnabled = false;
+    }
+    setCrispRendering(myCtx);
+    setCrispRendering(friendCtx);
+
     // Unterscheidung: Startseite vs. Tier-des-Tages (getrennte Speicherung)
     const isDailyPage = document.body.classList.contains('paint-page');
     const keySuffix = isDailyPage ? '_daily' : '';
@@ -310,6 +320,7 @@ function initPaintApp() {
             if (canvas.width !== newWidth || canvas.height !== newHeight) {
                 canvas.width = newWidth;
                 canvas.height = newHeight;
+                setCrispRendering(canvas.getContext('2d'));
                 resetZoom(canvas); // Zoom zurücksetzen bei Größenänderung
                 resized = true;
             }
@@ -363,6 +374,7 @@ function initPaintApp() {
     const brushBtn = document.getElementById('brush-btn');
     const eraserBtn = document.getElementById('eraser-btn');
     const colorBtn = document.getElementById('color-btn');
+    const fillBtn = document.getElementById('fill-btn');
     const saveBtn = document.getElementById('save-btn');
     const archiveBtn = document.getElementById('archive-btn');
     const clearBtn = document.getElementById('clear-btn');
@@ -391,6 +403,17 @@ function initPaintApp() {
     const customColorPicker = document.getElementById('custom-color');
     const archiveStoragePrefix = `draw_archive${keySuffix}`;
     const savedSnapshotSuffix = `_saved_snapshot${keySuffix}`;
+
+    function updateToolButtonStates() {
+        if (brushBtn) brushBtn.classList.toggle('is-tool-active', !isEraser);
+        if (eraserBtn) eraserBtn.classList.toggle('is-tool-active', isEraser);
+    }
+
+    function updateFillButtonState() {
+        if (fillBtn) fillBtn.classList.toggle('is-fill-active', isFillMode);
+        if (fillToggle) fillToggle.checked = isFillMode;
+        if (eraserFillToggle) eraserFillToggle.checked = isFillMode;
+    }
 
     function getArchiveKey(user) {
         return `${archiveStoragePrefix}_${user}`;
@@ -800,7 +823,7 @@ function initPaintApp() {
         const pos = getEventPosition(canvas, e);
 
         // Füll-Modus Logik
-        if ((!isEraser && isFillMode) || (isEraser && isEraserFillMode)) {
+        if (isFillMode) {
             pushUndoSnapshot(activeUser, canvas);
             floodFill(canvas, Math.floor(pos.x), Math.floor(pos.y), brushColor, isEraser);
             persistDrawingLocally(activeUser);
@@ -938,31 +961,44 @@ function initPaintApp() {
         if (!erase && startR === r && startG === g && startB === b && startA === a) return;
         if (erase && startA === 0) return; // Bereits transparent
 
-        // Toleranz für Anti-Aliasing (Lücken vermeiden)
-        const tolerance = 60; 
+        const fillTolerance = 8;
+        const eraseTolerance = startA > 180 ? 120 : 90;
 
         const stack = [[startX, startY]];
         const visited = new Uint8Array(width * height); // Verhindert Endlosschleifen
         
         while (stack.length) {
             const [x, y] = stack.pop();
-            const pixelIndex = y * width + x;
-            
-            if (visited[pixelIndex]) continue;
-            
-            const pos = pixelIndex * 4;
-
             if (x < 0 || x >= width || y < 0 || y >= height) continue;
+            const pixelIndex = y * width + x;
+            if (visited[pixelIndex]) continue;
+            const pos = pixelIndex * 4;
             
-            // Prüfen ob Pixel innerhalb der Toleranz zur Startfarbe liegt
-            const matchesStartColor = Math.abs(data[pos] - startR) <= tolerance &&
-                Math.abs(data[pos + 1] - startG) <= tolerance &&
-                Math.abs(data[pos + 2] - startB) <= tolerance &&
-                Math.abs(data[pos + 3] - startA) <= tolerance;
+            const pr = data[pos];
+            const pg = data[pos + 1];
+            const pb = data[pos + 2];
+            const pa = data[pos + 3];
+            let matchesStartColor;
+            if (erase) {
+                // Beim Lösch-Fill: verbundene Farbpixel inkl. weicher Randpixel entfernen
+                matchesStartColor = pa > 0 &&
+                    Math.abs(pr - startR) <= eraseTolerance &&
+                    Math.abs(pg - startG) <= eraseTolerance &&
+                    Math.abs(pb - startB) <= eraseTolerance;
+            } else {
+                matchesStartColor =
+                    Math.abs(pr - startR) <= fillTolerance &&
+                    Math.abs(pg - startG) <= fillTolerance &&
+                    Math.abs(pb - startB) <= fillTolerance &&
+                    Math.abs(pa - startA) <= fillTolerance;
+            }
 
             if (matchesStartColor) {
                 
                 if (erase) {
+                    data[pos] = 0;
+                    data[pos + 1] = 0;
+                    data[pos + 2] = 0;
                     data[pos + 3] = 0; // Transparent machen
                 } else {
                     data[pos] = r;
@@ -1057,23 +1093,46 @@ function initPaintApp() {
         // 'click' ist dank user-scalable=no schnell genug und zuverlässiger.
     }
 
+    function addDoubleClickBtn(elem, callback) {
+        let lastClickAt = 0;
+        elem.addEventListener('click', (e) => {
+            const now = Date.now();
+            if (now - lastClickAt < 320) callback(e);
+            lastClickAt = now;
+        });
+    }
+
     addTouchBtn(brushBtn, (e) => { 
         e.stopPropagation(); 
         isEraser = false; // Zurück zum Pinsel-Modus
+        updateToolButtonStates();
+    });
+    addDoubleClickBtn(brushBtn, (e) => {
+        e.stopPropagation();
+        isEraser = false;
         togglePanel(brushPanel, true);
-        // Optional: Visuelles Feedback entfernen
-        if (eraserBtn) eraserBtn.style.backgroundColor = '';
-        brushBtn.style.backgroundColor = '#ccc';
+        updateToolButtonStates();
     });
 
     if (eraserBtn) {
         addTouchBtn(eraserBtn, (e) => {
             e.stopPropagation();
             isEraser = true; // Radierer aktivieren
+            updateToolButtonStates();
+        });
+        addDoubleClickBtn(eraserBtn, (e) => {
+            e.stopPropagation();
+            isEraser = true;
             togglePanel(eraserPanel, true);
-            // Visuelles Feedback
-            eraserBtn.style.backgroundColor = '#ccc';
-            brushBtn.style.backgroundColor = '';
+            updateToolButtonStates();
+        });
+    }
+
+    if (fillBtn) {
+        addTouchBtn(fillBtn, (e) => {
+            e.stopPropagation();
+            isFillMode = !isFillMode;
+            updateFillButtonState();
         });
     }
 
@@ -1164,11 +1223,14 @@ function initPaintApp() {
     if (fillToggle) {
         fillToggle.addEventListener('change', (e) => {
             isFillMode = e.target.checked;
+            updateFillButtonState();
         });
     }
     if (eraserFillToggle) {
         eraserFillToggle.addEventListener('change', (e) => {
             isEraserFillMode = e.target.checked;
+            isFillMode = e.target.checked;
+            updateFillButtonState();
         });
     }
 
@@ -1334,6 +1396,8 @@ function initPaintApp() {
         
         wrapper.classList.add('fullscreen');
         document.body.classList.add('mode-fullscreen');
+        updateToolButtonStates();
+        updateFillButtonState();
         
         // Status-Logik: Nur auf Grün setzen, wenn ich NICHT der letzte Editor war
         const lastEditor = localStorage.getItem(`${user}_last_editor${keySuffix}`);
@@ -1438,6 +1502,8 @@ function initPaintApp() {
     // --- Initialisierung ---
     resizeCanvases();
     generateColors();
+    updateToolButtonStates();
+    updateFillButtonState();
     updateStatusDots();
     markAsSeen();
 }
@@ -1540,5 +1606,3 @@ function initQuizApp() {
         }
     });
 }
-
-
