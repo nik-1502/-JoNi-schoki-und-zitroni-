@@ -1207,8 +1207,9 @@ function initPaintApp() {
             }
 
             // 2) Zoom um aktuellen Finger-Mittelpunkt (Procreate-ähnlich)
-            const zoomFactor = prevDist > 0 ? dist / prevDist : 1;
-            if (Math.abs(zoomFactor - 1) > 0.0001) {
+            const distDelta = dist - prevDist;
+            const zoomFactor = Math.exp(distDelta / 220); // robust/smooth bei Touch
+            if (Math.abs(distDelta) > 0.05) {
                 zoomCanvasAroundViewportPoint(canvas, zoomFactor, center.x, center.y);
             }
 
@@ -1281,6 +1282,12 @@ function initPaintApp() {
 
     function stopDrawing(e) {
         if (isZooming && (!e.touches || e.touches.length < 2)) {
+            // Größere "fast gerade"-Spanne beim Loslassen
+            const canvas = e.target;
+            const t = getCanvasTransform(canvas);
+            if (Math.abs(t.rotation) < 6) {
+                updateCanvasTransform(canvas, t.tx, t.ty, t.scale, 0);
+            }
             isZooming = false;
             isDrawing = false; // Erst nach neuem Touchstart wieder zeichnen
             return;
