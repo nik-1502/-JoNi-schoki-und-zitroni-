@@ -1460,13 +1460,35 @@ function initPaintApp() {
         // 'click' ist dank user-scalable=no schnell genug und zuverlässiger.
     }
 
-    function addDoubleClickBtn(elem, callback) {
-        let lastClickAt = 0;
-        elem.addEventListener('click', (e) => {
-            const now = Date.now();
-            if (now - lastClickAt < 320) callback(e);
-            lastClickAt = now;
+    function addOpenSettingsGesture(elem, callback) {
+        // Desktop: echtes Doppelklick-Event
+        elem.addEventListener('dblclick', (e) => {
+            e.preventDefault();
+            callback(e);
         });
+
+        // Touch (Handy/iPad): Doppeltipp-Erkennung
+        let lastTapAt = 0;
+        let lastTapX = 0;
+        let lastTapY = 0;
+        elem.addEventListener('touchend', (e) => {
+            if (!e.changedTouches || e.changedTouches.length === 0) return;
+            const touch = e.changedTouches[0];
+            const now = Date.now();
+            const dt = now - lastTapAt;
+            const dx = touch.clientX - lastTapX;
+            const dy = touch.clientY - lastTapY;
+            const nearSameSpot = (dx * dx + dy * dy) < 400; // ~20px
+
+            if (dt > 60 && dt < 360 && nearSameSpot) {
+                e.preventDefault();
+                callback(e);
+            }
+
+            lastTapAt = now;
+            lastTapX = touch.clientX;
+            lastTapY = touch.clientY;
+        }, { passive: false });
     }
 
     addTouchBtn(brushBtn, (e) => { 
@@ -1474,7 +1496,7 @@ function initPaintApp() {
         isEraser = false; // Zurück zum Pinsel-Modus
         updateToolButtonStates();
     });
-    addDoubleClickBtn(brushBtn, (e) => {
+    addOpenSettingsGesture(brushBtn, (e) => {
         e.stopPropagation();
         isEraser = false;
         togglePanel(brushPanel, true);
@@ -1487,7 +1509,7 @@ function initPaintApp() {
             isEraser = true; // Radierer aktivieren
             updateToolButtonStates();
         });
-        addDoubleClickBtn(eraserBtn, (e) => {
+        addOpenSettingsGesture(eraserBtn, (e) => {
             e.stopPropagation();
             isEraser = true;
             togglePanel(eraserPanel, true);
