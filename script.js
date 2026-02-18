@@ -488,8 +488,10 @@ function initPaintApp() {
         let newTx = viewX - (na * px + nc * py);
         let newTy = viewY - (nb * px + nd * py);
 
-        // Wenn wieder maximale Grundgröße erreicht ist, automatisch gerade ausrichten
-        if (newScale >= 0.995) {
+        // Nur beim Zurückzoomen auf die Grundgröße automatisch gerade/zentriert ausrichten.
+        // Wichtig: NICHT beim Reinzoomen triggern.
+        const isReturningToBase = zoomFactor <= 1 && newScale >= 0.995 && newScale <= 1.05;
+        if (isReturningToBase) {
             newScale = 1;
             const centered = getCenteredTranslation(canvas, 1, 0);
             newTx = centered.tx;
