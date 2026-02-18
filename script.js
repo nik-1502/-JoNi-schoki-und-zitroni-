@@ -410,6 +410,34 @@ function initPaintApp() {
         updateCanvasTransform(canvas, newTx, newTy, scale, newRotation);
     }
 
+    function rotateCanvasAroundViewportPoint(canvas, deltaDeg, cx, cy) {
+        const { scale, tx, ty, rotation } = getCanvasTransform(canvas);
+        const rotRad = rotation * Math.PI / 180;
+        const cos = Math.cos(rotRad);
+        const sin = Math.sin(rotRad);
+        const a = scale * cos;
+        const b = scale * sin;
+        const c = -scale * sin;
+        const d = scale * cos;
+        const det = a * d - b * c || 1;
+
+        // Punkt unter dem Pivot vor Rotation bestimmen
+        const px = ((cx - tx) * d - (cy - ty) * c) / det;
+        const py = (-(cx - tx) * b + (cy - ty) * a) / det;
+
+        const newRotation = rotation + deltaDeg;
+        const newRad = newRotation * Math.PI / 180;
+        const newCos = Math.cos(newRad);
+        const newSin = Math.sin(newRad);
+        const na = scale * newCos;
+        const nb = scale * newSin;
+        const nc = -scale * newSin;
+        const nd = scale * newCos;
+        const newTx = cx - (na * px + nc * py);
+        const newTy = cy - (nb * px + nd * py);
+        updateCanvasTransform(canvas, newTx, newTy, scale, newRotation);
+    }
+
     function getCenteredTranslation(canvas, scale, rotation) {
         const wrapper = canvas.parentElement;
         const cssWidth = canvas.clientWidth || wrapper.clientWidth || 1;
@@ -1152,30 +1180,23 @@ function initPaintApp() {
 
             const prevDist = zoomState.lastDist || dist;
             const prevAngle = zoomState.lastAngle || angle;
-            const prevCenterX = zoomState.lastCenterX || center.x;
-            const prevCenterY = zoomState.lastCenterY || center.y;
+            const anchorX = zoomState.startX;
+            const anchorY = zoomState.startY;
 
-            // 1) Zwei-Finger-Verschieben (Pan)
-            const panDx = center.x - prevCenterX;
-            const panDy = center.y - prevCenterY;
-            if (panDx !== 0 || panDy !== 0) {
-                const t = getCanvasTransform(canvas);
-                updateCanvasTransform(canvas, t.tx + panDx, t.ty + panDy, t.scale, t.rotation);
-            }
-
-            // 2) Zoom um Finger-Mittelpunkt
+            // Während einer Pinch-Geste bleibt der Start-Anker fix:
+            // gezoomt/rotiert wird immer um den Punkt zwischen den Fingern beim Auflegen.
             const zoomFactor = prevDist > 0 ? dist / prevDist : 1;
             if (Math.abs(zoomFactor - 1) > 0.0001) {
-                zoomCanvasAroundViewportPoint(canvas, zoomFactor, center.x, center.y);
+                zoomCanvasAroundViewportPoint(canvas, zoomFactor, anchorX, anchorY);
             }
 
-            // 3) Rotation (gleiches Prinzip wie Desktop: um sichtbare Feldmitte)
+            // Rotation ebenfalls um den fixen Start-Anker
             let deltaRad = angle - prevAngle;
             if (deltaRad > Math.PI) deltaRad -= 2 * Math.PI;
             if (deltaRad < -Math.PI) deltaRad += 2 * Math.PI;
             const deltaDeg = deltaRad * 180 / Math.PI;
-            if (Math.abs(deltaDeg) > 0.05) {
-                rotateCanvasAroundViewportCenter(canvas, deltaDeg);
+            if (Math.abs(deltaDeg) > 0.25) {
+                rotateCanvasAroundViewportPoint(canvas, deltaDeg, anchorX, anchorY);
             }
 
             // optionales leichtes Einrasten nahe 0°
@@ -1186,8 +1207,6 @@ function initPaintApp() {
 
             zoomState.lastDist = dist;
             zoomState.lastAngle = angle;
-            zoomState.lastCenterX = center.x;
-            zoomState.lastCenterY = center.y;
             return;
         }
 
@@ -1818,6 +1837,7 @@ function initPaintApp() {
         activeUser = null;
         isRightDragging = false;
         rightDragCanvas = null;
+        gridEnabled = false;
         document.querySelectorAll('.canvas-wrapper').forEach(el => el.classList.remove('fullscreen'));
         document.body.classList.remove('mode-fullscreen');
         updateGridVisibility();
