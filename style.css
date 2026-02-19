@@ -158,7 +158,7 @@ body.home-page h1 {
     color: var(--white);
     -webkit-text-stroke: 0.08cm black;
     paint-order: stroke fill;
-    margin-top: 2.6cm;
+    margin-top: 0.2cm;
 }
 
 .button, .control-button {
@@ -189,8 +189,8 @@ body.home-page h1 {
     display: flex;
     flex-direction: column;
     flex-grow: 1; /* Nimmt den restlichen Platz ein */
-    gap: 15px; /* Einheitlicher Abstand (Spielen -> Buttons -> Malen) */
-    margin-top: 10px;
+    gap: 8px; /* Kompakter, damit Spielen-Button oben sichtbar bleibt */
+    margin-top: 0;
     padding-bottom: 10px;
     justify-content: flex-start; /* Von oben nach unten anordnen */
 }
@@ -202,6 +202,10 @@ body.home-page h1 {
     justify-content: space-between;
     /* flex: 1; entfernt, um natürliche Höhe zu erlauben */
     min-height: 0; /* Wichtig für Flexbox-Scaling */
+}
+
+body.home-page .text-row {
+    margin-top: 14px;
 }
 
 .col {
