@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+Ôªø<!DOCTYPE html>
 <!-- SEITE 3: Malen -->
 <html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Gemeinsam Malen</title>
-    <link rel="stylesheet" href="style.css?v=20260218bl">
+    <link rel="stylesheet" href="style.css?v=20260218bn">
     <link rel="apple-touch-icon" href="images/home-Icon.png">
     <style>
         /* Change container background to brown */
@@ -13,7 +13,7 @@
             background-color: rgb(178, 128, 74);
         }
 
-        /* Spezifische Styles f¸r die Paint-Seite, um das Design zu verschˆnern */
+        /* Spezifische Styles f√ºr die Paint-Seite, um das Design zu versch√∂nern */
         .paint-page .container {
             justify-content: flex-start; /* Inhalt oben beginnen lassen */
             padding-top: 40px;
@@ -48,7 +48,7 @@
             margin-top: 5px;
         }
 
-        /* Mobile Styles (kopiert von index.html f¸r Konsistenz) */
+        /* Mobile Styles (kopiert von index.html f√ºr Konsistenz) */
         @media (max-width: 768px) {
             body:not(.mode-fullscreen) #color-btn { display: none !important; }
             body:not(.mode-fullscreen) #color-panel { display: none !important; }
@@ -71,7 +71,7 @@
             }
         }
         
-        /* Fullscreen Layout Styles f¸r Paint Seite */
+        /* Fullscreen Layout Styles f√ºr Paint Seite */
         .fullscreen-top-bar {
             position: fixed; top: 20px; left: 0; width: 100%;
             display: flex; justify-content: center; gap: 8px; z-index: 200;
@@ -140,7 +140,7 @@
         <div class="fullscreen-top-bar" style="display: none;">
             <button id="save-btn" class="control-button">Speichern</button>
             <button id="archive-btn" class="control-button">Archiv</button>
-            <button id="clear-btn" class="control-button">Lˆschen</button>
+            <button id="clear-btn" class="control-button">L√∂schen</button>
             <button id="refresh-btn" class="control-button">&#9670;</button>
             <button id="close-fullscreen-btn" class="control-button">Fertig</button>
         </div>
@@ -148,9 +148,9 @@
         <div class="fullscreen-bottom-bar" style="display: none;">
             <button id="color-btn" class="control-button">Farbe</button>
             <button id="brush-btn" class="control-button">Pinsel</button>
-            <button id="fill-btn" class="control-button">F¸llen</button>
+            <button id="fill-btn" class="control-button">F√ºllen</button>
             <button id="eraser-btn" class="control-button">Radierer</button>
-            <button id="undo-btn" class="control-button">Zur¸ck</button>
+            <button id="undo-btn" class="control-button">Zur√ºck</button>
             <button id="redo-btn" class="control-button">Vor</button>
         </div>
     </div>
@@ -159,7 +159,7 @@
     <div id="brush-panel" class="panel hidden">
         <div class="panel-header">
             <h3>Pinseleinstellungen</h3>
-            <button id="brush-back-btn" class="back-button">Schlieﬂen</button>
+            <button id="brush-back-btn" class="back-button">Schlie√üen</button>
         </div>
         <div class="panel-content">
             <div class="setting">
@@ -167,7 +167,7 @@
                 <input type="checkbox" id="grid-toggle" style="width: 24px; height: 24px;">
             </div>
             <div class="setting">
-                <label for="grid-size">Rastergrˆﬂe:</label>
+                <label for="grid-size">Rastergr√∂√üe:</label>
                 <input type="range" id="grid-size" min="8" max="80" value="24">
                 <span id="grid-size-value">24</span>
             </div>
@@ -188,10 +188,10 @@
     <div id="eraser-panel" class="panel hidden">
         <div class="panel-header">
             <h3>Radierer</h3>
-            <button id="eraser-back-btn" class="back-button">Schlieﬂen</button>
+            <button id="eraser-back-btn" class="back-button">Schlie√üen</button>
         </div>
         <div class="panel-content">
-            <div class="setting"><label>Grˆﬂe:</label><input type="range" id="eraser-size" min="1" max="100" value="20"><span id="eraser-size-value">20</span></div>
+            <div class="setting"><label>Gr√∂√üe:</label><input type="range" id="eraser-size" min="1" max="100" value="20"><span id="eraser-size-value">20</span></div>
             <div class="setting"><label>Transparenz:</label><input type="range" id="eraser-opacity" min="0.1" max="1" step="0.1" value="1"><span id="eraser-opacity-value">1.0</span></div>
         </div>
     </div>
@@ -200,7 +200,7 @@
     <div id="color-panel" class="panel hidden">
         <div class="panel-header">
             <h3>Farbauswahl</h3>
-            <button id="color-back-btn" class="back-button">Schlieﬂen</button>
+            <button id="color-back-btn" class="back-button">Schlie√üen</button>
         </div>
         <div class="panel-content">
             <div class="setting" style="justify-content: center; margin-bottom: 15px;"><label for="custom-color">Eigene Farbe:</label><input type="color" id="custom-color" value="#000000"></div>
@@ -213,15 +213,15 @@
 
     <script src="script.js?v=20260218aw"></script>
     <script>
-        // Logik f¸r das Tages-Tier
+        // Logik f√ºr das Tages-Tier
         const animals = [
-            "Elefant", "Giraffe", "Loewe", "Tiger", "Zebra", "Pinguin", "Koala", "Panda", 
-            "Kaenguru", "Fuchs", "Eule", "Schmetterling", "Schildkroete", "Delfin", "Einhorn", 
-            "Drache", "Katze", "Hund", "Hase", "Eichhoernchen", "Flamingo", "Papagei", 
-            "Qualle", "Seepferdchen", "Faultier", "Igel", "Marienkaefer", "Biene", "Wolf", "Baer"
+            "Elefant", "Giraffe", "L√∂we", "Tiger", "Zebra", "Pinguin", "Koala", "Panda", 
+            "K√§nguru", "Fuchs", "Eule", "Schmetterling", "Schildkr√∂te", "Delfin", "Einhorn", 
+            "Drache", "Katze", "Hund", "Hase", "Eichh√∂rnchen", "Flamingo", "Papagei", 
+            "Qualle", "Seepferdchen", "Faultier", "Igel", "Marienk√§fer", "Biene", "Wolf", "B√§r"
         ];
         
-        // W‰hle ein Tier basierend auf dem Datum (damit es den ganzen Tag gleich bleibt)
+        // W√§hle ein Tier basierend auf dem Datum (damit es den ganzen Tag gleich bleibt)
         const today = new Date();
         const dayIndex = (today.getDate() + today.getMonth() * 31 + today.getFullYear()) % animals.length;
         document.getElementById('daily-animal-text').innerText = animals[dayIndex];
@@ -237,7 +237,7 @@
                         topBar.style.display = isFullscreen ? 'flex' : 'none';
                         bottomBar.style.display = isFullscreen ? 'flex' : 'none';
                     }
-                    // Panels schlieﬂen, wenn Vollbild verlassen wird
+                    // Panels schlie√üen, wenn Vollbild verlassen wird
                     if (!isFullscreen) {
                         document.getElementById('brush-panel').classList.add('hidden');
                         document.getElementById('color-panel').classList.add('hidden');
@@ -250,6 +250,7 @@
     </script>
 </body>
 </html>
+
 
 
 

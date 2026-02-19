@@ -84,6 +84,21 @@ body.mode-fullscreen::after {
     opacity: 0.45;
 }
 
+/* Wenn ein Malfeld geöffnet ist: Seitenfarbe vollflächig nutzen */
+body.home-page.mode-fullscreen::before {
+    background: #00BFFF;
+}
+
+body.paint-page.mode-fullscreen::before {
+    background: rgb(178, 128, 74);
+}
+
+body.home-page.mode-fullscreen::after,
+body.paint-page.mode-fullscreen::after {
+    background-image: none;
+    opacity: 0;
+}
+
 body.paint-page {
     background-color: rgb(178, 128, 74);
 }
@@ -372,16 +387,6 @@ canvas {
 
 body.home-page:not(.mode-fullscreen) canvas {
     outline: none;
-}
-
-body.home-page .canvas-wrapper,
-body.home-page canvas {
-    background-color: #00BFFF;
-}
-
-body.paint-page .canvas-wrapper,
-body.paint-page canvas {
-    background-color: rgb(178, 128, 74);
 }
 
 .grid-overlay {
@@ -1281,5 +1286,6 @@ body.games-page .floating-refresh-btn {
     background-color: rgb(255, 140, 0); /* Orange - passend zum Container-Inhalt */
     color: rgb(95, 45, 0);
 }
+
 
 
