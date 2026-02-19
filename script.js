@@ -2130,41 +2130,34 @@ function initPaintApp() {
         setTimeout(resizeCanvases, 50); // Resize after elements are back
     }
 
-    let lastTouchOpenAt = 0;
-    let lastPointerOpenAt = 0;
-    function bindFieldOpen(wrapper, user) {
-        if (!wrapper) return;
-        const tryOpen = () => {
-            if (activeUser) return;
-            enterFullscreen(user);
-        };
-        wrapper.addEventListener('click', () => {
-            // iOS erzeugt nach touchend oft noch ein click-Event -> nicht doppelt öffnen
-            if (Date.now() - lastTouchOpenAt < 700) return;
-            if (Date.now() - lastPointerOpenAt < 700) return;
-            tryOpen();
-        });
-        wrapper.addEventListener('pointerup', (e) => {
-            // iPad/Safari liefert je nach Version Pointer- statt Touch-Events
-            if (!e.isPrimary) return;
-            if (e.pointerType === 'mouse' && e.button !== 0) return;
-            if (e.pointerType !== 'mouse') {
-                e.preventDefault();
-                lastPointerOpenAt = Date.now();
-            }
-            tryOpen();
-        }, { passive: false });
-        wrapper.addEventListener('touchend', (e) => {
-            if (activeUser) return;
-            if (e.changedTouches && e.changedTouches.length !== 1) return;
-            e.preventDefault();
-            lastTouchOpenAt = Date.now();
-            tryOpen();
-        }, { passive: false });
+    let lastOpenAt = 0;
+    function tryOpenField(user) {
+        if (activeUser) return;
+        const now = Date.now();
+        if (now - lastOpenAt < 450) return; // Doppelauslösung vermeiden
+        lastOpenAt = now;
+        enterFullscreen(user);
     }
 
-    bindFieldOpen(wrapperNiklas, 'niklas');
-    bindFieldOpen(wrapperJovelyn, 'jovelyn');
+    function bindFieldOpenTargets(user, ...targets) {
+        targets.forEach((target) => {
+            if (!target) return;
+            target.addEventListener('click', () => tryOpenField(user));
+            target.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                tryOpenField(user);
+            }, { passive: false });
+            target.addEventListener('pointerup', (e) => {
+                if (!e.isPrimary) return;
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                if (e.pointerType !== 'mouse') e.preventDefault();
+                tryOpenField(user);
+            }, { passive: false });
+        });
+    }
+
+    bindFieldOpenTargets('niklas', wrapperNiklas, myCanvas);
+    bindFieldOpenTargets('jovelyn', wrapperJovelyn, friendCanvas);
     addTouchBtn(closeFullscreenBtn, (e) => {
         e.stopPropagation();
         if (activeUser) discardUnsavedChanges(activeUser);
