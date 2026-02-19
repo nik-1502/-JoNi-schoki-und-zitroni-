@@ -2131,19 +2131,35 @@ function initPaintApp() {
     }
 
     let lastTouchOpenAt = 0;
+    let lastPointerOpenAt = 0;
     function bindFieldOpen(wrapper, user) {
         if (!wrapper) return;
+        const tryOpen = () => {
+            if (activeUser) return;
+            enterFullscreen(user);
+        };
         wrapper.addEventListener('click', () => {
             // iOS erzeugt nach touchend oft noch ein click-Event -> nicht doppelt öffnen
             if (Date.now() - lastTouchOpenAt < 700) return;
-            if (!activeUser) enterFullscreen(user);
+            if (Date.now() - lastPointerOpenAt < 700) return;
+            tryOpen();
         });
+        wrapper.addEventListener('pointerup', (e) => {
+            // iPad/Safari liefert je nach Version Pointer- statt Touch-Events
+            if (!e.isPrimary) return;
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            if (e.pointerType !== 'mouse') {
+                e.preventDefault();
+                lastPointerOpenAt = Date.now();
+            }
+            tryOpen();
+        }, { passive: false });
         wrapper.addEventListener('touchend', (e) => {
             if (activeUser) return;
             if (e.changedTouches && e.changedTouches.length !== 1) return;
             e.preventDefault();
             lastTouchOpenAt = Date.now();
-            enterFullscreen(user);
+            tryOpen();
         }, { passive: false });
     }
 
