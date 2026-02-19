@@ -2,6 +2,23 @@
 // Damit die Synchronisation über Geräte hinweg funktioniert:
 // Synchronisierung laeuft ueber die API unter /api/state.
 // Frontend und API werden gemeinsam vom Render-Webservice ausgeliefert.
+(() => {
+    // localStorage darf die App nicht mehr mit Exceptions stoppen
+    // (z. B. iOS WebApp, privater Modus, Speicherlimit erreicht).
+    try {
+        const rawSetItem = Storage.prototype.setItem;
+        const rawGetItem = Storage.prototype.getItem;
+        Storage.prototype.setItem = function(key, value) {
+            try { return rawSetItem.call(this, key, value); } catch (_e) { return undefined; }
+        };
+        Storage.prototype.getItem = function(key) {
+            try { return rawGetItem.call(this, key); } catch (_e) { return null; }
+        };
+    } catch (_e) {
+        // no-op
+    }
+})();
+
 const Cloud = {
     apiBase: '/api/state',
     listeners: new Map(),
@@ -126,6 +143,7 @@ function initDashboard() {
         niklas: document.getElementById('niklas-text'),
         jovelyn: document.getElementById('jovelyn-text')
     };
+    if (!textAreas.niklas || !textAreas.jovelyn) return;
     const textSaveDelayMs = 1200;
     const textSyncState = {
         niklas: { timer: null, pending: false },
@@ -709,7 +727,6 @@ function initPaintApp() {
 
     ensureGridVisual('niklas', myCanvas, wrapperNiklas);
     ensureGridVisual('jovelyn', friendCanvas, wrapperJovelyn);
-    initArchiveCloudSync();
 
     function getArchiveKey(user) {
         return `${stableArchivePrefix}_${user}`;
@@ -988,6 +1005,7 @@ function initPaintApp() {
             });
         });
     }
+    initArchiveCloudSync();
 
     function openSaveGalleryModal() {
         ensureSaveGalleryModal();
@@ -1729,9 +1747,25 @@ function initPaintApp() {
 
     // Helper für Touch-Support auf Buttons
     function addTouchBtn(elem, callback) {
-        elem.addEventListener('click', callback);
-        // touchstart entfernt, da dies auf iOS oft zu Problemen führt.
-        // 'click' ist dank user-scalable=no schnell genug und zuverlässiger.
+        if (!elem) return;
+        let lastTapAt = 0;
+        const run = (e) => {
+            const now = Date.now();
+            if (now - lastTapAt < 320) return; // Doppelauslösung verhindern
+            lastTapAt = now;
+            callback(e);
+        };
+        elem.addEventListener('click', run);
+        elem.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            run(e);
+        }, { passive: false });
+        elem.addEventListener('pointerup', (e) => {
+            if (!e.isPrimary) return;
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            if (e.pointerType !== 'mouse') e.preventDefault();
+            run(e);
+        }, { passive: false });
     }
 
     function addOpenSettingsGesture(elem, callback) {
@@ -2132,6 +2166,16 @@ function initPaintApp() {
 
     wrapperNiklas.addEventListener('click', () => { if(!activeUser) enterFullscreen('niklas'); });
     wrapperJovelyn.addEventListener('click', () => { if(!activeUser) enterFullscreen('jovelyn'); });
+    wrapperNiklas.addEventListener('touchend', (e) => {
+        if (activeUser) return;
+        e.preventDefault();
+        enterFullscreen('niklas');
+    }, { passive: false });
+    wrapperJovelyn.addEventListener('touchend', (e) => {
+        if (activeUser) return;
+        e.preventDefault();
+        enterFullscreen('jovelyn');
+    }, { passive: false });
     addTouchBtn(closeFullscreenBtn, (e) => {
         e.stopPropagation();
         if (activeUser) discardUnsavedChanges(activeUser);
