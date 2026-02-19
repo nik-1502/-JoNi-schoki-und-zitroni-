@@ -39,6 +39,7 @@ body.quiz-page {
 /* Blue background for fullscreen painting */
 body.mode-fullscreen {
     /* Hintergrundfarbe wird jetzt vom Overlay übernommen */
+    overflow: hidden;
     --fs-margin-x: 20px;
     --fs-bars-space: 190px;
     --fs-size-shrink: 60px;
@@ -59,10 +60,10 @@ body.mode-fullscreen {
 body.mode-fullscreen::before {
     content: "";
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 100vh;
     background:
         radial-gradient(circle at 18% 22%, rgba(111, 164, 255, 0.22), transparent 42%),
         radial-gradient(circle at 82% 72%, rgba(255, 178, 84, 0.2), transparent 45%),
@@ -75,6 +76,9 @@ body.mode-fullscreen::after {
     content: "";
     position: fixed;
     inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 100vh;
     z-index: 36;
     pointer-events: none;
     background-image:
