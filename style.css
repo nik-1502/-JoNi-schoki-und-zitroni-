@@ -39,6 +39,20 @@ body.quiz-page {
 /* Blue background for fullscreen painting */
 body.mode-fullscreen {
     /* Hintergrundfarbe wird jetzt vom Overlay übernommen */
+    --fs-margin-x: 20px;
+    --fs-bars-space: 190px;
+    --fs-size-shrink: 60px;
+    --fs-bar-target-width: 860px;
+    --fs-bar-height: 56px;
+    --fs-bar-gap-top: 12px;
+    --fs-bar-gap-bottom: 12px;
+    --fs-frame-outer: 30px;
+    --fs-bar-inset: 10px;
+    --fs-canvas-size: var(--fs-size);
+    --fs-size: min(
+        calc(100vw - var(--fs-margin-x) - var(--fs-size-shrink)),
+        calc(100vh - var(--fs-bars-space) - var(--fs-size-shrink))
+    );
 }
 
 /* Overlay, das alles andere verdeckt (Buttons, Text, etc.) */
@@ -49,12 +63,29 @@ body.mode-fullscreen::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #333333; /* Dunkelgrau */
+    background:
+        radial-gradient(circle at 18% 22%, rgba(111, 164, 255, 0.22), transparent 42%),
+        radial-gradient(circle at 82% 72%, rgba(255, 178, 84, 0.2), transparent 45%),
+        linear-gradient(145deg, #1a1628 0%, #26203a 46%, #2f2750 100%);
     z-index: 35; /* Liegt über dem Inhalt, aber unter dem Malfeld (z-index 40) */
+    animation: fullscreenAurora 12s ease-in-out infinite alternate;
+}
+
+body.mode-fullscreen::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 36;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 26px 26px;
+    opacity: 0.45;
 }
 
 body.paint-page {
-    background-color: rgb(205, 170, 125);
+    background-color: rgb(178, 128, 74);
 }
 
 /* Games-Seite vollflaechig ohne Rahmen */
@@ -214,6 +245,11 @@ body.home-page h1 {
     box-sizing: border-box;
 }
 
+body.home-page .chat-input {
+    border-color: #2f2858;
+    box-shadow: 0 8px 18px rgba(32, 23, 66, 0.24);
+}
+
 .name-button {
     width: 100%;
     background-color: rgb(0, 180, 0); /* Gesättigtes Grün */
@@ -230,7 +266,28 @@ body.home-page h1 {
 
 /* Dunkelgrüner Rand für die Buttons auf der Startseite */
 body.home-page .name-button {
-    border: 6px solid #1a3310; /* Dunkelgrün */
+    background: linear-gradient(145deg, #5d78e8 0%, #49a0e8 100%);
+    color: #f5f8ff;
+    border: 6px solid #2f2858;
+    box-shadow: 0 8px 18px rgba(32, 23, 66, 0.28);
+}
+
+body.home-page .button {
+    background: linear-gradient(145deg, #ffb35c 0%, #ff8f66 100%) !important;
+    color: #2b180f !important;
+    border: 6px solid #8a3f2d !important;
+    box-shadow: 0 10px 24px rgba(76, 32, 18, 0.28);
+}
+
+body.home-page .button:hover {
+    background: linear-gradient(145deg, #ffa54f 0%, #ff7f58 100%) !important;
+}
+
+body.paint-page .name-button {
+    background: #e4883f;
+    color: #fff2e2;
+    border: 6px solid #9b3f12;
+    box-shadow: 0 8px 18px rgba(83, 39, 14, 0.24);
 }
 
 /* Quiz-spezifische Farben */
@@ -266,6 +323,11 @@ body.home-page .name-button {
     overflow: hidden; /* Damit die Ecken auch beim Canvas rund bleiben */
 }
 
+body.home-page .canvas-wrapper {
+    border-color: #2f2858;
+    box-shadow: 0 8px 18px rgba(32, 23, 66, 0.24);
+}
+
 .player-info {
     background-color: transparent;
     color: #757575;
@@ -293,12 +355,18 @@ canvas {
     background-color: var(--white);
     width: 100%;
     height: 100%;
-    border: 1px solid #d3d3d3;
+    border: none;
+    outline: 1px solid #7f8ca3;
+    outline-offset: -1px;
     box-sizing: border-box;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 0v24M0 12h24" stroke="black" stroke-width="4" stroke-linecap="round"/><path d="M12 0v24M0 12h24" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>') 12 12, crosshair;
     touch-action: none; /* Verhindert Page-Scrolling beim Malen auf Touch-Geräten */
+}
+
+body.home-page:not(.mode-fullscreen) canvas {
+    outline: none;
 }
 
 .grid-overlay {
@@ -440,11 +508,14 @@ body.home-page.mode-fullscreen .controls {
     left: 50%;
     transform: translate(-50%, -50%);
     /* Make it as large as possible while being square and fitting in the frame */
-    width: calc(100vmin - 208px); /* 100vmin - 2 * (74px margin + 30px border) */
-    height: calc(100vmin - 208px);
+    width: var(--fs-canvas-size);
+    height: var(--fs-canvas-size);
     z-index: 40;
-    border: 1px solid black;
-    box-shadow: 0 0 0 20px white, 0 0 0 30px black;
+    border: 6px solid #7592d8;
+    box-shadow:
+        0 0 0 18px rgba(117, 146, 216, 0.96),
+        0 0 0 30px rgba(41, 31, 72, 0.96),
+        0 18px 50px rgba(0, 0, 0, 0.5);
     border-radius: 20px;
     background: white;
     overflow: hidden;
@@ -467,23 +538,263 @@ body.mode-fullscreen .controls {
 
 /* Buttons im Fullscreen-Modus hellgrau */
 body.mode-fullscreen .control-button {
-    background-color: #d3d3d3 !important; /* Hellgrau */
-    color: #333 !important; /* Dunkle Schrift */
-    border: 1px solid #999;
+    background: linear-gradient(160deg, #a4b4ff 0%, #8ec0ff 52%, #86ddd6 100%) !important;
+    color: #0f1730 !important;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        0 8px 18px rgba(5, 8, 25, 0.28);
+    backdrop-filter: blur(6px);
+    transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+body.mode-fullscreen .control-button:hover {
+    transform: translateY(-1px);
+    filter: saturate(1.03) brightness(1.01);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        0 12px 22px rgba(5, 8, 25, 0.34);
 }
 
 body.mode-fullscreen .control-button.is-tool-active {
-    background-color: #5f5f5f !important;
-    color: #ffffff !important;
-    border-color: #3f3f3f !important;
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.28);
+    background: linear-gradient(150deg, #ffb347 0%, #ff8a5b 100%) !important;
+    color: #271507 !important;
+    border-color: rgba(255, 226, 171, 0.95) !important;
+    box-shadow:
+        inset 0 1px 6px rgba(0, 0, 0, 0.2),
+        0 7px 18px rgba(140, 57, 22, 0.35);
 }
 
 body.mode-fullscreen .control-button.is-fill-active {
-    background-color: #1f6fe0 !important;
+    background: linear-gradient(150deg, #5c7bff 0%, #49b1ff 100%) !important;
     color: #ffffff !important;
-    border-color: #154f9a !important;
-    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.22);
+    border-color: rgba(205, 227, 255, 0.95) !important;
+    box-shadow:
+        inset 0 1px 6px rgba(0, 0, 0, 0.2),
+        0 7px 18px rgba(28, 74, 168, 0.35);
+}
+
+body.mode-fullscreen .fullscreen-top-bar,
+body.mode-fullscreen .fullscreen-bottom-bar {
+    position: fixed !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: min(calc(100vw - 20px), var(--fs-bar-target-width)) !important;
+    max-width: calc(100vw - 10px);
+    margin: 0 !important;
+    padding: 10px !important;
+    min-height: var(--fs-bar-height);
+    justify-content: center !important;
+    align-items: center !important;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: linear-gradient(140deg, rgba(31, 30, 63, 0.78), rgba(44, 40, 86, 0.64));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.22),
+        0 8px 26px rgba(0, 0, 0, 0.33);
+    backdrop-filter: blur(8px);
+}
+
+body.mode-fullscreen .fullscreen-top-bar {
+    top: max(4px, calc(
+        (
+            (50% - (var(--fs-canvas-size) / 2) - var(--fs-frame-outer))
+            - var(--fs-bar-height)
+        ) / 2 + var(--fs-bar-inset)
+    )) !important;
+}
+
+body.mode-fullscreen .fullscreen-bottom-bar {
+    top: min(calc(100vh - var(--fs-bar-height) - 4px), calc(
+        50% + (var(--fs-canvas-size) / 2) + var(--fs-frame-outer) + (
+            (
+                (50% - (var(--fs-canvas-size) / 2) - var(--fs-frame-outer))
+                - var(--fs-bar-height)
+            ) / 2 - var(--fs-bar-inset)
+        )
+    )) !important;
+    bottom: auto !important;
+}
+
+body.mode-fullscreen .fullscreen-top-bar .control-button,
+body.mode-fullscreen .fullscreen-bottom-bar .control-button {
+    flex: 0 0 130px !important;
+    width: 130px !important;
+    max-width: 130px;
+    text-align: center !important;
+    justify-content: center !important;
+}
+
+@media (max-width: 767px) {
+    body.mode-fullscreen {
+        --fs-size-shrink: 90px;
+        --fs-bar-gap-top: 34px;
+        --fs-bar-gap-bottom: 34px;
+        --fs-canvas-size: min(100vw, 100vh);
+    }
+
+    body.mode-fullscreen .canvas-wrapper.fullscreen {
+        width: var(--fs-canvas-size) !important;
+        height: var(--fs-canvas-size) !important;
+    }
+
+    body.mode-fullscreen .fullscreen-top-bar,
+    body.mode-fullscreen .fullscreen-bottom-bar {
+        width: calc(100vw - 10px) !important;
+        max-width: calc(100vw - 10px) !important;
+        padding: 6px !important;
+        gap: 4px !important;
+        min-height: 48px;
+    }
+
+    body.mode-fullscreen .fullscreen-top-bar .control-button,
+    body.mode-fullscreen .fullscreen-bottom-bar .control-button {
+        flex: 1 1 0 !important;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        height: 38px !important;
+        font-size: 11px !important;
+        padding: 0 4px !important;
+    }
+}
+
+body.mode-fullscreen .panel {
+    background: linear-gradient(165deg, rgba(30, 29, 61, 0.96), rgba(42, 39, 82, 0.95));
+    color: #edf4ff;
+    border: 1px solid rgba(175, 209, 255, 0.35);
+    border-radius: 14px;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
+}
+
+body.mode-fullscreen .panel-header {
+    border-bottom: 1px solid rgba(180, 212, 255, 0.25);
+}
+
+body.mode-fullscreen .setting label,
+body.mode-fullscreen .panel-header h3 {
+    color: #edf4ff;
+}
+
+body.mode-fullscreen .back-button {
+    background: linear-gradient(145deg, #6d82ff, #4f66e6);
+    color: #fff;
+    border: 1px solid rgba(210, 226, 255, 0.5);
+}
+
+body.mode-fullscreen .panel input[type="range"] {
+    accent-color: #66b5ff;
+}
+
+body.mode-fullscreen #custom-color {
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 8px;
+    background: #0d1b2b;
+}
+
+body.mode-fullscreen #color-panel {
+    background: #ffffff;
+    color: #1a1a1a;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+body.mode-fullscreen #color-panel .panel-header {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+body.mode-fullscreen #color-panel .panel-header h3,
+body.mode-fullscreen #color-panel .setting label {
+    color: #222;
+}
+
+body.mode-fullscreen #color-panel .panel-content {
+    background: #ffffff;
+}
+
+body.mode-fullscreen #color-palette {
+    background: #ffffff;
+    border-radius: 10px;
+}
+
+/* Tier-des-Tages: Fullscreen-Farben an Seiten-Schema anpassen */
+body.paint-page.mode-fullscreen::before {
+    background:
+        radial-gradient(circle at 18% 24%, rgba(255, 183, 94, 0.22), transparent 42%),
+        radial-gradient(circle at 82% 72%, rgba(210, 126, 58, 0.2), transparent 45%),
+        linear-gradient(145deg, #4a2e1b 0%, #6c4427 46%, #8b5a33 100%);
+}
+
+body.paint-page.mode-fullscreen::after {
+    background-image:
+        linear-gradient(rgba(255, 244, 228, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 244, 228, 0.05) 1px, transparent 1px);
+}
+
+body.paint-page.mode-fullscreen .canvas-wrapper.fullscreen {
+    border-color: #f1c48b;
+    box-shadow:
+        0 0 0 18px rgba(255, 239, 217, 0.96),
+        0 0 0 30px rgba(114, 68, 34, 0.96),
+        0 18px 50px rgba(38, 20, 8, 0.5);
+}
+
+body.paint-page.mode-fullscreen .control-button {
+    background: linear-gradient(160deg, #f2b566 0%, #e58f46 52%, #c96e2f 100%) !important;
+    color: #2f190d !important;
+    border-color: rgba(255, 217, 170, 0.88);
+}
+
+body.paint-page.mode-fullscreen .control-button.is-tool-active {
+    background: linear-gradient(150deg, #7a3f21 0%, #5f2e16 100%) !important;
+    color: #fff4e8 !important;
+    border-color: rgba(255, 204, 150, 0.58) !important;
+    box-shadow:
+        inset 0 2px 7px rgba(0, 0, 0, 0.3),
+        0 5px 14px rgba(71, 38, 19, 0.34);
+}
+
+body.paint-page.mode-fullscreen .control-button.is-fill-active {
+    background: linear-gradient(150deg, #f18434 0%, #cc5f24 100%) !important;
+    color: #2f170a !important;
+    border-color: rgba(255, 206, 156, 0.95) !important;
+    box-shadow:
+        inset 0 1px 6px rgba(0, 0, 0, 0.2),
+        0 7px 18px rgba(125, 56, 20, 0.35);
+}
+
+body.paint-page.mode-fullscreen .fullscreen-top-bar,
+body.paint-page.mode-fullscreen .fullscreen-bottom-bar {
+    border-color: rgba(255, 224, 184, 0.34);
+    background: linear-gradient(140deg, rgba(96, 58, 33, 0.78), rgba(128, 79, 47, 0.66));
+}
+
+body.paint-page.mode-fullscreen .panel {
+    background: linear-gradient(165deg, rgba(78, 47, 26, 0.97), rgba(114, 69, 39, 0.95));
+    border-color: rgba(255, 208, 152, 0.4);
+}
+
+body.paint-page.mode-fullscreen .panel-header {
+    border-bottom-color: rgba(255, 220, 182, 0.3);
+}
+
+body.paint-page.mode-fullscreen .setting label,
+body.paint-page.mode-fullscreen .panel-header h3 {
+    color: #fff0de;
+}
+
+body.paint-page.mode-fullscreen .back-button {
+    background: linear-gradient(145deg, #d48243, #b96b34);
+    border-color: rgba(255, 221, 181, 0.5);
+}
+
+body.paint-page.mode-fullscreen .panel input[type="range"] {
+    accent-color: #ffae64;
+}
+
+@keyframes fullscreenAurora {
+    0% { filter: saturate(0.95) brightness(0.96); }
+    100% { filter: saturate(1.08) brightness(1.04); }
 }
 
 /* Responsive Layout */
@@ -602,6 +913,31 @@ body.mode-fullscreen .control-button.is-fill-active {
 }
 
 /* Speicher-Galerie */
+.save-gallery-modal {
+    background: rgba(16, 12, 30, 0.62);
+    backdrop-filter: blur(6px);
+}
+
+.save-gallery-modal .modal-content.save-gallery-content {
+    background: linear-gradient(165deg, rgba(30, 29, 61, 0.98), rgba(42, 39, 82, 0.97));
+    color: #edf4ff;
+    border: 2px solid rgba(175, 209, 255, 0.45);
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.42);
+}
+
+.save-gallery-modal .save-gallery-header h3,
+.save-gallery-modal .save-gallery-hint,
+.save-gallery-modal .save-gallery-meta span,
+.save-gallery-modal .save-gallery-detail-meta span {
+    color: #dfeaff;
+}
+
+.save-gallery-modal .save-gallery-name-input {
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(91, 120, 191, 0.5);
+    color: #18233f;
+}
+
 .save-gallery-content {
     width: min(92vw, 760px);
     max-height: 88vh;
@@ -659,11 +995,11 @@ body.mode-fullscreen .control-button.is-fill-active {
 
 .save-gallery-item {
     display: block;
-    border: 1px solid #e7ddcc;
+    border: 1px solid rgba(173, 204, 255, 0.35);
     border-radius: 12px;
     padding: 0;
-    background: linear-gradient(180deg, #fffdfa 0%, #fff7ec 100%);
-    box-shadow: 0 3px 10px rgba(80, 50, 20, 0.08);
+    background: linear-gradient(170deg, rgba(74, 93, 170, 0.28), rgba(63, 114, 180, 0.22));
+    box-shadow: 0 3px 10px rgba(10, 12, 38, 0.25);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
     overflow: hidden;
     min-height: 108px;
@@ -677,7 +1013,7 @@ body.mode-fullscreen .control-button.is-fill-active {
 
 .save-gallery-item:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 14px rgba(80, 50, 20, 0.16);
+    box-shadow: 0 6px 16px rgba(14, 18, 55, 0.32);
 }
 
 .save-gallery-item-main {
@@ -700,8 +1036,8 @@ body.mode-fullscreen .control-button.is-fill-active {
     min-height: 84px;
     border-radius: 8px;
     object-fit: cover;
-    border: 1px solid #ddd;
-    background: #fafafa;
+    border: 1px solid rgba(214, 228, 255, 0.75);
+    background: rgba(255, 255, 255, 0.9);
     align-self: start;
 }
 
@@ -711,9 +1047,13 @@ body.mode-fullscreen .control-button.is-fill-active {
     gap: 4px;
 }
 
+.save-gallery-meta strong {
+    color: #ffffff;
+}
+
 .save-gallery-meta span {
     font-size: 0.85rem;
-    color: #666;
+    color: #dfe7ff;
 }
 
 .save-gallery-detail {
@@ -727,8 +1067,8 @@ body.mode-fullscreen .control-button.is-fill-active {
     max-height: 42vh;
     object-fit: contain;
     border-radius: 12px;
-    border: 1px solid #ddc9aa;
-    background: #fff;
+    border: 1px solid rgba(189, 213, 255, 0.58);
+    background: rgba(255, 255, 255, 0.96);
 }
 
 .save-gallery-detail-meta {
@@ -738,7 +1078,7 @@ body.mode-fullscreen .control-button.is-fill-active {
 }
 
 .save-gallery-detail-meta span {
-    color: #666;
+    color: #dfe7ff;
     font-size: 0.9rem;
 }
 
