@@ -6,7 +6,6 @@ const Cloud = {
     apiBase: '/api/state',
     listeners: new Map(),
     pendingWrites: new Map(),
-    inflightWrites: new Set(),
     pollTimer: null,
     pollMs: 1500,
     serverEnabled: false,
@@ -17,13 +16,24 @@ const Cloud = {
     set: function(key, value) {
         const strValue = String(value);
         this.pendingWrites.set(key, { value: strValue, at: Date.now(), localOnly: false });
-        try {
-            localStorage.setItem(key, strValue);
-        } catch (_err) {
-            // Local write kann auf einzelnen Geräten fehlschlagen.
-        }
+        localStorage.setItem(key, strValue);
         this.notify(key, strValue);
-        this.trySendPendingKey(key);
+        fetch(`${this.apiBase}/${encodeURIComponent(key)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value: strValue })
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const pending = this.pendingWrites.get(key);
+                if (pending && pending.value === strValue) {
+                    this.pendingWrites.delete(key);
+                }
+                this.serverEnabled = true;
+            })
+            .catch(() => {
+                this.serverEnabled = false;
+            });
     },
     holdLocalValue: function(key, value) {
         this.pendingWrites.set(key, { value: String(value), at: Date.now(), localOnly: true });
@@ -43,40 +53,6 @@ const Cloud = {
         const callbacks = this.listeners.get(key);
         if (!callbacks) return;
         callbacks.forEach((cb) => cb(value));
-    },
-    trySendPendingKey: function(key) {
-        const pending = this.pendingWrites.get(key);
-        if (!pending || pending.localOnly) return;
-        if (this.inflightWrites.has(key)) return;
-
-        this.inflightWrites.add(key);
-        const value = pending.value;
-        fetch(`${this.apiBase}/${encodeURIComponent(key)}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ value })
-        })
-            .then((res) => {
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const nowPending = this.pendingWrites.get(key);
-                if (nowPending && !nowPending.localOnly && nowPending.value === value) {
-                    this.pendingWrites.delete(key);
-                }
-                this.serverEnabled = true;
-            })
-            .catch(() => {
-                // Key bleibt pending und wird beim nächsten Poll erneut versucht.
-                this.serverEnabled = false;
-                this.inflightWrites.delete(key);
-            })
-            .then(() => {
-                this.inflightWrites.delete(key);
-            });
-    },
-    flushPendingWrites: function() {
-        this.pendingWrites.forEach((_val, key) => {
-            this.trySendPendingKey(key);
-        });
     },
     pullFromServer: async function() {
         try {
@@ -113,11 +89,11 @@ const Cloud = {
     startPolling: function() {
         if (this.pollTimer) return;
         this.pollTimer = setInterval(() => {
-            this.flushPendingWrites();
             this.pullFromServer();
         }, this.pollMs);
     }
 };
+
 document.addEventListener('DOMContentLoaded', () => {
     Cloud.init(); // Server-Sync starten
 
@@ -132,19 +108,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Logik für den globalen Refresh-Button
     const globalRefreshBtn = document.getElementById('global-refresh-btn');
-    const hardRefreshPage = () => {
-        try {
-            const url = new URL(window.location.href);
-            url.searchParams.set('_r', String(Date.now()));
-            window.location.replace(url.toString());
-        } catch (_err) {
-            window.location.reload();
-        }
-    };
     if (globalRefreshBtn) {
         globalRefreshBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            hardRefreshPage();
+            // Wenn wir NICHT auf einer Mal-Seite sind (kein Canvas), machen wir einen normalen Reload
+            if (!document.getElementById('niklas-canvas')) {
+                location.reload();
+            }
+            // Falls Canvas existiert, wird das Event in initPaintApp abgefangen und smart synchronisiert
         });
     }
 });
@@ -155,7 +126,6 @@ function initDashboard() {
         niklas: document.getElementById('niklas-text'),
         jovelyn: document.getElementById('jovelyn-text')
     };
-    if (!textAreas.niklas || !textAreas.jovelyn) return;
     const textSaveDelayMs = 1200;
     const textSyncState = {
         niklas: { timer: null, pending: false },
@@ -2160,30 +2130,8 @@ function initPaintApp() {
         setTimeout(resizeCanvases, 50); // Resize after elements are back
     }
 
-    let lastOpenAt = 0;
-    function tryOpenField(user) {
-        if (activeUser) return;
-        const now = Date.now();
-        if (now - lastOpenAt < 450) return; // Doppelauslösung vermeiden
-        lastOpenAt = now;
-        enterFullscreen(user);
-    }
-
-    function bindFieldOpenTargets(user, ...targets) {
-        targets.forEach((target) => {
-            if (!target) return;
-            target.addEventListener('pointerdown', (e) => {
-                if (!e.isPrimary) return;
-                if (e.pointerType === 'mouse' && e.button !== 0) return;
-                tryOpenField(user);
-            });
-            // Fallback für ältere Browser/Events
-            target.addEventListener('click', () => tryOpenField(user));
-        });
-    }
-
-    bindFieldOpenTargets('niklas', wrapperNiklas, myCanvas);
-    bindFieldOpenTargets('jovelyn', wrapperJovelyn, friendCanvas);
+    wrapperNiklas.addEventListener('click', () => { if(!activeUser) enterFullscreen('niklas'); });
+    wrapperJovelyn.addEventListener('click', () => { if(!activeUser) enterFullscreen('jovelyn'); });
     addTouchBtn(closeFullscreenBtn, (e) => {
         e.stopPropagation();
         if (activeUser) discardUnsavedChanges(activeUser);
@@ -2207,13 +2155,9 @@ function initPaintApp() {
     if (globalRefreshBtn) {
         addTouchBtn(globalRefreshBtn, (e) => {
             e.stopPropagation();
-            try {
-                const url = new URL(window.location.href);
-                url.searchParams.set('_r', String(Date.now()));
-                window.location.replace(url.toString());
-            } catch (_err) {
-                window.location.reload();
-            }
+            drawFromStorage('niklas', true);
+            drawFromStorage('jovelyn', true);
+            updateStatusDots();
         });
     }
 
@@ -2432,4 +2376,3 @@ function initQuizApp() {
     });
     updateQuizStatusDots();
 }
-
