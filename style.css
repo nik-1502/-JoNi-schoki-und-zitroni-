@@ -889,6 +889,9 @@ body.paint-page.mode-fullscreen .panel input[type="range"] {
         height: auto !important;
         aspect-ratio: 1 / 1 !important;
     }
+    body.home-page .global-archive-row {
+        margin-top: 2px;
+    }
     body.paint-page .row .name-button {
         width: calc(100% - 44px);
         margin-bottom: 10px;

@@ -2130,8 +2130,25 @@ function initPaintApp() {
         setTimeout(resizeCanvases, 50); // Resize after elements are back
     }
 
-    wrapperNiklas.addEventListener('click', () => { if(!activeUser) enterFullscreen('niklas'); });
-    wrapperJovelyn.addEventListener('click', () => { if(!activeUser) enterFullscreen('jovelyn'); });
+    let lastTouchOpenAt = 0;
+    function bindFieldOpen(wrapper, user) {
+        if (!wrapper) return;
+        wrapper.addEventListener('click', () => {
+            // iOS erzeugt nach touchend oft noch ein click-Event -> nicht doppelt öffnen
+            if (Date.now() - lastTouchOpenAt < 700) return;
+            if (!activeUser) enterFullscreen(user);
+        });
+        wrapper.addEventListener('touchend', (e) => {
+            if (activeUser) return;
+            if (e.changedTouches && e.changedTouches.length !== 1) return;
+            e.preventDefault();
+            lastTouchOpenAt = Date.now();
+            enterFullscreen(user);
+        }, { passive: false });
+    }
+
+    bindFieldOpen(wrapperNiklas, 'niklas');
+    bindFieldOpen(wrapperJovelyn, 'jovelyn');
     addTouchBtn(closeFullscreenBtn, (e) => {
         e.stopPropagation();
         if (activeUser) discardUnsavedChanges(activeUser);
