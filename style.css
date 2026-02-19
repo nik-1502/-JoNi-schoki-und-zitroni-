@@ -611,6 +611,7 @@ body.mode-fullscreen .fullscreen-top-bar {
 }
 
 body.mode-fullscreen .fullscreen-bottom-bar {
+    width: var(--fs-canvas-size) !important;
     top: min(calc(100vh - var(--fs-bar-height) - 4px), calc(
         50% + (var(--fs-canvas-size) / 2) + var(--fs-frame-outer) + (
             (
@@ -620,6 +621,15 @@ body.mode-fullscreen .fullscreen-bottom-bar {
         )
     )) !important;
     bottom: auto !important;
+}
+
+body.mode-fullscreen .fullscreen-bottom-bar .control-button {
+    flex: 0 0 110px !important;
+    width: 110px !important;
+    max-width: 110px;
+    height: 40px !important;
+    font-size: 13px !important;
+    padding: 0 6px !important;
 }
 
 body.mode-fullscreen .fullscreen-top-bar .control-button,
@@ -653,6 +663,11 @@ body.mode-fullscreen .fullscreen-bottom-bar .control-button {
         min-height: 48px;
     }
 
+    body.mode-fullscreen .fullscreen-bottom-bar {
+        width: var(--fs-canvas-size) !important;
+        max-width: calc(100vw - 10px) !important;
+    }
+
     body.mode-fullscreen .fullscreen-top-bar .control-button,
     body.mode-fullscreen .fullscreen-bottom-bar .control-button {
         flex: 1 1 0 !important;
@@ -662,6 +677,12 @@ body.mode-fullscreen .fullscreen-bottom-bar .control-button {
         height: 38px !important;
         font-size: 11px !important;
         padding: 0 4px !important;
+    }
+
+    body.mode-fullscreen .fullscreen-bottom-bar .control-button {
+        height: 34px !important;
+        font-size: 10px !important;
+        padding: 0 3px !important;
     }
 }
 
@@ -808,6 +829,64 @@ body.paint-page.mode-fullscreen .panel input[type="range"] {
     .game-container { flex-direction: row; } /* Nebeneinander auf Desktop */
     .control-button { font-size: 18px; }
     .back-link { display: none; } /* Zurück-Button auf Desktop ausblenden */
+    body.home-page .image-wrapper > button {
+        margin-bottom: 250px !important;
+    }
+    body.home-page .text-row .name-button,
+    body.home-page .text-row .chat-input {
+        width: calc(100% - 44px);
+    }
+    body.home-page .text-row .col:first-child .name-button,
+    body.home-page .text-row .col:first-child .chat-input {
+        margin-left: auto;
+        margin-right: 0;
+    }
+    body.home-page .text-row .col:last-child .name-button,
+    body.home-page .text-row .col:last-child .chat-input {
+        margin-left: 0;
+        margin-right: auto;
+    }
+    body.home-page .text-row .name-button {
+        margin-bottom: 10px;
+    }
+    body.home-page .text-row .chat-input {
+        height: auto !important;
+        aspect-ratio: 1 / 1 !important;
+    }
+    body.paint-page .row .name-button {
+        width: calc(100% - 44px);
+        margin-bottom: 10px;
+    }
+    body.paint-page .row .col:first-child .name-button {
+        margin-left: auto;
+        margin-right: 0;
+    }
+    body.paint-page .row .col:last-child .name-button {
+        margin-left: 0;
+        margin-right: auto;
+    }
+    body.mode-fullscreen .fullscreen-top-bar,
+    body.mode-fullscreen .fullscreen-bottom-bar {
+        width: fit-content !important;
+        max-width: calc(100vw - 20px) !important;
+        padding: 8px 10px !important;
+    }
+    body.mode-fullscreen .fullscreen-top-bar .control-button,
+    body.mode-fullscreen .fullscreen-bottom-bar .control-button {
+        flex: 0 0 90px !important;
+        width: 90px !important;
+        max-width: 90px !important;
+        height: 34px !important;
+        font-size: 11px !important;
+        padding: 0 4px !important;
+    }
+    body.mode-fullscreen .fullscreen-bottom-bar .control-button {
+        flex: 0 0 74px !important;
+        width: 74px !important;
+        max-width: 74px !important;
+        font-size: 10px !important;
+        padding: 0 3px !important;
+    }
 
     .panel {
         position: fixed;
