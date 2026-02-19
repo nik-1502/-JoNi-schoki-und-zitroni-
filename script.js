@@ -580,6 +580,7 @@ function initPaintApp() {
     const fillBtn = document.getElementById('fill-btn');
     const saveBtn = document.getElementById('save-btn');
     const archiveBtn = document.getElementById('archive-btn');
+    const globalArchiveBtn = document.getElementById('global-archive-btn');
     const clearBtn = document.getElementById('clear-btn');
     const closeFullscreenBtn = document.getElementById('close-fullscreen-btn');
     const refreshBtn = document.getElementById('refresh-btn');
@@ -608,6 +609,8 @@ function initPaintApp() {
     const colorPalette = document.getElementById('color-palette');
     const customColorPicker = document.getElementById('custom-color');
     const archiveStoragePrefix = `draw_archive${keySuffix}`;
+    const archiveScope = isDailyPage ? 'daily' : 'home';
+    const stableArchivePrefix = `draw_archive_stable_${archiveScope}`;
     const savedSnapshotSuffix = `_saved_snapshot${keySuffix}`;
     let gridEnabled = false;
     let gridSize = 24;
@@ -706,8 +709,13 @@ function initPaintApp() {
 
     ensureGridVisual('niklas', myCanvas, wrapperNiklas);
     ensureGridVisual('jovelyn', friendCanvas, wrapperJovelyn);
+    initArchiveCloudSync();
 
     function getArchiveKey(user) {
+        return `${stableArchivePrefix}_${user}`;
+    }
+
+    function getLegacyArchiveKey(user) {
         return `${archiveStoragePrefix}_${user}`;
     }
 
@@ -715,18 +723,44 @@ function initPaintApp() {
         return `${user}${savedSnapshotSuffix}`;
     }
 
-    function getArchiveItems(user) {
+    function parseArchiveList(raw) {
+        if (!raw) return [];
         try {
-            const raw = localStorage.getItem(getArchiveKey(user));
-            const parsed = raw ? JSON.parse(raw) : [];
+            const parsed = JSON.parse(raw);
             return Array.isArray(parsed) ? parsed : [];
-        } catch (err) {
+        } catch (_err) {
             return [];
         }
     }
 
+    function getArchiveItems(user) {
+        const stableKey = getArchiveKey(user);
+        const legacyKey = getLegacyArchiveKey(user);
+        const stableItems = parseArchiveList(localStorage.getItem(stableKey));
+        const legacyItems = legacyKey === stableKey ? [] : parseArchiveList(localStorage.getItem(legacyKey));
+
+        if (!legacyItems.length) return stableItems;
+
+        // Merge legacy data once into the stable key so app updates don't hide old archives.
+        const merged = [...stableItems];
+        const seen = new Set(stableItems.map((item) => item && item.id).filter(Boolean));
+        legacyItems.forEach((item) => {
+            if (!item || !item.id || seen.has(item.id)) return;
+            seen.add(item.id);
+            merged.push(item);
+        });
+
+        const mergedJson = JSON.stringify(merged);
+        localStorage.setItem(stableKey, mergedJson);
+        Cloud.set(stableKey, mergedJson);
+        return merged;
+    }
+
     function setArchiveItems(user, items) {
-        localStorage.setItem(getArchiveKey(user), JSON.stringify(items));
+        const key = getArchiveKey(user);
+        const json = JSON.stringify(items);
+        localStorage.setItem(key, json);
+        Cloud.set(key, json);
     }
 
     function formatArchiveDate(ts) {
@@ -819,6 +853,13 @@ function initPaintApp() {
     let saveGalleryDetailTitle = null;
     let saveGalleryDetailDate = null;
     let saveGallerySelectedId = null;
+    let globalArchiveModal = null;
+    let globalArchiveList = null;
+    let globalArchiveDetail = null;
+    let globalArchiveDetailImage = null;
+    let globalArchiveDetailTitle = null;
+    let globalArchiveDetailDate = null;
+    let globalArchiveSelected = null;
 
     function ensureSaveGalleryModal() {
         if (saveGalleryModal) return;
@@ -935,6 +976,19 @@ function initPaintApp() {
         showSaveGalleryListView();
     }
 
+    function initArchiveCloudSync() {
+        ['niklas', 'jovelyn'].forEach((user) => {
+            const key = getArchiveKey(user);
+            Cloud.on(key, (val) => {
+                const parsed = parseArchiveList(val);
+                localStorage.setItem(key, JSON.stringify(parsed));
+                if (!saveGalleryModal || saveGalleryModal.classList.contains('hidden')) return;
+                if (activeUser !== user) return;
+                renderSaveGalleryList();
+            });
+        });
+    }
+
     function openSaveGalleryModal() {
         ensureSaveGalleryModal();
         saveGalleryHint.textContent = activeUser ? `Aktives Feld: ${activeUser}` : 'Bitte zuerst ein Feld öffnen.';
@@ -966,7 +1020,7 @@ function initPaintApp() {
             dataURL
         };
         items.unshift(nextItem);
-        setArchiveItems(activeUser, items.slice(0, 120));
+        setArchiveItems(activeUser, items);
         renderSaveGalleryList();
         saveGalleryHint.textContent = 'Bild gespeichert und synchronisiert.';
     }
@@ -1017,6 +1071,153 @@ function initPaintApp() {
         setArchiveItems(activeUser, items);
         renderSaveGalleryList();
         saveGalleryHint.textContent = 'Bild wurde aus dem Archiv gelöscht.';
+    }
+
+    function getAllArchiveKeys() {
+        const users = ['niklas', 'jovelyn'];
+        const scopes = ['home', 'daily'];
+        const keys = [];
+        scopes.forEach((scope) => {
+            users.forEach((user) => {
+                keys.push(`draw_archive_stable_${scope}_${user}`);
+                keys.push(`draw_archive${scope === 'daily' ? '_daily' : ''}_${user}`);
+            });
+        });
+        return keys;
+    }
+
+    function getGlobalArchiveItems() {
+        const all = [];
+        getAllArchiveKeys().forEach((key) => {
+            const list = parseArchiveList(localStorage.getItem(key));
+            list.forEach((item) => {
+                if (!item || !item.id || !item.dataURL) return;
+                all.push({
+                    ...item,
+                    _sourceKey: key
+                });
+            });
+        });
+        all.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        return all;
+    }
+
+    function ensureGlobalArchiveModal() {
+        if (globalArchiveModal) return;
+        const modal = document.createElement('div');
+        modal.id = 'global-archive-modal';
+        modal.className = 'modal hidden save-gallery-modal';
+        modal.innerHTML = `
+            <div class="modal-content save-gallery-content">
+                <div class="save-gallery-header">
+                    <h3>Gesamt-Archiv</h3>
+                    <button id="global-archive-close-btn" class="back-button">Schließen</button>
+                </div>
+                <p id="global-archive-hint" class="save-gallery-hint">Alle gespeicherten Bilder aus Startseite und Tier des Tages.</p>
+                <div id="global-archive-list" class="save-gallery-list"></div>
+                <div id="global-archive-detail" class="save-gallery-detail hidden">
+                    <button id="global-archive-back-btn" class="back-button">Zurück</button>
+                    <img id="global-archive-detail-image" class="save-gallery-detail-image" alt="Archivbild">
+                    <div class="save-gallery-detail-meta">
+                        <strong id="global-archive-detail-title"></strong>
+                        <span id="global-archive-detail-date"></span>
+                    </div>
+                    <div class="save-gallery-detail-actions">
+                        <button id="global-archive-detail-share-btn" class="control-button">Teilen</button>
+                        <button id="global-archive-detail-download-btn" class="control-button">Herunterladen</button>
+                        <button id="global-archive-detail-delete-btn" class="control-button">Löschen</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        globalArchiveModal = modal;
+        globalArchiveList = modal.querySelector('#global-archive-list');
+        globalArchiveDetail = modal.querySelector('#global-archive-detail');
+        globalArchiveDetailImage = modal.querySelector('#global-archive-detail-image');
+        globalArchiveDetailTitle = modal.querySelector('#global-archive-detail-title');
+        globalArchiveDetailDate = modal.querySelector('#global-archive-detail-date');
+
+        modal.querySelector('#global-archive-close-btn').addEventListener('click', closeGlobalArchiveModal);
+        modal.querySelector('#global-archive-back-btn').addEventListener('click', () => {
+            globalArchiveSelected = null;
+            globalArchiveDetail.classList.add('hidden');
+            globalArchiveList.classList.remove('hidden');
+        });
+        modal.querySelector('#global-archive-detail-share-btn').addEventListener('click', async () => {
+            if (!globalArchiveSelected) return;
+            try {
+                await shareArchiveImage(globalArchiveSelected);
+            } catch (_err) {}
+        });
+        modal.querySelector('#global-archive-detail-download-btn').addEventListener('click', () => {
+            if (!globalArchiveSelected) return;
+            const safeName = sanitizeFileName(globalArchiveSelected.name) || 'bild';
+            downloadDataUrl(globalArchiveSelected.dataURL, `${safeName}.png`);
+        });
+        modal.querySelector('#global-archive-detail-delete-btn').addEventListener('click', () => {
+            if (!globalArchiveSelected) return;
+            const sourceKey = globalArchiveSelected._sourceKey;
+            const next = parseArchiveList(localStorage.getItem(sourceKey)).filter((it) => it && it.id !== globalArchiveSelected.id);
+            const json = JSON.stringify(next);
+            localStorage.setItem(sourceKey, json);
+            if (sourceKey.startsWith('draw_archive_stable_')) Cloud.set(sourceKey, json);
+            renderGlobalArchiveList();
+        });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeGlobalArchiveModal();
+        });
+    }
+
+    function renderGlobalArchiveList() {
+        ensureGlobalArchiveModal();
+        const items = getGlobalArchiveItems();
+        if (!items.length) {
+            globalArchiveList.innerHTML = '<p class="save-gallery-empty">Noch keine gespeicherten Bilder.</p>';
+            globalArchiveDetail.classList.add('hidden');
+            globalArchiveList.classList.remove('hidden');
+            return;
+        }
+        globalArchiveList.innerHTML = items.map((item) => `
+            <article class="save-gallery-item" data-id="${item.id}" data-source="${item._sourceKey}">
+                <button class="save-gallery-item-main" type="button">
+                    <img src="${item.dataURL}" alt="${escapeHtml(item.name)}" class="save-gallery-thumb">
+                    <div class="save-gallery-meta">
+                        <strong>${escapeHtml(item.name)}</strong>
+                    </div>
+                </button>
+            </article>
+        `).join('');
+        globalArchiveList.querySelectorAll('.save-gallery-item').forEach((card) => {
+            const id = card.dataset.id;
+            const sourceKey = card.dataset.source;
+            card.querySelector('.save-gallery-item-main').addEventListener('click', () => {
+                const item = getGlobalArchiveItems().find((it) => it.id === id && it._sourceKey === sourceKey);
+                if (!item) return;
+                globalArchiveSelected = item;
+                globalArchiveDetailImage.src = item.dataURL;
+                globalArchiveDetailTitle.textContent = item.name;
+                globalArchiveDetailDate.textContent = formatArchiveDate(item.createdAt || Date.now());
+                globalArchiveList.classList.add('hidden');
+                globalArchiveDetail.classList.remove('hidden');
+            });
+        });
+        globalArchiveDetail.classList.add('hidden');
+        globalArchiveList.classList.remove('hidden');
+    }
+
+    function openGlobalArchiveModal() {
+        ensureGlobalArchiveModal();
+        renderGlobalArchiveList();
+        globalArchiveModal.classList.remove('hidden');
+    }
+
+    function closeGlobalArchiveModal() {
+        if (!globalArchiveModal) return;
+        globalArchiveModal.classList.add('hidden');
+        globalArchiveSelected = null;
+        globalArchiveDetail.classList.add('hidden');
+        globalArchiveList.classList.remove('hidden');
     }
 
     // --- Zeichenfunktionen ---
@@ -1856,11 +2057,34 @@ function initPaintApp() {
         document.getElementById('jovelyn-status').className = `status-dot ${jovelynStatus}`;
     }
     
-    function markAsSeen() {
-        // Wir markieren einfach alles als gesehen, wenn die App öffnet (optional)
-        localStorage.setItem(`niklas_status${keySuffix}`, 'green');
-        Cloud.set(`niklas_status${keySuffix}`, 'green'); // Cloud Save
+    function markUserSeenIfNeeded(user) {
+        if (!user) return;
+        const lastEditor = localStorage.getItem(`${user}_last_editor${keySuffix}`);
+        if (!lastEditor || lastEditor === deviceId) return;
+        const key = `${user}_status${keySuffix}`;
+        if (localStorage.getItem(key) === 'green') return;
+        localStorage.setItem(key, 'green');
+        Cloud.set(key, 'green');
         updateStatusDots();
+    }
+
+    function isElementVisibleEnough(el) {
+        if (!el) return false;
+        const rect = el.getBoundingClientRect();
+        const vw = window.innerWidth || document.documentElement.clientWidth || 0;
+        const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+        if (vw <= 0 || vh <= 0) return false;
+
+        const visibleWidth = Math.max(0, Math.min(rect.right, vw) - Math.max(rect.left, 0));
+        const visibleHeight = Math.max(0, Math.min(rect.bottom, vh) - Math.max(rect.top, 0));
+        const visibleArea = visibleWidth * visibleHeight;
+        const totalArea = Math.max(1, rect.width * rect.height);
+        return (visibleArea / totalArea) >= 0.35;
+    }
+
+    function markVisibleCanvasesAsSeen() {
+        if (isElementVisibleEnough(wrapperNiklas)) markUserSeenIfNeeded('niklas');
+        if (isElementVisibleEnough(wrapperJovelyn)) markUserSeenIfNeeded('jovelyn');
     }
 
     // --- Fullscreen Logik ---
@@ -1875,12 +2099,7 @@ function initPaintApp() {
         updateGridVisibility();
         
         // Status-Logik: Nur auf Grün setzen, wenn ich NICHT der letzte Editor war
-        const lastEditor = localStorage.getItem(`${user}_last_editor${keySuffix}`);
-        if (lastEditor && lastEditor !== deviceId) {
-            localStorage.setItem(`${user}_status${keySuffix}`, 'green');
-            Cloud.set(`${user}_status${keySuffix}`, 'green'); // Cloud Save
-            updateStatusDots();
-        }
+        markUserSeenIfNeeded(user);
         
         // Kurz warten, damit CSS Transition greift, dann Canvas anpassen
         setTimeout(resizeCanvases, 50);
@@ -1921,6 +2140,7 @@ function initPaintApp() {
 
     addTouchBtn(saveBtn, saveData);
     if (archiveBtn) addTouchBtn(archiveBtn, (e) => { e.stopPropagation(); openSaveGalleryModal(); });
+    if (globalArchiveBtn) addTouchBtn(globalArchiveBtn, (e) => { e.stopPropagation(); openGlobalArchiveModal(); });
     addTouchBtn(clearBtn, clearCanvas);
     
     if (refreshBtn) {
@@ -1965,18 +2185,32 @@ function initPaintApp() {
     }, 2000);
 
     // Update beim Wechseln des Tabs oder Öffnen der App (Wichtig für Mobile!)
+    let seenCheckScheduled = false;
+    function scheduleSeenCheck() {
+        if (seenCheckScheduled) return;
+        seenCheckScheduled = true;
+        requestAnimationFrame(() => {
+            seenCheckScheduled = false;
+            markVisibleCanvasesAsSeen();
+        });
+    }
+
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
             drawFromStorage('niklas', true);
             drawFromStorage('jovelyn', true);
             updateStatusDots();
+            scheduleSeenCheck();
         }
     });
     window.addEventListener('focus', () => {
         drawFromStorage('niklas', true);
         drawFromStorage('jovelyn', true);
         updateStatusDots();
+        scheduleSeenCheck();
     });
+    window.addEventListener('scroll', scheduleSeenCheck, { passive: true });
+    window.addEventListener('resize', scheduleSeenCheck);
 
     // --- Initialisierung ---
     resizeCanvases();
@@ -1985,7 +2219,7 @@ function initPaintApp() {
     updateFillButtonState();
     updateGridVisibility();
     updateStatusDots();
-    markAsSeen();
+    scheduleSeenCheck();
 }
 
 function initQuizApp() {
@@ -2024,13 +2258,50 @@ function initQuizApp() {
     const modalQuestion = document.getElementById('quiz-question-text');
     const modalInput = document.getElementById('quiz-answer-input');
     const modalDoneBtn = document.getElementById('quiz-done-btn');
+    const statusDots = {
+        niklas: document.getElementById('quiz-status-niklas'),
+        jovelyn: document.getElementById('quiz-status-jovelyn')
+    };
     let currentQuizUser = null;
+    const deviceId = localStorage.getItem('deviceId') || Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('deviceId', deviceId);
+
+    function answerKey(user) {
+        return `quiz_answer_${user}_${dateString}`;
+    }
+
+    function statusKey(user) {
+        return `quiz_status_${user}_${dateString}`;
+    }
+
+    function lastEditorKey(user) {
+        return `quiz_last_editor_${user}_${dateString}`;
+    }
+
+    function updateQuizStatusDots() {
+        Object.keys(statusDots).forEach((user) => {
+            const dot = statusDots[user];
+            if (!dot) return;
+            const status = localStorage.getItem(statusKey(user)) || 'red';
+            dot.className = `status-dot quiz-status-dot ${status}`;
+        });
+    }
+
+    function markQuizSeenIfNeeded(user) {
+        const lastEditor = localStorage.getItem(lastEditorKey(user));
+        if (!lastEditor || lastEditor === deviceId) return;
+        if (localStorage.getItem(statusKey(user)) === 'green') return;
+        localStorage.setItem(statusKey(user), 'green');
+        Cloud.set(statusKey(user), 'green');
+        updateQuizStatusDots();
+    }
 
     function openQuizModal(user) {
         currentQuizUser = user;
+        markQuizSeenIfNeeded(user);
         
         // Antwort laden
-        const savedAnswerKey = `quiz_answer_${user}_${dateString}`;
+        const savedAnswerKey = answerKey(user);
         const savedAnswer = localStorage.getItem(savedAnswerKey) || "";
 
         // Modal befüllen
@@ -2049,9 +2320,14 @@ function initQuizApp() {
     // Speichern beim Tippen
     modalInput.addEventListener('input', (e) => {
         if (currentQuizUser) {
-            const savedAnswerKey = `quiz_answer_${currentQuizUser}_${dateString}`;
+            const savedAnswerKey = answerKey(currentQuizUser);
             localStorage.setItem(savedAnswerKey, e.target.value);
             Cloud.set(savedAnswerKey, e.target.value); // Cloud Save
+            localStorage.setItem(lastEditorKey(currentQuizUser), deviceId);
+            Cloud.set(lastEditorKey(currentQuizUser), deviceId);
+            localStorage.setItem(statusKey(currentQuizUser), 'red');
+            Cloud.set(statusKey(currentQuizUser), 'red');
+            updateQuizStatusDots();
         }
     });
 
@@ -2071,11 +2347,15 @@ function initQuizApp() {
     
     // Cloud Listener für Quiz
     Object.keys(wrappers).forEach(user => {
-        const key = `quiz_answer_${user}_${dateString}`;
+        const key = answerKey(user);
         Cloud.on(key, (val) => {
             if (currentQuizUser === user && document.activeElement !== modalInput) {
                 modalInput.value = val || '';
             }
+        });
+        Cloud.on(statusKey(user), () => updateQuizStatusDots());
+        Cloud.on(lastEditorKey(user), () => {
+            // Nur lokal halten, damit "gesehen"-Logik geräteübergreifend korrekt funktioniert.
         });
     });
 
@@ -2084,5 +2364,15 @@ function initQuizApp() {
         if (e.key.startsWith('quiz_answer_') && e.key.endsWith(dateString)) {
             // Hier könnte man die Antwort des anderen live aktualisieren, wenn gewünscht
         }
+        if (e.key.startsWith('quiz_status_') && e.key.endsWith(dateString)) {
+            updateQuizStatusDots();
+        }
     });
+
+    Object.keys(wrappers).forEach((user) => {
+        if (!localStorage.getItem(statusKey(user))) {
+            localStorage.setItem(statusKey(user), 'red');
+        }
+    });
+    updateQuizStatusDots();
 }
