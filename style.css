@@ -205,7 +205,7 @@ body.home-page h1 {
 }
 
 body.home-page .text-row {
-    margin-top: calc(1.5 * 68px);
+    margin-top: calc((1.5 * 68px) + 18px);
 }
 
 .col {
