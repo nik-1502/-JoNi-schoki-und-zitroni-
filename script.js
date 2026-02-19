@@ -16,7 +16,12 @@ const Cloud = {
     set: function(key, value) {
         const strValue = String(value);
         this.pendingWrites.set(key, { value: strValue, at: Date.now(), localOnly: false });
-        localStorage.setItem(key, strValue);
+        try {
+            localStorage.setItem(key, strValue);
+        } catch (_err) {
+            // Storage kann auf mobilen Browsern/Privatmodus fehlschlagen.
+            // App soll trotzdem weiterlaufen und per Server synchronisieren.
+        }
         this.notify(key, strValue);
         fetch(`${this.apiBase}/${encodeURIComponent(key)}`, {
             method: 'PUT',
@@ -126,6 +131,7 @@ function initDashboard() {
         niklas: document.getElementById('niklas-text'),
         jovelyn: document.getElementById('jovelyn-text')
     };
+    if (!textAreas.niklas || !textAreas.jovelyn) return;
     const textSaveDelayMs = 1200;
     const textSyncState = {
         niklas: { timer: null, pending: false },
@@ -2142,17 +2148,13 @@ function initPaintApp() {
     function bindFieldOpenTargets(user, ...targets) {
         targets.forEach((target) => {
             if (!target) return;
-            target.addEventListener('click', () => tryOpenField(user));
-            target.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                tryOpenField(user);
-            }, { passive: false });
-            target.addEventListener('pointerup', (e) => {
+            target.addEventListener('pointerdown', (e) => {
                 if (!e.isPrimary) return;
                 if (e.pointerType === 'mouse' && e.button !== 0) return;
-                if (e.pointerType !== 'mouse') e.preventDefault();
                 tryOpenField(user);
-            }, { passive: false });
+            });
+            // Fallback für ältere Browser/Events
+            target.addEventListener('click', () => tryOpenField(user));
         });
     }
 
