@@ -2,21 +2,6 @@
 // Damit die Synchronisation über Geräte hinweg funktioniert:
 // Synchronisierung laeuft ueber die API unter /api/state.
 // Frontend und API werden gemeinsam vom Render-Webservice ausgeliefert.
-(() => {
-    try {
-        const rawSetItem = Storage.prototype.setItem;
-        const rawGetItem = Storage.prototype.getItem;
-        Storage.prototype.setItem = function(key, value) {
-            try { return rawSetItem.call(this, key, value); } catch (_err) { return undefined; }
-        };
-        Storage.prototype.getItem = function(key) {
-            try { return rawGetItem.call(this, key); } catch (_err) { return null; }
-        };
-    } catch (_err) {
-        // no-op
-    }
-})();
-
 const Cloud = {
     apiBase: '/api/state',
     listeners: new Map(),
@@ -32,7 +17,11 @@ const Cloud = {
     set: function(key, value) {
         const strValue = String(value);
         this.pendingWrites.set(key, { value: strValue, at: Date.now(), localOnly: false });
-        localStorage.setItem(key, strValue);
+        try {
+            localStorage.setItem(key, strValue);
+        } catch (_err) {
+            // Local write kann auf einzelnen Geräten fehlschlagen.
+        }
         this.notify(key, strValue);
         this.trySendPendingKey(key);
     },
@@ -78,8 +67,9 @@ const Cloud = {
             .catch(() => {
                 // Key bleibt pending und wird beim nächsten Poll erneut versucht.
                 this.serverEnabled = false;
+                this.inflightWrites.delete(key);
             })
-            .finally(() => {
+            .then(() => {
                 this.inflightWrites.delete(key);
             });
     },
