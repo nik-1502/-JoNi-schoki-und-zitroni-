@@ -163,6 +163,7 @@ body.home-page h1 {
     -webkit-text-stroke: 0.08cm black;
     paint-order: stroke fill;
     margin-top: 2.6cm;
+    transform: translateY(calc(20px - 2.6cm));
 }
 
 .button, .control-button {
