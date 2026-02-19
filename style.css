@@ -84,21 +84,6 @@ body.mode-fullscreen::after {
     opacity: 0.45;
 }
 
-/* Wenn ein Malfeld geöffnet ist: Seitenfarbe vollflächig nutzen */
-body.home-page.mode-fullscreen::before {
-    background: #00BFFF;
-}
-
-body.paint-page.mode-fullscreen::before {
-    background: rgb(178, 128, 74);
-}
-
-body.home-page.mode-fullscreen::after,
-body.paint-page.mode-fullscreen::after {
-    background-image: none;
-    opacity: 0;
-}
-
 body.paint-page {
     background-color: rgb(178, 128, 74);
 }
@@ -173,7 +158,7 @@ body.home-page h1 {
     color: var(--white);
     -webkit-text-stroke: 0.08cm black;
     paint-order: stroke fill;
-    margin-top: 0.2cm;
+    margin-top: 2.6cm;
 }
 
 .button, .control-button {
@@ -204,8 +189,8 @@ body.home-page h1 {
     display: flex;
     flex-direction: column;
     flex-grow: 1; /* Nimmt den restlichen Platz ein */
-    gap: 8px; /* Kompakter, damit Spielen-Button oben sichtbar bleibt */
-    margin-top: 0;
+    gap: 15px; /* Einheitlicher Abstand (Spielen -> Buttons -> Malen) */
+    margin-top: 10px;
     padding-bottom: 10px;
     justify-content: flex-start; /* Von oben nach unten anordnen */
 }
@@ -217,10 +202,6 @@ body.home-page h1 {
     justify-content: space-between;
     /* flex: 1; entfernt, um natürliche Höhe zu erlauben */
     min-height: 0; /* Wichtig für Flexbox-Scaling */
-}
-
-body.home-page .text-row {
-    margin-top: calc((1.5 * 68px) + 18px);
 }
 
 .col {
@@ -372,7 +353,6 @@ body.home-page .canvas-wrapper {
 
 canvas {
     background-color: var(--white);
-    display: block;
     width: 100%;
     height: 100%;
     border: none;
@@ -1286,6 +1266,5 @@ body.games-page .floating-refresh-btn {
     background-color: rgb(255, 140, 0); /* Orange - passend zum Container-Inhalt */
     color: rgb(95, 45, 0);
 }
-
 
 

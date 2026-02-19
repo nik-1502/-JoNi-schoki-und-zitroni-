@@ -2086,4 +2086,3 @@ function initQuizApp() {
         }
     });
 }
-
