@@ -2,10 +2,26 @@
 // Damit die Synchronisation über Geräte hinweg funktioniert:
 // Synchronisierung laeuft ueber die API unter /api/state.
 // Frontend und API werden gemeinsam vom Render-Webservice ausgeliefert.
+(() => {
+    try {
+        const rawSetItem = Storage.prototype.setItem;
+        const rawGetItem = Storage.prototype.getItem;
+        Storage.prototype.setItem = function(key, value) {
+            try { return rawSetItem.call(this, key, value); } catch (_err) { return undefined; }
+        };
+        Storage.prototype.getItem = function(key) {
+            try { return rawGetItem.call(this, key); } catch (_err) { return null; }
+        };
+    } catch (_err) {
+        // no-op
+    }
+})();
+
 const Cloud = {
     apiBase: '/api/state',
     listeners: new Map(),
     pendingWrites: new Map(),
+    inflightWrites: new Set(),
     pollTimer: null,
     pollMs: 1500,
     serverEnabled: false,
@@ -16,29 +32,9 @@ const Cloud = {
     set: function(key, value) {
         const strValue = String(value);
         this.pendingWrites.set(key, { value: strValue, at: Date.now(), localOnly: false });
-        try {
-            localStorage.setItem(key, strValue);
-        } catch (_err) {
-            // Storage kann auf mobilen Browsern/Privatmodus fehlschlagen.
-            // App soll trotzdem weiterlaufen und per Server synchronisieren.
-        }
+        localStorage.setItem(key, strValue);
         this.notify(key, strValue);
-        fetch(`${this.apiBase}/${encodeURIComponent(key)}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ value: strValue })
-        })
-            .then((res) => {
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const pending = this.pendingWrites.get(key);
-                if (pending && pending.value === strValue) {
-                    this.pendingWrites.delete(key);
-                }
-                this.serverEnabled = true;
-            })
-            .catch(() => {
-                this.serverEnabled = false;
-            });
+        this.trySendPendingKey(key);
     },
     holdLocalValue: function(key, value) {
         this.pendingWrites.set(key, { value: String(value), at: Date.now(), localOnly: true });
@@ -58,6 +54,39 @@ const Cloud = {
         const callbacks = this.listeners.get(key);
         if (!callbacks) return;
         callbacks.forEach((cb) => cb(value));
+    },
+    trySendPendingKey: function(key) {
+        const pending = this.pendingWrites.get(key);
+        if (!pending || pending.localOnly) return;
+        if (this.inflightWrites.has(key)) return;
+
+        this.inflightWrites.add(key);
+        const value = pending.value;
+        fetch(`${this.apiBase}/${encodeURIComponent(key)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value })
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const nowPending = this.pendingWrites.get(key);
+                if (nowPending && !nowPending.localOnly && nowPending.value === value) {
+                    this.pendingWrites.delete(key);
+                }
+                this.serverEnabled = true;
+            })
+            .catch(() => {
+                // Key bleibt pending und wird beim nächsten Poll erneut versucht.
+                this.serverEnabled = false;
+            })
+            .finally(() => {
+                this.inflightWrites.delete(key);
+            });
+    },
+    flushPendingWrites: function() {
+        this.pendingWrites.forEach((_val, key) => {
+            this.trySendPendingKey(key);
+        });
     },
     pullFromServer: async function() {
         try {
@@ -94,11 +123,11 @@ const Cloud = {
     startPolling: function() {
         if (this.pollTimer) return;
         this.pollTimer = setInterval(() => {
+            this.flushPendingWrites();
             this.pullFromServer();
         }, this.pollMs);
     }
 };
-
 document.addEventListener('DOMContentLoaded', () => {
     Cloud.init(); // Server-Sync starten
 
@@ -113,14 +142,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Logik für den globalen Refresh-Button
     const globalRefreshBtn = document.getElementById('global-refresh-btn');
+    const hardRefreshPage = () => {
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.set('_r', String(Date.now()));
+            window.location.replace(url.toString());
+        } catch (_err) {
+            window.location.reload();
+        }
+    };
     if (globalRefreshBtn) {
         globalRefreshBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // Wenn wir NICHT auf einer Mal-Seite sind (kein Canvas), machen wir einen normalen Reload
-            if (!document.getElementById('niklas-canvas')) {
-                location.reload();
-            }
-            // Falls Canvas existiert, wird das Event in initPaintApp abgefangen und smart synchronisiert
+            hardRefreshPage();
         });
     }
 });
@@ -2183,9 +2217,13 @@ function initPaintApp() {
     if (globalRefreshBtn) {
         addTouchBtn(globalRefreshBtn, (e) => {
             e.stopPropagation();
-            drawFromStorage('niklas', true);
-            drawFromStorage('jovelyn', true);
-            updateStatusDots();
+            try {
+                const url = new URL(window.location.href);
+                url.searchParams.set('_r', String(Date.now()));
+                window.location.replace(url.toString());
+            } catch (_err) {
+                window.location.reload();
+            }
         });
     }
 
@@ -2404,3 +2442,4 @@ function initQuizApp() {
     });
     updateQuizStatusDots();
 }
+
