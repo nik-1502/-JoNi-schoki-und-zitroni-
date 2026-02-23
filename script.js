@@ -557,7 +557,13 @@ function initPaintApp() {
     let isDrawing = false;
     let lastX = 0;
     let lastY = 0;
+    let lastPointer = { x: 0, y: 0 };
     let activeUser = null; // 'niklas' oder 'jovelyn'
+    const LONG_PRESS_MS = 1200;
+    let currentStroke = [];
+    let longPressTimer = null;
+    let beautifiedThisStroke = false;
+    let shapeDrag = null; // { type:'circle', center:{x,y}, radius, baseDataURL, baseImg, pointerStart }
     
     // Geräte-ID für Status-Logik (Erstellt eine zufällige ID pro Browser)
     const deviceId = localStorage.getItem('deviceId') || Math.random().toString(36).substr(2, 9);
@@ -589,6 +595,115 @@ function initPaintApp() {
         if (history[user].undo.length > 20) history[user].undo.shift();
         history[user].undo.push(canvas.toDataURL());
         history[user].redo = [];
+    }
+
+    function clearLongPressTimer() {
+        if (longPressTimer) {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+        }
+    }
+
+    function scheduleBeautifyTimer(canvas) {
+        clearLongPressTimer();
+        longPressTimer = setTimeout(() => {
+            if (isDrawing && !beautifiedThisStroke) {
+                beautifyStroke(canvas);
+            }
+        }, LONG_PRESS_MS);
+    }
+
+    function dist(a, b) {
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function detectCircle(points) {
+        if (!points || points.length < 10) return null;
+        const bbox = {
+            minX: Math.min(...points.map(p => p.x)),
+            maxX: Math.max(...points.map(p => p.x)),
+            minY: Math.min(...points.map(p => p.y)),
+            maxY: Math.max(...points.map(p => p.y))
+        };
+        const w = bbox.maxX - bbox.minX;
+        const h = bbox.maxY - bbox.minY;
+        const minSide = Math.min(w, h);
+        if (minSide < 8) return null;
+
+        const closed = dist(points[0], points[points.length - 1]) < 0.35 * minSide;
+        if (!closed) return null;
+
+        const cx = (bbox.minX + bbox.maxX) / 2;
+        const cy = (bbox.minY + bbox.maxY) / 2;
+        const radii = points.map(p => Math.sqrt(Math.pow(p.x - cx, 2) + Math.pow(p.y - cy, 2)));
+        const meanR = radii.reduce((a, b) => a + b, 0) / radii.length;
+        const varR = radii.reduce((a, b) => a + Math.pow(b - meanR, 2), 0) / radii.length;
+        const stdR = Math.sqrt(varR);
+        if (meanR < 4) return null;
+        const roundness = stdR / meanR; // kleiner besser
+        if (roundness > 0.3) return null;
+        return { center: { x: cx, y: cy }, radius: meanR };
+    }
+
+    function drawCircle(ctx, center, radius) {
+        ctx.beginPath();
+        ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+
+    function renderShapeDrag(canvas, pointer) {
+        const ctx = canvas.getContext('2d');
+        if (!shapeDrag) return;
+        if (!shapeDrag.baseImg) {
+            shapeDrag.baseImg = new Image();
+            shapeDrag.baseImg.src = shapeDrag.baseDataURL;
+            shapeDrag.baseImg.onload = () => renderShapeDrag(canvas, pointer);
+            return;
+        }
+        const dx = pointer.x - shapeDrag.pointerStart.x;
+        const dy = pointer.y - shapeDrag.pointerStart.y;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(shapeDrag.baseImg, 0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.globalAlpha = brushOpacity;
+        ctx.strokeStyle = brushColor;
+        ctx.lineWidth = brushSize;
+        if (shapeDrag.type === 'circle') {
+            const c = {
+                x: shapeDrag.center.x + dx,
+                y: shapeDrag.center.y + dy
+            };
+            drawCircle(ctx, c, shapeDrag.radius);
+        }
+        ctx.restore();
+    }
+
+    function beautifyStroke(canvas) {
+        if (!activeUser || currentStroke.length < 6 || beautifiedThisStroke) return;
+        const circle = detectCircle(currentStroke);
+        if (!circle) return;
+        beautifiedThisStroke = true;
+        clearLongPressTimer();
+
+        // Basisbild merken
+        const baseDataURL = history[activeUser]?.undo?.length
+            ? history[activeUser].undo[history[activeUser].undo.length - 1]
+            : canvas.toDataURL();
+
+        shapeDrag = {
+            type: 'circle',
+            center: circle.center,
+            radius: circle.radius,
+            baseDataURL,
+            baseImg: null,
+            pointerStart: { ...lastPointer }
+        };
+
+        // Erste Darstellung
+        renderShapeDrag(canvas, lastPointer);
     }
 
     // --- DOM-Elemente ---
@@ -1402,6 +1517,7 @@ function initPaintApp() {
 
         // Das Canvas, auf das geklickt wurde
         const pos = getEventPosition(canvas, e);
+        lastPointer = { x: pos.x, y: pos.y };
 
         // Füll-Modus Logik
         if (isFillMode) {
@@ -1412,7 +1528,11 @@ function initPaintApp() {
         }
 
         isDrawing = true;
+        shapeDrag = null;
         [lastX, lastY] = [pos.x, pos.y];
+        currentStroke = [{ x: pos.x, y: pos.y }];
+        beautifiedThisStroke = false;
+        scheduleBeautifyTimer(canvas);
 
         // Zustand speichern für Undo (bevor der neue Strich beginnt)
         pushUndoSnapshot(activeUser, canvas);
@@ -1476,8 +1596,18 @@ function initPaintApp() {
             isDrawing = false;
             return;
         }
-        const ctx = canvas.getContext('2d');
         const pos = getEventPosition(canvas, e);
+        lastPointer = { x: pos.x, y: pos.y };
+
+        // Dragging erkannter Form
+        if (shapeDrag) {
+            renderShapeDrag(canvas, pos);
+            return;
+        }
+
+        const ctx = canvas.getContext('2d');
+        currentStroke.push({ x: pos.x, y: pos.y });
+        scheduleBeautifyTimer(canvas);
         
         // Harte Kanten Logik (Pixel-Art Style)
         const x1 = lastX;
@@ -1537,7 +1667,19 @@ function initPaintApp() {
         }
         if (!isDrawing) return;
         isDrawing = false;
-        persistDrawingLocally(activeUser);
+        clearLongPressTimer();
+        if (shapeDrag) {
+            persistDrawingLocally(activeUser);
+            syncDrawingToCloud(activeUser);
+            shapeDrag = null;
+            beautifiedThisStroke = false;
+        } else {
+            if (!beautifiedThisStroke) {
+                persistDrawingLocally(activeUser);
+            }
+            currentStroke = [];
+            beautifiedThisStroke = false;
+        }
         // Pfad beenden nicht zwingend nötig bei dieser Logik, aber sauber
     }
 
@@ -2420,3 +2562,4 @@ function initQuizApp() {
     });
     updateQuizStatusDots();
 }
+
