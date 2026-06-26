@@ -2,17 +2,32 @@
 // Damit die Synchronisation über Geräte hinweg funktioniert:
 // Synchronisierung laeuft ueber die API unter /api/state.
 // Frontend und API werden gemeinsam vom Render-Webservice ausgeliefert.
+const ROOM_STORAGE_KEY = 'webapp_room_key';
+const GLOBAL_STORAGE_KEYS = new Set([ROOM_STORAGE_KEY, 'deviceId']);
+
 (() => {
     // localStorage darf die App nicht mehr mit Exceptions stoppen
     // (z. B. iOS WebApp, privater Modus, Speicherlimit erreicht).
     try {
-        const rawSetItem = Storage.prototype.setItem;
         const rawGetItem = Storage.prototype.getItem;
+        const rawSetItem = Storage.prototype.setItem;
+        const rawRemoveItem = Storage.prototype.removeItem;
+        const scopedKey = function(key) {
+            const strKey = String(key);
+            if (GLOBAL_STORAGE_KEYS.has(strKey) || strKey.startsWith('room:')) {
+                return strKey;
+            }
+            const roomKey = rawGetItem.call(localStorage, ROOM_STORAGE_KEY);
+            return roomKey ? `room:${roomKey}:${strKey}` : strKey;
+        };
         Storage.prototype.setItem = function(key, value) {
-            try { return rawSetItem.call(this, key, value); } catch (_e) { return undefined; }
+            try { return rawSetItem.call(this, scopedKey(key), value); } catch (_e) { return undefined; }
         };
         Storage.prototype.getItem = function(key) {
-            try { return rawGetItem.call(this, key); } catch (_e) { return null; }
+            try { return rawGetItem.call(this, scopedKey(key)); } catch (_e) { return null; }
+        };
+        Storage.prototype.removeItem = function(key) {
+            try { return rawRemoveItem.call(this, scopedKey(key)); } catch (_e) { return undefined; }
         };
     } catch (_e) {
         // no-op
@@ -20,25 +35,150 @@
 })();
 
 const Cloud = {
-    apiBase: '/api/state',
+    supabaseRestBase: 'https://ebkfhejsdgziuysysoet.supabase.co/rest/v1',
+    supabaseKey: 'sb_publishable_7bl6m_9Iu_R7TKQ1Pp_MdQ_RehFxE6w',
+    roomStorageKey: ROOM_STORAGE_KEY,
+    roomKey: null,
     listeners: new Map(),
     pendingWrites: new Map(),
     pollTimer: null,
     pollMs: 1500,
     serverEnabled: false,
+    requestHeaders: function(extraHeaders = {}) {
+        return {
+            apikey: this.supabaseKey,
+            Authorization: `Bearer ${this.supabaseKey}`,
+            ...extraHeaders
+        };
+    },
     init: async function() {
+        await this.ensureRoomKey();
+        this.bindRoomSwitchButtons();
         await this.pullFromServer();
         this.startPolling();
+    },
+    normalizeRoomKey: function(value) {
+        return String(value || '').trim();
+    },
+    getStoredRoomKey: function() {
+        return this.normalizeRoomKey(localStorage.getItem(this.roomStorageKey));
+    },
+    setRoomKey: function(value) {
+        const roomKey = this.normalizeRoomKey(value);
+        if (roomKey.length < 5) {
+            throw new Error('Der Room-Code muss mindestens 5 Zeichen lang sein.');
+        }
+        this.roomKey = roomKey;
+        localStorage.setItem(this.roomStorageKey, roomKey);
+    },
+    ensureRoomKey: async function(forcePrompt = false) {
+        const storedRoomKey = this.getStoredRoomKey();
+        if (!forcePrompt && storedRoomKey.length >= 5) {
+            this.roomKey = storedRoomKey;
+            return storedRoomKey;
+        }
+        const roomKey = await this.showRoomDialog();
+        this.setRoomKey(roomKey);
+        return this.roomKey;
+    },
+    showRoomDialog: function() {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'room-code-overlay';
+            overlay.innerHTML = `
+                <div class="room-code-modal" role="dialog" aria-modal="true" aria-labelledby="room-code-title">
+                    <h2 id="room-code-title">Raum wählen</h2>
+                    <p>Erstelle einen neuen Raum oder tritt einem bestehenden Raum bei.</p>
+                    <div class="room-code-actions">
+                        <button type="button" class="room-mode-button is-active" data-mode="create">Neuen Raum erstellen</button>
+                        <button type="button" class="room-mode-button" data-mode="join">Raum beitreten</button>
+                    </div>
+                    <label class="room-code-label" for="room-code-input">Room-Code</label>
+                    <input id="room-code-input" class="room-code-input" type="text" minlength="5" autocomplete="off" placeholder="Mindestens 5 Zeichen">
+                    <div class="room-code-error" aria-live="polite"></div>
+                    <button type="button" class="room-code-submit">Weiter</button>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            const input = overlay.querySelector('#room-code-input');
+            const error = overlay.querySelector('.room-code-error');
+            const submit = overlay.querySelector('.room-code-submit');
+            const modeButtons = overlay.querySelectorAll('.room-mode-button');
+
+            modeButtons.forEach((button) => {
+                button.addEventListener('click', () => {
+                    modeButtons.forEach((item) => item.classList.remove('is-active'));
+                    button.classList.add('is-active');
+                    input.focus();
+                });
+            });
+
+            const finish = () => {
+                const roomKey = this.normalizeRoomKey(input.value);
+                if (roomKey.length < 5) {
+                    error.textContent = 'Bitte gib mindestens 5 Zeichen ein.';
+                    input.focus();
+                    return;
+                }
+                overlay.remove();
+                resolve(roomKey);
+            };
+
+            submit.addEventListener('click', finish);
+            input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    finish();
+                }
+            });
+
+            setTimeout(() => input.focus(), 0);
+        });
+    },
+    switchRoom: async function() {
+        localStorage.removeItem(this.roomStorageKey);
+        this.roomKey = null;
+        this.pendingWrites.clear();
+        await this.ensureRoomKey(true);
+        await this.pullFromServer();
+        window.location.reload();
+    },
+    bindRoomSwitchButtons: function() {
+        document.querySelectorAll('[data-room-switch]').forEach((button) => {
+            if (button.dataset.roomSwitchBound === 'true') return;
+            button.dataset.roomSwitchBound = 'true';
+            button.addEventListener('click', () => {
+                this.switchRoom();
+            });
+        });
+    },
+    requireRoomKey: function() {
+        if (!this.roomKey) {
+            this.roomKey = this.getStoredRoomKey();
+        }
+        if (!this.roomKey || this.roomKey.length < 5) {
+            throw new Error('Missing room key.');
+        }
+        return this.roomKey;
     },
     set: function(key, value) {
         const strValue = String(value);
         this.pendingWrites.set(key, { value: strValue, at: Date.now(), localOnly: false });
         localStorage.setItem(key, strValue);
         this.notify(key, strValue);
-        fetch(`${this.apiBase}/${encodeURIComponent(key)}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ value: strValue })
+        fetch(`${this.supabaseRestBase}/shared_state?on_conflict=room_key,key`, {
+            method: 'POST',
+            headers: this.requestHeaders({
+                'Content-Type': 'application/json',
+                Prefer: 'resolution=merge-duplicates,return=minimal'
+            }),
+            body: JSON.stringify({
+                room_key: this.requireRoomKey(),
+                key,
+                value: strValue,
+                updated_at: new Date().toISOString()
+            })
         })
             .then((res) => {
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -73,10 +213,21 @@ const Cloud = {
     },
     pullFromServer: async function() {
         try {
-            const response = await fetch(this.apiBase, { cache: 'no-store' });
+            const roomKey = encodeURIComponent(this.requireRoomKey());
+            const response = await fetch(`${this.supabaseRestBase}/shared_state?select=key,value&room_key=eq.${roomKey}`, {
+                cache: 'no-store',
+                headers: this.requestHeaders()
+            });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const payload = await response.json();
-            const state = payload && payload.state ? payload.state : {};
+            const rows = await response.json();
+            const state = {};
+            if (Array.isArray(rows)) {
+                rows.forEach((row) => {
+                    if (row && typeof row.key === 'string') {
+                        state[row.key] = row.value;
+                    }
+                });
+            }
             Object.keys(state).forEach((key) => {
                 const serverValue = String(state[key]);
                 const localValue = localStorage.getItem(key);
@@ -111,8 +262,8 @@ const Cloud = {
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    Cloud.init(); // Server-Sync starten
+document.addEventListener('DOMContentLoaded', async () => {
+    await Cloud.init(); // Server-Sync starten
 
     // Führe die App aus, wenn Canvas vorhanden ist (jetzt auf index.html)
     if (document.getElementById('niklas-canvas')) {

@@ -316,6 +316,114 @@ body.home-page .global-archive-button:hover {
     background: linear-gradient(145deg, #ffa54f 0%, #ff7f58 100%);
 }
 
+.room-switch-button {
+    align-self: center;
+    margin: 4px auto 0 auto;
+    padding: 6px 12px;
+    color: rgba(0, 0, 0, 0.58);
+    background: rgba(255, 255, 255, 0.32);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+.room-switch-button:hover {
+    color: rgba(0, 0, 0, 0.78);
+    background: rgba(255, 255, 255, 0.48);
+}
+
+.room-code-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.45);
+    box-sizing: border-box;
+}
+
+.room-code-modal {
+    width: min(420px, 100%);
+    padding: 22px;
+    border-radius: 12px;
+    background: var(--white);
+    color: var(--dark-grey);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+    text-align: left;
+}
+
+.room-code-modal h2 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+}
+
+.room-code-modal p {
+    margin: 0 0 16px 0;
+    color: #555;
+    line-height: 1.35;
+}
+
+.room-code-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.room-mode-button,
+.room-code-submit {
+    min-height: 42px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.room-mode-button {
+    color: #333;
+    background: #eef1f5;
+}
+
+.room-mode-button.is-active {
+    color: var(--white);
+    background: var(--primary-color);
+}
+
+.room-code-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.room-code-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.room-code-error {
+    min-height: 20px;
+    margin: 6px 0 8px 0;
+    color: #b00020;
+    font-size: 13px;
+}
+
+.room-code-submit {
+    width: 100%;
+    color: var(--white);
+    background: var(--primary-color);
+}
+
 body.paint-page .name-button {
     background: #e4883f;
     color: #fff2e2;
