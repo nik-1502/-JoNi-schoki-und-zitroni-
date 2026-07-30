@@ -35,8 +35,8 @@ const GLOBAL_STORAGE_KEYS = new Set([ROOM_STORAGE_KEY, 'deviceId']);
 })();
 
 const Cloud = {
-    supabaseRestBase: 'https://ebkfhejsdgziuysysoet.supabase.co/rest/v1',
-    supabaseKey: 'sb_publishable_7bl6m_9Iu_R7TKQ1Pp_MdQ_RehFxE6w',
+    supabaseRestBase: 'https://ufgnpqqngoacvcqwbdgt.supabase.co/rest/v1',
+    supabaseKey: 'sb_publishable__U5Q4qcaEkW5MKLf3zSo2Q_6OlJEIK6',
     roomStorageKey: ROOM_STORAGE_KEY,
     roomKey: null,
     listeners: new Map(),
