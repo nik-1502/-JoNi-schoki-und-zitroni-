@@ -32,11 +32,11 @@ Danach laufen Frontend und API auf derselben Domain.
 
 ## API
 
-- `GET /api/state` -> kompletter Zustand (ohne Passcode lesbar)
-- `PUT /api/state/:key` -> schreibt genau einen Key
+- `GET /api/state?room=ROOM_CODE` -> Zustand eines Raums
+- `PUT /api/state/:key` mit `{ "roomKey": "ROOM_CODE", "value": "..." }` -> schreibt einen Key im Raum
 - `GET /health` -> Healthcheck inkl. DB-Check
 
 ## Sicherheit
 
-- Soft-Rate-Limit fuer Writes: 60 Requests/Minute/IP.
+- Soft-Rate-Limit fuer Writes: 300 Requests/Minute/IP.
 - Groesse pro Value ist auf 20 MB begrenzt.

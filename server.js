@@ -6,7 +6,9 @@ const { Pool } = require('pg');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL;
-const WRITE_LIMIT_PER_MINUTE = 60;
+// Zwei Geräte im selben WLAN teilen sich meist eine öffentliche IP.
+// Zeichnungen erzeugen mehrere Schreibvorgänge, daher genügend Spielraum lassen.
+const WRITE_LIMIT_PER_MINUTE = 300;
 const writeWindowMs = 60 * 1000;
 const writeRate = new Map();
 
@@ -53,9 +55,13 @@ function writeRateLimit(req, res, next) {
 function validateStateInput(req, res, next) {
     const key = req.params.key;
     const value = req.body ? req.body.value : undefined;
+    const roomKey = req.body ? req.body.roomKey : undefined;
 
     if (!key || key.length > 180) {
         return res.status(400).json({ error: 'Invalid key.' });
+    }
+    if (typeof roomKey !== 'string' || roomKey.trim().length < 5 || roomKey.length > 180) {
+        return res.status(400).json({ error: 'Invalid room key.' });
     }
     if (typeof value !== 'string') {
         return res.status(400).json({ error: 'Value must be a string.' });
@@ -70,11 +76,18 @@ function validateStateInput(req, res, next) {
 async function ensureSchema() {
     await pool.query(`
         CREATE TABLE IF NOT EXISTS shared_state (
-            key TEXT PRIMARY KEY,
+            room_key TEXT NOT NULL,
+            key TEXT NOT NULL,
             value TEXT NOT NULL,
-            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            PRIMARY KEY (room_key, key)
         )
     `);
+    await pool.query('ALTER TABLE shared_state ADD COLUMN IF NOT EXISTS room_key TEXT');
+    await pool.query("UPDATE shared_state SET room_key = 'legacy' WHERE room_key IS NULL");
+    await pool.query('ALTER TABLE shared_state ALTER COLUMN room_key SET NOT NULL');
+    await pool.query('ALTER TABLE shared_state DROP CONSTRAINT IF EXISTS shared_state_pkey');
+    await pool.query('ALTER TABLE shared_state ADD CONSTRAINT shared_state_pkey PRIMARY KEY (room_key, key)');
 }
 
 app.get('/health', async (_req, res) => {
@@ -86,9 +99,16 @@ app.get('/health', async (_req, res) => {
     }
 });
 
-app.get('/api/state', async (_req, res, next) => {
+app.get('/api/state', async (req, res, next) => {
+    const roomKey = typeof req.query.room === 'string' ? req.query.room.trim() : '';
+    if (roomKey.length < 5 || roomKey.length > 180) {
+        return res.status(400).json({ error: 'Invalid room key.' });
+    }
     try {
-        const result = await pool.query('SELECT key, value FROM shared_state');
+        const result = await pool.query(
+            'SELECT key, value FROM shared_state WHERE room_key = $1',
+            [roomKey]
+        );
         const state = {};
         for (const row of result.rows) {
             state[row.key] = row.value;
@@ -102,16 +122,17 @@ app.get('/api/state', async (_req, res, next) => {
 app.put('/api/state/:key', writeRateLimit, validateStateInput, async (req, res, next) => {
     const key = req.params.key;
     const value = req.body.value;
+    const roomKey = req.body.roomKey.trim();
 
     try {
         await pool.query(
             `
-            INSERT INTO shared_state (key, value, updated_at)
-            VALUES ($1, $2, NOW())
-            ON CONFLICT (key)
+            INSERT INTO shared_state (room_key, key, value, updated_at)
+            VALUES ($1, $2, $3, NOW())
+            ON CONFLICT (room_key, key)
             DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
             `,
-            [key, value]
+            [roomKey, key, value]
         );
 
         res.json({ ok: true });

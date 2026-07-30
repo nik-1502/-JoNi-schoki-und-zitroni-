@@ -35,8 +35,7 @@ const GLOBAL_STORAGE_KEYS = new Set([ROOM_STORAGE_KEY, 'deviceId']);
 })();
 
 const Cloud = {
-    supabaseRestBase: 'https://ebkfhejsdgziuysysoet.supabase.co/rest/v1',
-    supabaseKey: 'sb_publishable_7bl6m_9Iu_R7TKQ1Pp_MdQ_RehFxE6w',
+    apiBase: '/api/state',
     roomStorageKey: ROOM_STORAGE_KEY,
     roomKey: null,
     listeners: new Map(),
@@ -44,13 +43,6 @@ const Cloud = {
     pollTimer: null,
     pollMs: 1500,
     serverEnabled: false,
-    requestHeaders: function(extraHeaders = {}) {
-        return {
-            apikey: this.supabaseKey,
-            Authorization: `Bearer ${this.supabaseKey}`,
-            ...extraHeaders
-        };
-    },
     init: async function() {
         await this.ensureRoomKey();
         this.bindRoomSwitchButtons();
@@ -167,17 +159,12 @@ const Cloud = {
         this.pendingWrites.set(key, { value: strValue, at: Date.now(), localOnly: false });
         localStorage.setItem(key, strValue);
         this.notify(key, strValue);
-        fetch(`${this.supabaseRestBase}/shared_state?on_conflict=room_key,key`, {
-            method: 'POST',
-            headers: this.requestHeaders({
-                'Content-Type': 'application/json',
-                Prefer: 'resolution=merge-duplicates,return=minimal'
-            }),
+        return fetch(`${this.apiBase}/${encodeURIComponent(key)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                room_key: this.requireRoomKey(),
-                key,
-                value: strValue,
-                updated_at: new Date().toISOString()
+                roomKey: this.requireRoomKey(),
+                value: strValue
             })
         })
             .then((res) => {
@@ -188,8 +175,10 @@ const Cloud = {
                 }
                 this.serverEnabled = true;
             })
-            .catch(() => {
+            .catch((err) => {
                 this.serverEnabled = false;
+                console.error('Synchronisierung fehlgeschlagen:', err);
+                return false;
             });
     },
     holdLocalValue: function(key, value) {
@@ -214,20 +203,10 @@ const Cloud = {
     pullFromServer: async function() {
         try {
             const roomKey = encodeURIComponent(this.requireRoomKey());
-            const response = await fetch(`${this.supabaseRestBase}/shared_state?select=key,value&room_key=eq.${roomKey}`, {
-                cache: 'no-store',
-                headers: this.requestHeaders()
-            });
+            const response = await fetch(`${this.apiBase}?room=${roomKey}`, { cache: 'no-store' });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const rows = await response.json();
-            const state = {};
-            if (Array.isArray(rows)) {
-                rows.forEach((row) => {
-                    if (row && typeof row.key === 'string') {
-                        state[row.key] = row.value;
-                    }
-                });
-            }
+            const payload = await response.json();
+            const state = payload && payload.state ? payload.state : {};
             Object.keys(state).forEach((key) => {
                 const serverValue = String(state[key]);
                 const localValue = localStorage.getItem(key);
@@ -734,6 +713,7 @@ function initPaintApp() {
     const lastDrawState = { niklas: null, jovelyn: null };
     const drawRenderToken = { niklas: 0, jovelyn: 0 };
     const drawingDirty = { niklas: false, jovelyn: false };
+    const drawingSyncTimers = { niklas: null, jovelyn: null };
 
     // --- History für Undo/Redo ---
     const history = {
@@ -1595,15 +1575,36 @@ function initPaintApp() {
         Cloud.holdLocalValue(`${user}_status${keySuffix}`, 'red');
         drawingDirty[user] = true;
         updateStatusDots();
+        scheduleDrawingSync(user);
     }
 
-    function syncDrawingToCloud(user) {
+    function scheduleDrawingSync(user) {
         if (!user) return;
+        if (drawingSyncTimers[user]) clearTimeout(drawingSyncTimers[user]);
+        drawingSyncTimers[user] = setTimeout(() => {
+            drawingSyncTimers[user] = null;
+            syncDrawingToCloud(user);
+        }, 500);
+    }
+
+    async function syncDrawingToCloud(user) {
+        if (!user) return false;
+        if (drawingSyncTimers[user]) {
+            clearTimeout(drawingSyncTimers[user]);
+            drawingSyncTimers[user] = null;
+        }
         const dataURL = localStorage.getItem(`${user}_drawing${keySuffix}`) || '';
-        Cloud.set(`${user}_drawing${keySuffix}`, dataURL);
-        Cloud.set(`${user}_status${keySuffix}`, 'red');
+        const results = await Promise.all([
+            Cloud.set(`${user}_drawing${keySuffix}`, dataURL),
+            Cloud.set(`${user}_status${keySuffix}`, 'red')
+        ]);
+        if (results.some((result) => result === false)) {
+            drawingDirty[user] = true;
+            return false;
+        }
         localStorage.setItem(getSavedSnapshotKey(user), dataURL);
         drawingDirty[user] = false;
+        return true;
     }
 
     function rememberCurrentAsSavedSnapshot(user) {
@@ -1821,7 +1822,6 @@ function initPaintApp() {
         clearLongPressTimer();
         if (shapeDrag) {
             persistDrawingLocally(activeUser);
-            syncDrawingToCloud(activeUser);
             shapeDrag = null;
             beautifiedThisStroke = false;
         } else {
@@ -2326,11 +2326,13 @@ function initPaintApp() {
     }
 
     // --- Speichern, Laden und Löschen ---
-    function saveData() {
+    async function saveData() {
         if (!activeUser) return;
         persistDrawingLocally(activeUser);
-        syncDrawingToCloud(activeUser);
-        alert('Bild gespeichert und für die andere Person sichtbar!');
+        const synced = await syncDrawingToCloud(activeUser);
+        alert(synced
+            ? 'Bild gespeichert und für die andere Person sichtbar!'
+            : 'Das Bild wurde lokal gespeichert, konnte aber nicht synchronisiert werden.');
     }
 
     function drawFromStorage(user, force = false) {
