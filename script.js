@@ -35,7 +35,8 @@ const GLOBAL_STORAGE_KEYS = new Set([ROOM_STORAGE_KEY, 'deviceId']);
 })();
 
 const Cloud = {
-    apiBase: '/api/state',
+    supabaseRestBase: 'https://ebkfhejsdgziuysysoet.supabase.co/rest/v1',
+    supabaseKey: 'sb_publishable_7bl6m_9Iu_R7TKQ1Pp_MdQ_RehFxE6w',
     roomStorageKey: ROOM_STORAGE_KEY,
     roomKey: null,
     listeners: new Map(),
@@ -43,6 +44,13 @@ const Cloud = {
     pollTimer: null,
     pollMs: 1500,
     serverEnabled: false,
+    requestHeaders: function(extraHeaders = {}) {
+        return {
+            apikey: this.supabaseKey,
+            Authorization: `Bearer ${this.supabaseKey}`,
+            ...extraHeaders
+        };
+    },
     init: async function() {
         await this.ensureRoomKey();
         this.bindRoomSwitchButtons();
@@ -159,12 +167,17 @@ const Cloud = {
         this.pendingWrites.set(key, { value: strValue, at: Date.now(), localOnly: false });
         localStorage.setItem(key, strValue);
         this.notify(key, strValue);
-        return fetch(`${this.apiBase}/${encodeURIComponent(key)}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+        return fetch(`${this.supabaseRestBase}/shared_state?on_conflict=room_key,key`, {
+            method: 'POST',
+            headers: this.requestHeaders({
+                'Content-Type': 'application/json',
+                Prefer: 'resolution=merge-duplicates,return=minimal'
+            }),
             body: JSON.stringify({
-                roomKey: this.requireRoomKey(),
-                value: strValue
+                room_key: this.requireRoomKey(),
+                key,
+                value: strValue,
+                updated_at: new Date().toISOString()
             })
         })
             .then((res) => {
@@ -203,10 +216,20 @@ const Cloud = {
     pullFromServer: async function() {
         try {
             const roomKey = encodeURIComponent(this.requireRoomKey());
-            const response = await fetch(`${this.apiBase}?room=${roomKey}`, { cache: 'no-store' });
+            const response = await fetch(`${this.supabaseRestBase}/shared_state?select=key,value&room_key=eq.${roomKey}`, {
+                cache: 'no-store',
+                headers: this.requestHeaders()
+            });
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const payload = await response.json();
-            const state = payload && payload.state ? payload.state : {};
+            const rows = await response.json();
+            const state = {};
+            if (Array.isArray(rows)) {
+                rows.forEach((row) => {
+                    if (row && typeof row.key === 'string') {
+                        state[row.key] = row.value;
+                    }
+                });
+            }
             Object.keys(state).forEach((key) => {
                 const serverValue = String(state[key]);
                 const localValue = localStorage.getItem(key);
