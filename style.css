@@ -518,6 +518,10 @@ body.home-page:not(.mode-fullscreen) canvas {
     outline: none;
 }
 
+body.paint-page:not(.mode-fullscreen) canvas {
+    outline: none;
+}
+
 .grid-overlay {
     position: absolute;
     inset: 0;
@@ -1521,6 +1525,189 @@ body.quiz-page .floating-refresh-btn {
 body.games-page .floating-refresh-btn {
     background-color: rgb(255, 140, 0); /* Orange - passend zum Container-Inhalt */
     color: rgb(95, 45, 0);
+}
+
+/* Gezielte Verfeinerung: Grundfarben, Größen und Layout bleiben erhalten. */
+body.home-page {
+    background-color: #00BFFF;
+    background-image: radial-gradient(circle at 50% 7%, rgba(255,255,255,.13), transparent 38%), linear-gradient(180deg, rgba(0,191,255,0) 48%, rgba(0,103,154,.13) 100%);
+    background-attachment: fixed;
+}
+body.games-page, body.games-page .container {
+    background-color: rgb(255,140,0);
+    background-image: radial-gradient(circle at 50% 5%, rgba(255,236,183,.15), transparent 38%), linear-gradient(180deg, rgba(255,140,0,0) 50%, rgba(154,63,0,.12) 100%);
+    background-attachment: fixed;
+}
+body.paint-page, body.paint-page .container {
+    background-color: rgb(178,128,74);
+    background-image: radial-gradient(circle at 50% 5%, rgba(255,239,210,.12), transparent 38%), linear-gradient(180deg, rgba(178,128,74,0) 52%, rgba(91,54,28,.11) 100%);
+    background-attachment: fixed;
+}
+body.quiz-page, body.quiz-page .container {
+    background-color: rgb(90,20,190);
+    background-image: radial-gradient(circle at 50% 5%, rgba(224,205,255,.12), transparent 38%), linear-gradient(180deg, rgba(90,20,190,0) 52%, rgba(40,7,91,.13) 100%);
+    background-attachment: fixed;
+}
+body.home-page h1 {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    letter-spacing: -.045em;
+    line-height: .94;
+    -webkit-text-stroke: .055cm rgba(22,38,53,.92);
+    text-shadow: 0 4px 0 rgba(22,38,53,.48), 0 7px 14px rgba(0,55,85,.22);
+}
+.page-back-button {
+    position: fixed;
+    top: calc(12px + env(safe-area-inset-top));
+    left: calc(12px + env(safe-area-inset-left));
+    z-index: 190;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 0 2px 5px 0;
+    border: 1px solid rgba(255,255,255,.38);
+    border-radius: 13px;
+    color: #fff;
+    background: rgba(36,28,48,.22);
+    box-shadow: 0 4px 10px rgba(35,20,24,.16), inset 0 1px rgba(255,255,255,.13);
+    font: 400 38px/1 Arial, sans-serif;
+    text-decoration: none;
+    touch-action: manipulation;
+    transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+.page-back-button:active {
+    transform: translateY(2px) scale(.97);
+    box-shadow: 0 1px 4px rgba(35,20,24,.14), inset 0 1px rgba(255,255,255,.1);
+    background: rgba(36,28,48,.3);
+}
+body.mode-fullscreen .page-back-button { display: none; }
+
+/* Einheitliche Display-Typografie ohne Änderungen an Größen oder Positionen. */
+body,
+body * {
+    font-family: 'Fredoka', sans-serif !important;
+}
+
+body,
+input,
+textarea,
+select {
+    font-weight: 400;
+}
+
+button,
+.button,
+.control-button,
+.name-button,
+.global-archive-button,
+.room-switch-button {
+    font-weight: 600;
+}
+
+body.home-page h1 {
+    width: calc(100% - 24px);
+    max-width: calc(100vw - 40px);
+    box-sizing: border-box;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0;
+    font-size: clamp(2.65rem, 11.25vw, 5.25rem);
+    letter-spacing: .01em;
+    line-height: 1.02;
+    text-align: center;
+    -webkit-text-stroke: 0.075cm rgba(18, 30, 43, 0.98);
+    paint-order: stroke fill;
+    text-shadow:
+        0 2px 0 rgba(18, 30, 43, 0.98),
+        0 5px 0 rgba(18, 30, 43, 0.58),
+        0 9px 18px rgba(0, 42, 68, 0.32);
+}
+
+.daily-challenge-title {
+    font-weight: 600 !important;
+}
+
+.daily-animal {
+    font-weight: 700 !important;
+}
+
+body.home-page .name-button {
+    font-size: 1.5rem !important;
+}
+
+body.paint-page .name-button,
+body.quiz-page .name-button {
+    width: 100%;
+    padding: 20px;
+    border-width: 6px;
+    border-style: solid;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+    font-size: 1.5rem !important;
+    line-height: normal;
+}
+
+body.quiz-page .name-button {
+    color: #fff;
+    background: rgb(104, 75, 158);
+    min-height: 0;
+    padding: 20px;
+    border-width: 6px;
+    border-color: rgb(38, 26, 60);
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 1.5rem !important;
+    box-shadow: 0 8px 18px rgba(38, 26, 60, 0.28);
+}
+
+.quiz-page .container > .row {
+    zoom: 1 !important;
+    gap: 15px !important;
+}
+
+.quiz-page .canvas-wrapper {
+    width: 100%;
+    height: auto !important;
+    aspect-ratio: 1 / 1 !important;
+    border-color: rgb(38, 26, 60);
+    box-shadow: none !important;
+}
+
+.quiz-daily-header {
+    width: calc(90% + 60px);
+    max-width: none;
+    min-height: 160px;
+    box-sizing: border-box;
+    padding: 15px 30px;
+    margin-bottom: 20px;
+    border-radius: 15px;
+    background-color: rgb(255, 140, 0);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.quiz-daily-header h1 {
+    margin: 0;
+    color: rgb(38, 26, 60);
+    font-family: 'Fredoka', sans-serif !important;
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.quiz-page .container > .quiz-daily-header {
+    zoom: 1;
+}
+
+.quiz-page .container {
+    padding-top: 40px !important;
 }
 
 
