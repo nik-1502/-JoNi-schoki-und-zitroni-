@@ -1703,11 +1703,426 @@ body.quiz-page .name-button {
 }
 
 .quiz-page .container > .quiz-daily-header {
-    zoom: 1;
+    zoom: 1 !important;
 }
 
 .quiz-page .container {
     padding-top: 40px !important;
+}
+
+/* Quiz-Look nach Referenzbild – ausschließlich Farbe, Licht und Materialtiefe. */
+body.quiz-page {
+    isolation: isolate;
+    background-color: #351044;
+    background-image:
+        radial-gradient(ellipse 82% 58% at 50% 34%, rgba(190, 73, 189, 0.34) 0%, rgba(123, 42, 145, 0.17) 44%, transparent 72%),
+        radial-gradient(ellipse 100% 74% at 50% 66%, rgba(139, 55, 151, 0.20) 0%, transparent 66%),
+        linear-gradient(180deg, #351044 0%, #63206f 48%, #3b124d 100%);
+    background-attachment: fixed;
+}
+
+body.quiz-page .container {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+
+body.quiz-page::before,
+body.quiz-page::after {
+    content: '';
+    position: fixed;
+    z-index: 0;
+    left: 50%;
+    pointer-events: none;
+    border-radius: 50%;
+    transform-origin: center;
+}
+
+body.quiz-page::before {
+    bottom: -31vh;
+    width: 150vw;
+    height: 52vh;
+    background: linear-gradient(180deg, rgba(157, 57, 175, 0.48), rgba(91, 28, 116, 0.34));
+    transform: translateX(-61%) rotate(8deg);
+    opacity: 0.58;
+}
+
+body.quiz-page::after {
+    bottom: -38vh;
+    width: 155vw;
+    height: 55vh;
+    background: linear-gradient(180deg, rgba(109, 35, 137, 0.60), rgba(53, 15, 72, 0.48));
+    transform: translateX(-39%) rotate(-9deg);
+    opacity: 0.68;
+}
+
+body.quiz-page .quiz-daily-header {
+    width: 348px;
+    max-width: 90vw;
+    min-height: 120px;
+    box-sizing: border-box;
+    border: 0;
+    border-radius: 15px;
+    background: linear-gradient(180deg, #4b145f 0%, #32103f 100%);
+    box-shadow: inset 0 0 0 5px #d58bea, 0 9px 18px rgba(26, 7, 35, 0.24);
+}
+
+body.quiz-page .quiz-daily-header h1 {
+    color: #fff6ff;
+    text-shadow: 0 2px 5px rgba(31, 8, 40, 0.18);
+}
+
+body.quiz-page .name-button {
+    color: #fff9ff;
+    background: linear-gradient(180deg, #b94fe1 0%, #7240c1 58%, #4c2b9b 100%);
+    border-color: #281037;
+    box-shadow: 0 8px 14px rgba(30, 7, 42, 0.24), inset 0 1px rgba(255, 255, 255, 0.14);
+    text-shadow: 0 1px 3px rgba(34, 9, 48, 0.18);
+}
+
+body.quiz-page .canvas-wrapper {
+    background: #fffdfd;
+    border-color: #281037;
+    box-shadow: 0 8px 15px rgba(28, 7, 39, 0.18) !important;
+}
+
+body.quiz-page .quiz-question-container {
+    background: #fffdfd;
+}
+
+body.quiz-page .quiz-click-text {
+    color: #321047;
+}
+
+body.quiz-page .quiz-status-dot.red,
+body.quiz-page .quiz-status-dot.green {
+    background: linear-gradient(180deg, #f0c4ff 0%, #d89aee 100%);
+    box-shadow: 0 3px 8px rgba(35, 9, 48, 0.16), inset 0 1px rgba(255, 255, 255, 0.28);
+}
+
+body.quiz-page .page-back-button {
+    color: #fff;
+    background: rgba(51, 13, 68, 0.62);
+    border-color: rgba(232, 186, 247, 0.62);
+    box-shadow: 0 4px 10px rgba(27, 7, 37, 0.20);
+}
+
+body.quiz-page .floating-refresh-btn {
+    color: #fff;
+    background: rgba(125, 54, 148, 0.72);
+    box-shadow: 0 4px 10px rgba(28, 7, 39, 0.16) !important;
+}
+
+/* Tier-des-Tages-Look nach Petrol-/Mint-Referenz – Geometrie bleibt erhalten. */
+body.paint-page:not(.mode-fullscreen) {
+    isolation: isolate;
+    background-color: #082f37;
+    background-image:
+        radial-gradient(ellipse 82% 58% at 50% 34%, rgba(105, 199, 180, 0.30) 0%, rgba(42, 119, 116, 0.16) 45%, transparent 72%),
+        radial-gradient(ellipse 100% 74% at 50% 66%, rgba(73, 151, 139, 0.18) 0%, transparent 66%),
+        linear-gradient(180deg, #082f37 0%, #15535a 49%, #0a3540 100%);
+    background-attachment: fixed;
+}
+
+body.paint-page:not(.mode-fullscreen) .container {
+    position: relative;
+    z-index: 1;
+    background: transparent !important;
+}
+
+body.paint-page:not(.mode-fullscreen)::before,
+body.paint-page:not(.mode-fullscreen)::after {
+    content: '';
+    position: fixed;
+    z-index: 0;
+    left: 50%;
+    pointer-events: none;
+    border-radius: 50%;
+    transform-origin: center;
+}
+
+body.paint-page:not(.mode-fullscreen)::before {
+    bottom: -31vh;
+    width: 150vw;
+    height: 52vh;
+    background: linear-gradient(180deg, rgba(53, 128, 127, 0.50), rgba(15, 70, 78, 0.38));
+    transform: translateX(-61%) rotate(8deg);
+    opacity: 0.58;
+}
+
+body.paint-page:not(.mode-fullscreen)::after {
+    bottom: -38vh;
+    width: 155vw;
+    height: 55vh;
+    background: linear-gradient(180deg, rgba(29, 100, 103, 0.60), rgba(7, 48, 57, 0.50));
+    transform: translateX(-39%) rotate(-9deg);
+    opacity: 0.68;
+}
+
+body.paint-page:not(.mode-fullscreen) .daily-challenge-container {
+    border: 0;
+    color: #f9fffd;
+    background: linear-gradient(180deg, #0d4047 0%, #082d35 100%);
+    box-shadow:
+        inset 0 0 0 5px #7ccfbb,
+        0 9px 18px rgba(3, 29, 34, 0.24);
+}
+
+body.paint-page:not(.mode-fullscreen) .daily-challenge-title {
+    color: #fffefd;
+    text-shadow: 0 2px 5px rgba(2, 28, 33, 0.18);
+}
+
+body.paint-page:not(.mode-fullscreen) .daily-animal {
+    color: #76cbb6;
+    text-shadow: 0 2px 5px rgba(2, 28, 33, 0.18);
+}
+
+body.paint-page:not(.mode-fullscreen) .name-button {
+    color: #fffefd;
+    background: linear-gradient(180deg, #63b8ae 0%, #287d82 58%, #165965 100%);
+    border-color: #062d35;
+    box-shadow: 0 8px 14px rgba(3, 30, 35, 0.24), inset 0 1px rgba(255, 255, 255, 0.14);
+    text-shadow: 0 1px 3px rgba(2, 28, 33, 0.18);
+}
+
+body.paint-page:not(.mode-fullscreen) .canvas-wrapper {
+    background: #fffdfd;
+    border-color: #062d35;
+    box-shadow: 0 8px 15px rgba(3, 29, 34, 0.18);
+}
+
+body.paint-page:not(.mode-fullscreen) canvas {
+    background: #fffdfd;
+}
+
+body.paint-page:not(.mode-fullscreen) .status-dot.red,
+body.paint-page:not(.mode-fullscreen) .status-dot.green {
+    background: linear-gradient(180deg, #a0e1d0 0%, #6dc7b2 100%);
+    box-shadow: 0 3px 8px rgba(3, 30, 35, 0.16), inset 0 1px rgba(255, 255, 255, 0.28);
+}
+
+body.paint-page:not(.mode-fullscreen) .page-back-button {
+    color: #fff;
+    background: rgba(5, 50, 58, 0.68);
+    border-color: rgba(151, 224, 207, 0.62);
+    box-shadow: 0 4px 10px rgba(3, 28, 33, 0.20);
+}
+
+body.paint-page:not(.mode-fullscreen) .floating-refresh-btn {
+    color: #eafff9;
+    background: rgba(29, 111, 111, 0.74);
+    box-shadow: 0 4px 10px rgba(3, 29, 34, 0.16) !important;
+}
+
+/* Spielen-Auswahl im selben Materialstil, mit warmer Orange-Palette. */
+body.games-page {
+    isolation: isolate;
+    background-color: #d65b0d;
+    background-image:
+        radial-gradient(ellipse 82% 58% at 50% 34%, rgba(255, 221, 147, 0.38) 0%, rgba(248, 142, 48, 0.20) 45%, transparent 72%),
+        radial-gradient(ellipse 100% 74% at 50% 66%, rgba(244, 126, 35, 0.22) 0%, transparent 66%),
+        linear-gradient(180deg, #d65b0d 0%, #f18727 49%, #c84a09 100%);
+    background-attachment: fixed;
+}
+
+body.games-page .container {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+}
+
+body.games-page::before,
+body.games-page::after {
+    content: '';
+    position: fixed;
+    z-index: 0;
+    left: 50%;
+    pointer-events: none;
+    border-radius: 50%;
+    transform-origin: center;
+}
+
+body.games-page::before {
+    bottom: -31vh;
+    width: 150vw;
+    height: 52vh;
+    background: linear-gradient(180deg, rgba(248, 137, 43, 0.56), rgba(197, 70, 8, 0.36));
+    transform: translateX(-61%) rotate(8deg);
+    opacity: 0.58;
+}
+
+body.games-page::after {
+    bottom: -38vh;
+    width: 155vw;
+    height: 55vh;
+    background: linear-gradient(180deg, rgba(218, 81, 12, 0.58), rgba(151, 43, 4, 0.42));
+    transform: translateX(-39%) rotate(-9deg);
+    opacity: 0.66;
+}
+
+body.games-page h1 {
+    width: 348px;
+    max-width: 90vw;
+    min-height: 120px;
+    box-sizing: border-box;
+    margin: 20px 0;
+    padding: 10px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: #fff9ef;
+    background: linear-gradient(180deg, #329bea 0%, #0759a3 100%);
+    border: 0;
+    border-radius: 15px;
+    box-shadow: inset 0 0 0 5px #ffc878, 0 9px 18px rgba(91, 27, 2, 0.24);
+    text-shadow: 0 2px 5px rgba(2, 34, 66, 0.20);
+}
+
+body.games-page .button {
+    color: #fffaf1;
+    background: linear-gradient(180deg, #49acf0 0%, #1687d9 56%, #0867b6 100%);
+    border-color: #87d0fb;
+    box-shadow:
+        0 9px 15px rgba(76, 25, 2, 0.24),
+        0 3px 0 rgba(5, 77, 135, 0.34),
+        inset 0 2px rgba(255, 255, 255, 0.18);
+    text-shadow: 0 1px 3px rgba(2, 38, 72, 0.24);
+}
+
+body.games-page .page-back-button {
+    color: #fff;
+    background: rgba(130, 41, 4, 0.66);
+    border-color: rgba(255, 202, 126, 0.64);
+    box-shadow: 0 4px 10px rgba(86, 25, 2, 0.20);
+}
+
+body.games-page .floating-refresh-btn {
+    color: #fff8ed;
+    background: rgba(186, 67, 8, 0.74);
+    box-shadow: 0 4px 10px rgba(86, 25, 2, 0.16) !important;
+}
+
+@media (max-width: 767px) {
+    body.games-page .game-selection-container .button {
+        width: 152px;
+        height: 152px;
+        transform: translateY(-6px);
+    }
+}
+
+/* Geöffnete Malansicht: bestehende Geometrie, Petrol-/Mint-Farbwelt. */
+body.paint-page.mode-fullscreen::before {
+    background:
+        radial-gradient(circle at 50% 28%, rgba(111, 205, 184, 0.24), transparent 46%),
+        radial-gradient(circle at 50% 76%, rgba(45, 132, 127, 0.20), transparent 48%),
+        linear-gradient(145deg, #062b33 0%, #124d54 48%, #0a3842 100%);
+}
+
+body.paint-page.mode-fullscreen::after {
+    background-image:
+        linear-gradient(rgba(174, 232, 219, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(174, 232, 219, 0.045) 1px, transparent 1px);
+}
+
+body.paint-page.mode-fullscreen .canvas-wrapper.fullscreen {
+    border-color: #83d5c1;
+    box-shadow:
+        0 0 0 18px rgba(223, 250, 243, 0.96),
+        0 0 0 30px rgba(5, 55, 63, 0.96),
+        0 18px 50px rgba(2, 27, 32, 0.50);
+}
+
+body.paint-page.mode-fullscreen .control-button {
+    color: #062d35 !important;
+    background: linear-gradient(160deg, #9be0d0 0%, #6ac5b5 52%, #42a69f 100%) !important;
+    border-color: rgba(205, 247, 237, 0.88);
+}
+
+body.paint-page.mode-fullscreen .control-button.is-tool-active {
+    color: #f2fffc !important;
+    background: linear-gradient(150deg, #17666b 0%, #09464f 100%) !important;
+    border-color: rgba(151, 222, 206, 0.62) !important;
+    box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.28), 0 5px 14px rgba(2, 42, 48, 0.34);
+}
+
+body.paint-page.mode-fullscreen .control-button.is-fill-active {
+    color: #062d35 !important;
+    background: linear-gradient(150deg, #8fe0cd 0%, #55bda9 100%) !important;
+    border-color: rgba(215, 251, 242, 0.94) !important;
+    box-shadow: inset 0 1px 6px rgba(0, 0, 0, 0.16), 0 7px 18px rgba(4, 70, 72, 0.30);
+}
+
+body.paint-page.mode-fullscreen .fullscreen-top-bar,
+body.paint-page.mode-fullscreen .fullscreen-bottom-bar {
+    border-color: rgba(151, 224, 207, 0.34);
+    background: linear-gradient(140deg, rgba(5, 55, 63, 0.82), rgba(17, 91, 94, 0.72));
+}
+
+body.paint-page.mode-fullscreen .panel,
+body.paint-page.mode-fullscreen #color-panel {
+    color: #ecfffa;
+    background: linear-gradient(165deg, rgba(5, 51, 59, 0.98), rgba(13, 80, 82, 0.97));
+    border-color: rgba(139, 216, 199, 0.42);
+}
+
+body.paint-page.mode-fullscreen .panel-header,
+body.paint-page.mode-fullscreen #color-panel .panel-header {
+    border-bottom-color: rgba(159, 225, 210, 0.28);
+}
+
+body.paint-page.mode-fullscreen .setting label,
+body.paint-page.mode-fullscreen .panel-header h3,
+body.paint-page.mode-fullscreen #color-panel .setting label,
+body.paint-page.mode-fullscreen #color-panel .panel-header h3 {
+    color: #ecfffa;
+}
+
+body.paint-page.mode-fullscreen #color-panel .panel-content {
+    background: transparent;
+}
+
+body.paint-page.mode-fullscreen .back-button {
+    color: #f4fffc;
+    background: linear-gradient(145deg, #278f8e, #17676e);
+    border-color: rgba(174, 234, 220, 0.52);
+}
+
+body.paint-page.mode-fullscreen .panel input[type="range"] {
+    accent-color: #78d3be;
+}
+
+/* Geöffnetes Tagesquiz: Pflaumen-/Lavendel-Look passend zur Quiz-Seite. */
+body.quiz-page .modal {
+    background: rgba(33, 8, 44, 0.72);
+}
+
+body.quiz-page .modal-content {
+    color: #fff8ff;
+    background: linear-gradient(180deg, #522066 0%, #341343 100%);
+    border-color: #d58bea;
+    box-shadow: 0 16px 38px rgba(25, 5, 34, 0.38), inset 0 1px rgba(255, 255, 255, 0.08);
+}
+
+body.quiz-page #quiz-question-text {
+    color: #fff8ff;
+    text-shadow: 0 2px 5px rgba(25, 5, 34, 0.18);
+}
+
+body.quiz-page .quiz-answer-input {
+    color: #30103e;
+    background: #fffafd;
+    border: 2px solid #c985de;
+    outline-color: #d99bea;
+    box-shadow: inset 0 2px 6px rgba(50, 12, 65, 0.08);
+}
+
+body.quiz-page #quiz-done-btn {
+    color: #fff9ff !important;
+    background: linear-gradient(180deg, #a94ed0 0%, #7137a7 100%) !important;
+    border-color: #dca0ed;
+    box-shadow: 0 5px 10px rgba(31, 7, 43, 0.24), inset 0 1px rgba(255, 255, 255, 0.14);
 }
 
 
