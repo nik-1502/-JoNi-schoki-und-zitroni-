@@ -11,7 +11,7 @@
         playButton.style.setProperty('--home-play-offset-y', '0px');
 
         const initialCharactersRect = characters.getBoundingClientRect();
-        const heroOffset = window.innerHeight / 2
+        const heroOffset = window.innerHeight * 0.40
             - (initialCharactersRect.top + initialCharactersRect.height / 2);
         hero.style.setProperty('--home-hero-offset-y', `${heroOffset}px`);
 

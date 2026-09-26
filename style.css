@@ -1675,6 +1675,91 @@ body.home-page .home-play-button img {
     flex: 0 0 auto;
 }
 
+body.home-page .home-play-button:active img {
+    transform: translateY(3px);
+}
+
+body.home-page .home-settings-button {
+    position: fixed;
+    z-index: 200;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    right: calc(22px + env(safe-area-inset-right, 0px));
+    width: 54px;
+    height: 54px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
+    box-shadow: none;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+body.home-page .home-settings-button img {
+    width: 82px;
+    height: 82px;
+    display: block;
+    max-width: none;
+    flex: 0 0 auto;
+}
+
+body.home-page .home-settings-button:active {
+    transform: translateY(3px);
+    box-shadow: none;
+}
+
+body.home-page .home-archive-button {
+    position: fixed;
+    z-index: 200;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    left: calc(22px + env(safe-area-inset-left, 0px));
+    width: 54px;
+    height: 54px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    border-radius: 50%;
+    box-shadow: none;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+body.home-page .home-archive-button img {
+    width: 82px;
+    height: 82px;
+    display: block;
+    max-width: none;
+    flex: 0 0 auto;
+}
+
+body.home-page .home-archive-button:hover {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    transform: none;
+    filter: none;
+}
+
+body.home-page .home-archive-button:active {
+    transform: translateY(3px);
+    box-shadow: none;
+}
+
+body.home-page .archive-layout-spacer {
+    height: 36px;
+    min-height: 36px;
+    flex: 0 0 36px;
+}
+
 .daily-challenge-title {
     font-weight: 600 !important;
 }
@@ -2289,4 +2374,136 @@ html.monster-root::before {
     height: env(safe-area-inset-top, 0px);
     pointer-events: none;
     background: var(--page-top-color);
+}
+
+/* Zwischenansicht vor der bestehenden Spielen-Auswahl. */
+html.play-intro-root,
+body.play-intro-page {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background-color: #7471ef;
+}
+
+body.play-intro-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    position: relative;
+}
+
+.play-intro-background {
+    position: fixed;
+    z-index: 0;
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+    right: calc(-1 * env(safe-area-inset-right, 0px));
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: calc(-1 * env(safe-area-inset-left, 0px));
+    width: calc(100% + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px));
+    height: calc(100% + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+    max-width: none;
+    object-fit: cover;
+    object-position: center center;
+    pointer-events: none;
+    user-select: none;
+}
+
+.play-intro-monster {
+    position: fixed;
+    z-index: 1;
+    left: 50%;
+    bottom: 26.7vh;
+    width: clamp(238px, 61vw, 610px);
+    height: auto;
+    max-height: 53vh;
+    object-fit: contain;
+    transform: translateX(-50%);
+    pointer-events: none;
+    user-select: none;
+}
+
+.monster-status {
+    position: fixed;
+    z-index: 2;
+    top: calc(env(safe-area-inset-top, 0px) + 18px);
+    width: clamp(116px, 30vw, 244px);
+    height: auto;
+    user-select: none;
+    pointer-events: none;
+}
+
+.monster-status-heart {
+    left: 21%;
+    transform: translateX(-50%);
+}
+
+.monster-status-star {
+    left: 79%;
+    transform: translateX(-50%);
+}
+
+.monster-action {
+    position: fixed;
+    z-index: 2;
+    bottom: max(6.5vh, calc(env(safe-area-inset-bottom, 0px) + 14px));
+    width: clamp(145px, 39vw, 330px);
+    aspect-ratio: 4 / 3;
+    margin: 0;
+    padding: 0;
+    display: block;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    text-decoration: none;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.monster-action-feed {
+    left: 22%;
+    transform: translateX(-50%);
+}
+
+.monster-action-play {
+    left: 78%;
+    transform: translateX(-50%);
+}
+
+.monster-action-background,
+.monster-action-icon {
+    position: absolute;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+}
+
+.monster-action-background {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.monster-action-icon {
+    z-index: 1;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 62%;
+    height: auto;
+}
+
+.monster-controller-icon {
+    width: 60%;
+}
+
+.monster-feed-icon {
+    left: 50%;
+    top: 50%;
+    width: 40%;
+    transform: translate(-50%, -50%);
+}
+
+.monster-action:active {
+    transform: translateX(-50%) translateY(3px);
 }
