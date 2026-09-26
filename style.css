@@ -24,7 +24,7 @@ body {
 
 /* Seiten-spezifische Hintergründe */
 body.home-page {
-    background-color: #00BFFF; /* Gesättigtes Babyblau (DeepSkyBlue) */
+    background-color: #7DD5FB;
 }
 
 body.games-page {
@@ -1529,8 +1529,9 @@ body.games-page .floating-refresh-btn {
 
 /* Gezielte Verfeinerung: Grundfarben, Größen und Layout bleiben erhalten. */
 body.home-page {
-    background-color: #00BFFF;
-    background-image: radial-gradient(circle at 50% 7%, rgba(255,255,255,.13), transparent 38%), linear-gradient(180deg, rgba(0,191,255,0) 48%, rgba(0,103,154,.13) 100%);
+    background-color: #7DD5FB;
+    background-image:
+        radial-gradient(ellipse at 50% 42%, #79D6FC 0%, #7DD5FB 56%, #83CDF9 100%);
     background-attachment: fixed;
 }
 body.games-page, body.games-page .container {
@@ -1624,6 +1625,15 @@ body.home-page h1 {
         0 2px 0 rgba(18, 30, 43, 0.98),
         0 5px 0 rgba(18, 30, 43, 0.58),
         0 9px 18px rgba(0, 42, 68, 0.32);
+}
+
+body.home-page .home-title-graphic {
+    display: block;
+    width: 100%;
+    height: 2.04em;
+    object-fit: contain;
+    transform: translateY(8px) scale(1.12);
+    transform-origin: center;
 }
 
 .daily-challenge-title {
@@ -2010,6 +2020,35 @@ body.games-page .floating-refresh-btn {
         height: 152px;
         transform: translateY(-6px);
     }
+}
+
+/* Leere Spielfläche für das zukünftige Monster-Spiel. */
+html:has(body.monster-page) {
+    background: #54247b;
+}
+
+body.monster-page {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+    background:
+        radial-gradient(
+            ellipse 82% 68% at 50% 48%,
+            #9862c2 0%,
+            #8450b0 28%,
+            #6b3995 55%,
+            #542879 78%,
+            #421d62 100%
+        );
+}
+
+body.monster-page .page-back-button {
+    color: #fff;
+    background: rgba(55, 20, 79, 0.58);
+    border-color: rgba(226, 190, 246, 0.58);
+    box-shadow: 0 4px 10px rgba(31, 10, 45, 0.20);
 }
 
 /* Geöffnete Malansicht: bestehende Geometrie, Petrol-/Mint-Farbwelt. */
