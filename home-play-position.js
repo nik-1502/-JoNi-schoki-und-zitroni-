@@ -1,18 +1,29 @@
 (() => {
     const positionPlayButton = () => {
+        const hero = document.querySelector('.home-page .hero-container');
         const characters = document.getElementById('home-characters-image');
         const playButton = document.getElementById('home-play-button');
+        const playGraphic = playButton?.querySelector('img');
 
-        if (!characters || !playButton) return;
+        if (!hero || !characters || !playButton || !playGraphic) return;
 
+        hero.style.setProperty('--home-hero-offset-y', '0px');
         playButton.style.setProperty('--home-play-offset-y', '0px');
+
+        const initialCharactersRect = characters.getBoundingClientRect();
+        const heroOffset = window.innerHeight / 2
+            - (initialCharactersRect.top + initialCharactersRect.height / 2);
+        hero.style.setProperty('--home-hero-offset-y', `${heroOffset}px`);
 
         const charactersRect = characters.getBoundingClientRect();
         const playRect = playButton.getBoundingClientRect();
+        const playGraphicRect = playGraphic.getBoundingClientRect();
         const freeHeight = Math.max(0, window.innerHeight - charactersRect.bottom);
-        /* Das Bild wurde 12 px abgesenkt. Der zusätzliche Versatz sorgt
-           dafür, dass der Play-Button insgesamt etwa doppelt so weit sinkt. */
-        const targetCenter = charactersRect.bottom + freeHeight * 0.27 + 24;
+        const distanceToCenter = Math.max(
+            playGraphicRect.height / 2 + 8,
+            freeHeight * 0.18
+        );
+        const targetCenter = charactersRect.bottom + distanceToCenter;
         const currentCenter = playRect.top + playRect.height / 2;
 
         playButton.style.setProperty(

@@ -1637,7 +1637,7 @@ body.home-page .home-title-graphic {
 }
 
 body.home-page .hero-container {
-    transform: translateY(36px);
+    transform: translateY(var(--home-hero-offset-y, 0px));
 }
 
 body.home-page #home-characters-image {
@@ -2204,3 +2204,89 @@ body.quiz-page #quiz-done-btn {
 }
 
 
+/* Seitenverläufe auf der vollständigen iOS-Safe-Area: So läuft der jeweilige
+   Hintergrund ohne sichtbare Trennkante hinter der Statusleiste weiter. */
+html.home-root,
+html.home-root body.home-page {
+    --page-top-color: #39bcec;
+    color-scheme: light;
+    background-color: #39bcec;
+    background-image:
+        linear-gradient(
+            180deg,
+            #39bcec 0,
+            #39bcec 120px,
+            rgba(57, 188, 236, 0) 260px
+        ),
+        radial-gradient(ellipse at 50% 42%, #62d5fa 0%, #4ac7f5 56%, #32b8e9 100%);
+    background-position: top center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+html.games-root,
+html.games-root body.games-page {
+    --page-top-color: #d65b0d;
+    color-scheme: light;
+    background-color: #d65b0d;
+    background-image:
+        linear-gradient(180deg, #d65b0d 0, #d65b0d 120px, rgba(214, 91, 13, 0) 260px),
+        radial-gradient(ellipse 82% 58% at 50% 34%, rgba(255, 221, 147, 0.38) 0%, rgba(248, 142, 48, 0.20) 45%, transparent 72%),
+        radial-gradient(ellipse 100% 74% at 50% 66%, rgba(244, 126, 35, 0.22) 0%, transparent 66%),
+        linear-gradient(180deg, #d65b0d 0%, #f18727 49%, #c84a09 100%);
+    background-attachment: fixed;
+}
+
+html.paint-root,
+html.paint-root body.paint-page:not(.mode-fullscreen) {
+    --page-top-color: #082f37;
+    color-scheme: light;
+    background-color: #082f37;
+    background-image:
+        linear-gradient(180deg, #082f37 0, #082f37 120px, rgba(8, 47, 55, 0) 260px),
+        radial-gradient(ellipse 82% 58% at 50% 34%, rgba(105, 199, 180, 0.30) 0%, rgba(42, 119, 116, 0.16) 45%, transparent 72%),
+        radial-gradient(ellipse 100% 74% at 50% 66%, rgba(73, 151, 139, 0.18) 0%, transparent 66%),
+        linear-gradient(180deg, #082f37 0%, #15535a 49%, #0a3540 100%);
+    background-attachment: fixed;
+}
+
+html.quiz-root,
+html.quiz-root body.quiz-page {
+    --page-top-color: #351044;
+    color-scheme: light;
+    background-color: #351044;
+    background-image:
+        linear-gradient(180deg, #351044 0, #351044 120px, rgba(53, 16, 68, 0) 260px),
+        radial-gradient(ellipse 82% 58% at 50% 34%, rgba(190, 73, 189, 0.34) 0%, rgba(123, 42, 145, 0.17) 44%, transparent 72%),
+        radial-gradient(ellipse 100% 74% at 50% 66%, rgba(139, 55, 151, 0.20) 0%, transparent 66%),
+        linear-gradient(180deg, #351044 0%, #63206f 48%, #3b124d 100%);
+    background-attachment: fixed;
+}
+
+html.monster-root,
+html.monster-root body.monster-page {
+    --page-top-color: #472069;
+    color-scheme: light;
+    background-color: #472069;
+    background-image:
+        linear-gradient(180deg, #472069 0, #472069 120px, rgba(71, 32, 105, 0) 260px),
+        radial-gradient(ellipse 82% 68% at 50% 48%, #9862c2 0%, #8450b0 28%, #6b3995 55%, #542879 78%, #421d62 100%);
+    background-attachment: fixed;
+}
+
+/* iOS/PWA-Fallback: liegt exakt hinter der echten System-Statusleiste. */
+html.home-root::before,
+html.games-root::before,
+html.paint-root::before,
+html.quiz-root::before,
+html.monster-root::before {
+    content: '';
+    position: fixed;
+    z-index: 2147483647;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: env(safe-area-inset-top, 0px);
+    pointer-events: none;
+    background: var(--page-top-color);
+}
