@@ -1636,6 +1636,45 @@ body.home-page .home-title-graphic {
     transform-origin: center;
 }
 
+body.home-page .hero-container {
+    transform: translateY(36px);
+}
+
+body.home-page #home-characters-image {
+    transform: translateY(12px);
+}
+
+/* Der Layoutplatz bleibt unverändert; nur der sichtbare Play-Button wird
+   responsiv zwischen Figurenbild und Viewport-Unterkante positioniert. */
+body.home-page .home-play-button {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 15px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+    border: 0 !important;
+    border-radius: 0;
+    background: transparent !important;
+    box-shadow: none;
+    transform: translateY(var(--home-play-offset-y, 0px));
+    transition: none;
+}
+
+body.home-page .home-play-button:hover {
+    background: transparent !important;
+}
+
+body.home-page .home-play-button img {
+    display: block;
+    width: clamp(270px, 78vw, 350px);
+    max-width: none;
+    height: auto;
+    flex: 0 0 auto;
+}
+
 .daily-challenge-title {
     font-weight: 600 !important;
 }
