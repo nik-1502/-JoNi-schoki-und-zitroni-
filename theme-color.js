@@ -1,6 +1,6 @@
 (() => {
     const pageThemes = {
-        'home-page': '#7DD5FB',
+        'home-page': '#4AC7F5',
         'games-page': '#D65B0D',
         'paint-page': '#082F37',
         'quiz-page': '#351044',
