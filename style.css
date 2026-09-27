@@ -2599,6 +2599,10 @@ html.play-intro-root body.play-intro-page {
     transform: none;
 }
 
+.monster-status-plus:active {
+    transform: translateY(-50%) scale(.92);
+}
+
 .monster-status-star .monster-status-plus {
     right: 11%;
 }
@@ -2734,4 +2738,13 @@ html.play-intro-root body.play-intro-page {
 
 .monster-action:active {
     transform: translateX(-50%) translateY(3px);
+}
+
+.monster-bubble {
+    transition: transform 120ms ease, filter 120ms ease;
+}
+
+.monster-bubble:active {
+    transform: scale(.93);
+    filter: brightness(.92);
 }
