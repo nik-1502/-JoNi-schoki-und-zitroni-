@@ -3,6 +3,8 @@
 // GitHub Pages liefert die Website aus.
 // Die Synchronisierung verwendet direkt die Supabase REST API (siehe Cloud).
 const ROOM_STORAGE_KEY = 'webapp_room_key';
+const ROOM_PROMPTED_KEY = 'webapp_room_prompted_v1';
+const SETTINGS_AUTH_KEY = 'webapp_settings_authenticated';
 const GLOBAL_STORAGE_KEYS = new Set([ROOM_STORAGE_KEY, 'deviceId']);
 
 (() => {
@@ -73,12 +75,18 @@ const Cloud = {
     },
     ensureRoomKey: async function(forcePrompt = false) {
         const storedRoomKey = this.getStoredRoomKey();
-        if (!forcePrompt && storedRoomKey.length >= 5) {
+        const isStandalone = Boolean(window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches);
+        const isSettingsAuthenticated = localStorage.getItem(SETTINGS_AUTH_KEY) === 'true';
+        const promptedInStandalone = localStorage.getItem(ROOM_PROMPTED_KEY) === 'true';
+        const canReuseRoom = !forcePrompt && storedRoomKey.length >= 5 &&
+            (isSettingsAuthenticated || (isStandalone && promptedInStandalone));
+        if (canReuseRoom) {
             this.roomKey = storedRoomKey;
             return storedRoomKey;
         }
         const roomKey = await this.showRoomDialog();
         this.setRoomKey(roomKey);
+        localStorage.setItem(ROOM_PROMPTED_KEY, 'true');
         return this.roomKey;
     },
     showRoomDialog: function() {
