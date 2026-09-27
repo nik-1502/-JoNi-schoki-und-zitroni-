@@ -4,7 +4,7 @@
         'games-page': '#D65B0D',
         'paint-page': '#082F37',
         'quiz-page': '#351044',
-        'monster-page': '#472069'
+        'monster-page': '#7471ef'
     };
 
     function updateThemeColor() {

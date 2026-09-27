@@ -2350,12 +2350,13 @@ html.quiz-root body.quiz-page {
 
 html.monster-root,
 html.monster-root body.monster-page {
-    --page-top-color: #472069;
+    --page-top-color: #7471ef;
     color-scheme: light;
-    background-color: #472069;
-    background-image:
-        linear-gradient(180deg, #472069 0, #472069 120px, rgba(71, 32, 105, 0) 260px),
-        radial-gradient(ellipse 82% 68% at 50% 48%, #9862c2 0%, #8450b0 28%, #6b3995 55%, #542879 78%, #421d62 100%);
+    background-color: #7471ef;
+    background-image: url('images/monster hintergrund/3ffaf038-3d5d-4c0d-b9e8-0d93c2edc2b9.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     background-attachment: fixed;
 }
 
@@ -2363,8 +2364,7 @@ html.monster-root body.monster-page {
 html.home-root::before,
 html.games-root::before,
 html.paint-root::before,
-html.quiz-root::before,
-html.monster-root::before {
+html.quiz-root::before {
     content: '';
     position: fixed;
     z-index: 2147483647;
@@ -2395,12 +2395,10 @@ body.play-intro-page {
 .play-intro-background {
     position: fixed;
     z-index: 0;
-    top: calc(-1 * env(safe-area-inset-top, 0px));
-    right: calc(-1 * env(safe-area-inset-right, 0px));
-    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
-    left: calc(-1 * env(safe-area-inset-left, 0px));
-    width: calc(100% + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px));
-    height: calc(100% + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+    /* viewport-fit=cover includes the system safe areas already. */
+    inset: 0;
+    width: 100%;
+    height: 100%;
     max-width: none;
     object-fit: cover;
     object-position: center center;
