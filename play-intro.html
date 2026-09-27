@@ -13,7 +13,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Spielen</title>
-    <link rel="stylesheet" href="style.css?v=monster-menu-20260927-34">
+    <link rel="stylesheet" href="style.css?v=monster-menu-20260927-35">
 </head>
 <body class="play-intro-page">
     <a class="page-back-button" href="index.html?v=home-20260927-18" aria-label="Zurück zur Startseite">&#8249;</a>
@@ -76,6 +76,7 @@
             const MAX_TIME = 48 * 60 * 60 * 1000;
             const FEED_AMOUNT = 8 * 60 * 60 * 1000;
             const AFTER_HEART_LOSS = 24 * 60 * 60 * 1000;
+            const INITIAL_TIME = 24 * 60 * 60 * 1000;
             const keys = {
                 hearts: 'monster.hearts.v1', stars: 'monster.stars.v1', nextLoss: 'monster.nextHeartLossAt.v1'
             };
@@ -89,7 +90,7 @@
             };
             let hearts = Math.max(0, read(keys.hearts, 3));
             let stars = Math.max(0, read(keys.stars, 2));
-            let nextLoss = read(keys.nextLoss, Date.now() + 24 * 60 * 60 * 1000);
+            let nextLoss = read(keys.nextLoss, Date.now() + INITIAL_TIME);
 
             const persist = () => {
                 localStorage.setItem(keys.hearts, String(hearts));
