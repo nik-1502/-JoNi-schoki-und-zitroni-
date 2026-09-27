@@ -2588,6 +2588,10 @@ html.play-intro-root body.play-intro-page {
     object-fit: fill;
     user-select: none;
     pointer-events: none;
+    overflow: visible;
+    isolation: isolate;
+    contain: layout paint;
+    will-change: transform;
 }
 
 .monster-time-bar {
