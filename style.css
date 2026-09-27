@@ -1687,6 +1687,30 @@ body.home-page h1 {
     box-shadow: 0 1px 4px rgba(35,20,24,.14), inset 0 1px rgba(255,255,255,.1);
     background: rgba(36,28,48,.3);
 }
+
+.play-intro-page .monster-back-button {
+    top: calc(env(safe-area-inset-top, 0px) + 70px);
+    left: calc(22% - (clamp(145px, 39vw, 330px) / 2));
+    width: 54px;
+    height: 54px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: none;
+}
+
+.play-intro-page .monster-back-button img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.play-intro-page .monster-back-button:active {
+    background: transparent;
+    box-shadow: none;
+}
 body.mode-fullscreen .page-back-button { display: none; }
 
 /* Einheitliche Display-Typografie ohne Änderungen an Größen oder Positionen. */
