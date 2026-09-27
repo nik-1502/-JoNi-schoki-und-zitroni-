@@ -1,0 +1,14 @@
+{
+  "id": "./",
+  "name": "Herz in Menschenform",
+  "short_name": "JoNi",
+  "lang": "de",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#39BCEC",
+  "theme_color": "#39BCEC",
+  "icons": [
+    { "src": "images/home-Icon.png", "type": "image/png", "sizes": "1362x1388" }
+  ]
+}
