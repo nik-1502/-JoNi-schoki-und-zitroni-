@@ -24,7 +24,8 @@ body {
 
 /* Seiten-spezifische Hintergründe */
 body.home-page {
-    --home-content-offset-y: 24px;
+    --home-content-offset-y: 36px;
+    --home-navigation-offset-y: 8px;
     background-color: #4AC7F5;
 }
 
@@ -1688,7 +1689,7 @@ body.home-page .home-play-button:active img {
 body.home-page .home-settings-button {
     position: fixed;
     z-index: 200;
-    top: calc(12px + env(safe-area-inset-top, 0px) + var(--home-content-offset-y));
+    top: calc(12px + env(safe-area-inset-top, 0px) + var(--home-navigation-offset-y));
     right: calc(22px + env(safe-area-inset-right, 0px));
     width: 54px;
     height: 54px;
@@ -1720,7 +1721,7 @@ body.home-page .home-settings-button:active {
 body.home-page .home-archive-button {
     position: fixed;
     z-index: 200;
-    top: calc(12px + env(safe-area-inset-top, 0px) + var(--home-content-offset-y));
+    top: calc(12px + env(safe-area-inset-top, 0px) + var(--home-navigation-offset-y));
     left: calc(22px + env(safe-area-inset-left, 0px));
     width: 54px;
     height: 54px;
