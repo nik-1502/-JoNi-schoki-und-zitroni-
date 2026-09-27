@@ -2489,10 +2489,10 @@ html.play-intro-root body.play-intro-page {
 
 .monster-status-heart-icon {
     z-index: 1;
-    left: 14%;
-    top: 10%;
-    width: 24%;
-    height: 80%;
+    left: 10%;
+    top: 16%;
+    width: 20%;
+    height: 68%;
     object-fit: contain;
 }
 
@@ -2510,9 +2510,9 @@ html.play-intro-root body.play-intro-page {
     position: absolute;
     z-index: 1;
     left: 10%;
-    top: 10%;
-    width: 24%;
-    height: 80%;
+    top: 16%;
+    width: 20%;
+    height: 68%;
     object-fit: contain;
     transform: rotate(0deg);
 }
