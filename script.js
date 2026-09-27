@@ -6,7 +6,14 @@ const ROOM_STORAGE_KEY = 'webapp_room_key';
 const ROOM_PROMPTED_KEY = 'webapp_room_prompted_v2';
 const ROOM_SESSION_KEY = 'webapp_room_prompted_session_v1';
 const SETTINGS_AUTH_KEY = 'webapp_settings_authenticated';
-const GLOBAL_STORAGE_KEYS = new Set([ROOM_STORAGE_KEY, 'deviceId']);
+const GLOBAL_STORAGE_KEYS = new Set([ROOM_STORAGE_KEY, 'deviceId', 'monster.stars.v1']);
+const MONSTER_STARS_KEY = 'monster.stars.v1';
+
+function awardMonsterStars(amount = 2) {
+    const current = Number(localStorage.getItem(MONSTER_STARS_KEY));
+    const next = (Number.isFinite(current) ? current : 0) + amount;
+    localStorage.setItem(MONSTER_STARS_KEY, String(next));
+}
 
 (() => {
     // localStorage darf die App nicht mehr mit Exceptions stoppen
@@ -737,6 +744,7 @@ function initPaintApp() {
     let lastY = 0;
     let lastPointer = { x: 0, y: 0 };
     let activeUser = null; // 'niklas' oder 'jovelyn'
+    let drawingSavedSinceEntry = false;
     const LONG_PRESS_MS = 1200;
     let currentStroke = [];
     let longPressTimer = null;
@@ -2378,6 +2386,7 @@ function initPaintApp() {
         if (!activeUser) return;
         persistDrawingLocally(activeUser);
         const synced = await syncDrawingToCloud(activeUser);
+        drawingSavedSinceEntry = true;
         alert(synced
             ? 'Bild gespeichert und für die andere Person sichtbar!'
             : 'Das Bild wurde lokal gespeichert, konnte aber nicht synchronisiert werden.');
@@ -2467,6 +2476,7 @@ function initPaintApp() {
     // --- Fullscreen Logik ---
     function enterFullscreen(user) {
         activeUser = user;
+        drawingSavedSinceEntry = false;
         const wrapper = (user === 'niklas') ? wrapperNiklas : wrapperJovelyn;
         
         wrapper.classList.add('fullscreen');
@@ -2483,6 +2493,10 @@ function initPaintApp() {
     }
 
     function exitFullscreen() {
+        if (drawingSavedSinceEntry) {
+            awardMonsterStars(2);
+            drawingSavedSinceEntry = false;
+        }
         closeSaveGalleryModal();
         activeUser = null;
         isRightDragging = false;
@@ -2721,11 +2735,20 @@ function initQuizApp() {
         }
     });
 
-    // Fertig Button
-    modalDoneBtn.addEventListener('click', closeQuizModal);
-    modalDoneBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
+    // Fertig Button: eine beantwortete Frage belohnt den Monster-Sternestand.
+    let lastQuizDoneAt = 0;
+    const finishQuiz = (event) => {
+        if (event) event.preventDefault();
+        const answer = String(modalInput.value || '').trim();
+        if (answer && Date.now() - lastQuizDoneAt > 320) {
+            lastQuizDoneAt = Date.now();
+            awardMonsterStars(2);
+        }
         closeQuizModal();
+    };
+    modalDoneBtn.addEventListener('click', finishQuiz);
+    modalDoneBtn.addEventListener('touchstart', (e) => {
+        finishQuiz(e);
     }, { passive: false });
 
     // Klick auf die Kacheln öffnet Modal
