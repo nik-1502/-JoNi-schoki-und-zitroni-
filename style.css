@@ -431,6 +431,67 @@ body.home-page .global-archive-button:hover {
     touch-action: manipulation;
 }
 
+/* Raumcode-Fenster im gleichen glänzenden Archiv-Stil. */
+.room-code-overlay {
+    background: rgba(15, 31, 72, .48);
+    backdrop-filter: blur(6px);
+}
+
+.room-code-modal {
+    width: min(560px, 100%);
+    padding: 24px;
+    border: 3px solid rgba(255,255,255,.82);
+    border-radius: 28px;
+    color: #153c87;
+    background: linear-gradient(145deg, #f2fbff, #b8ddff);
+    box-shadow: 0 14px 36px rgba(20,63,125,.34), inset 0 2px rgba(255,255,255,.9);
+}
+
+.room-code-modal h2 {
+    margin: 0 0 8px;
+    color: #153c87;
+    font-size: clamp(1.7rem, 6vw, 2.3rem);
+}
+
+.room-code-modal p {
+    color: #28528f;
+}
+
+.room-code-actions {
+    gap: 10px;
+}
+
+.room-mode-button,
+.room-code-submit,
+.home-settings-cancel {
+    border: 2px solid rgba(255,255,255,.78);
+    border-radius: 14px;
+    box-shadow: 0 4px 0 rgba(38,91,157,.38), inset 0 1px rgba(255,255,255,.72);
+}
+
+.room-mode-button {
+    color: #214b8b;
+    background: rgba(255,255,255,.5);
+}
+
+.room-mode-button.is-active,
+.room-code-submit {
+    color: #fff;
+    background: linear-gradient(180deg, #5e9bea, #4774c7);
+}
+
+.room-code-input {
+    height: 48px;
+    border: 3px solid #6d9fe0;
+    border-radius: 14px;
+    color: #173f88;
+    background: rgba(255,255,255,.9);
+}
+
+.room-code-error {
+    color: #b13d55;
+}
+
 .room-code-label {
     display: block;
     margin-bottom: 6px;
