@@ -2256,6 +2256,17 @@ body.quiz-page .container {
     padding-top: 76px !important;
 }
 
+body.quiz-page .container > .row > .col {
+    padding: 0;
+    background: transparent;
+}
+
+body.quiz-page .container > .row > .col::before,
+body.quiz-page .quiz-daily-header::before,
+body.quiz-page .quiz-daily-header::after {
+    display: none;
+}
+
 body.quiz-page #quiz-modal .modal-content {
     border: 6px solid #102e93;
     border-radius: 28px;
