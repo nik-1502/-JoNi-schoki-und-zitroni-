@@ -1,4 +1,16 @@
 (() => {
+    // Apply in browsers and installed apps, before the browser restores a position.
+    if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'manual';
+    }
+    const startAtTop = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.addEventListener('DOMContentLoaded', startAtTop, { once: true });
+    window.addEventListener('pageshow', () => {
+        startAtTop();
+        // Also handle iOS restoring a cached page at the next rendering frame.
+        requestAnimationFrame(startAtTop);
+    });
+
     // Keep same-app links in the current window of older iOS Home Screen apps.
     if (!window.navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches) return;
 
