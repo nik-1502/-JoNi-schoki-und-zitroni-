@@ -2521,7 +2521,7 @@ html.play-intro-root body.play-intro-page {
     position: absolute;
     z-index: 3;
     top: 50%;
-    right: 10%;
+    right: 14%;
     width: 18%;
     aspect-ratio: 1;
     transform: translateY(-50%);
