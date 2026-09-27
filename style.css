@@ -2479,7 +2479,7 @@ html.play-intro-root body.play-intro-page {
 
 .monster-status-star {
     left: 78%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) scale(1.15);
 }
 
 .monster-action {
