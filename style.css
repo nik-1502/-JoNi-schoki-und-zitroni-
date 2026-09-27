@@ -1680,7 +1680,7 @@ body.home-page .home-play-button {
     background: transparent !important;
     box-shadow: none;
     transform: translateY(var(--home-play-offset-y, 0px));
-    transition: none;
+    transition: transform .12s ease;
 }
 
 body.home-page .home-play-button:hover {
@@ -1693,10 +1693,11 @@ body.home-page .home-play-button img {
     max-width: none;
     height: auto;
     flex: 0 0 auto;
+    transition: transform .12s ease;
 }
 
 body.home-page .home-play-button:active img {
-    transform: translateY(3px);
+    transform: translateY(3px) scale(.97);
 }
 
 body.home-page .home-settings-button {
@@ -1716,6 +1717,7 @@ body.home-page .home-settings-button {
     box-shadow: none;
     cursor: pointer;
     touch-action: manipulation;
+    transition: transform .12s ease;
 }
 
 body.home-page .home-settings-button img {
@@ -1727,7 +1729,7 @@ body.home-page .home-settings-button img {
 }
 
 body.home-page .home-settings-button:active {
-    transform: translateY(3px);
+    transform: translateY(3px) scale(.97);
     box-shadow: none;
 }
 
@@ -1751,6 +1753,7 @@ body.home-page .home-archive-button {
     box-shadow: none;
     cursor: pointer;
     touch-action: manipulation;
+    transition: transform .12s ease;
 }
 
 body.home-page .home-archive-button img {
@@ -1770,7 +1773,7 @@ body.home-page .home-archive-button:hover {
 }
 
 body.home-page .home-archive-button:active {
-    transform: translateY(3px);
+    transform: translateY(3px) scale(.97);
     box-shadow: none;
 }
 
