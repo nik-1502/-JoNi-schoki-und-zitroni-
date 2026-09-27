@@ -2151,31 +2151,27 @@ body.quiz-page .floating-refresh-btn {
 
 /* Quiz im gleichen freundlichen Monster-/Brawl-Stars-Stil wie die Start- und Monsterseite. */
 body.quiz-page {
-    background: linear-gradient(180deg, #36b8df 0%, #4b9dd8 42%, #6266d4 100%);
+    background-color: #4b59d8;
+    background-image:
+        linear-gradient(180deg, rgba(50, 58, 177, .18), rgba(61, 37, 153, .46)),
+        url('images/monster%20hintergrund/himmlische_wolkenbuehne_iphone15_1179x2556.png');
+    background-position: center;
+    background-size: cover;
     background-attachment: fixed;
 }
 
-body.quiz-page::before,
-body.quiz-page::after {
-    display: none;
-}
-
-body.quiz-page .container {
-    padding-top: 76px !important;
-}
-
 body.quiz-page .quiz-daily-header {
-    min-height: 104px;
-    border: 3px solid rgba(255,255,255,.72);
-    border-radius: 22px;
-    background: linear-gradient(180deg, #5ed5ee, #3d91d2);
-    box-shadow: 0 8px 18px rgba(24, 48, 115, .24), inset 0 1px rgba(255,255,255,.65);
+    min-height: 108px;
+    border: 5px solid #102e93;
+    border-radius: 28px;
+    background: linear-gradient(180deg, #58d3f4 0%, #398fdc 55%, #2864bd 100%);
+    box-shadow: 0 9px 0 #102e93, 0 15px 25px rgba(19, 35, 105, .32), inset 0 3px rgba(255,255,255,.65);
 }
 
 body.quiz-page .quiz-daily-header h1 {
     color: #fff;
-    font-size: clamp(2rem, 8vw, 3.5rem);
-    text-shadow: 0 2px 5px rgba(18, 38, 106, .3);
+    font-size: clamp(2.2rem, 9vw, 4rem);
+    text-shadow: 0 3px 0 #153487, 0 6px 10px rgba(18, 38, 106, .35);
 }
 
 body.quiz-page .quiz-daily-header {
@@ -2183,18 +2179,30 @@ body.quiz-page .quiz-daily-header {
     overflow: hidden;
 }
 
+body.quiz-page .quiz-daily-header::before,
+body.quiz-page .quiz-daily-header::after {
+    content: '✦';
+    position: absolute;
+    color: #ffe86a;
+    font-size: 2rem;
+    text-shadow: 0 2px 0 #153487;
+}
+
+body.quiz-page .quiz-daily-header::before { left: 18px; top: 12px; transform: rotate(-12deg); }
+body.quiz-page .quiz-daily-header::after { right: 18px; bottom: 10px; transform: rotate(14deg) scale(.75); }
+
 body.quiz-page .container > .row > .col {
     position: relative;
-    padding: 6px;
-    border-radius: 22px;
-    background: rgba(20, 55, 155, .14);
+    padding: 8px;
+    border-radius: 28px;
+    background: rgba(20, 55, 155, .22);
 }
 
 body.quiz-page .container > .row > .col::before {
     content: '';
     position: absolute;
     inset: 0;
-    border: 1px solid rgba(255,255,255,.28);
+    border: 2px solid rgba(255,255,255,.3);
     border-radius: inherit;
     pointer-events: none;
 }
@@ -2213,18 +2221,18 @@ body.quiz-page .quiz-click-text {
 }
 
 body.quiz-page .name-button {
-    border: 3px solid rgba(255,255,255,.72);
-    border-radius: 16px;
-    background: linear-gradient(180deg, #55c6e7, #347fc9);
-    box-shadow: 0 6px 14px rgba(19, 35, 105, .2), inset 0 1px rgba(255,255,255,.45);
-    text-shadow: 0 1px 3px rgba(23,55,131,.45);
+    border: 5px solid #102e93;
+    border-radius: 20px;
+    background: linear-gradient(180deg, #5fd8f5 0%, #3c93e3 58%, #2865bf 100%);
+    box-shadow: 0 6px 0 #102e93, 0 11px 18px rgba(19, 35, 105, .28), inset 0 2px rgba(255,255,255,.55);
+    text-shadow: 0 2px 0 #173783;
 }
 
 body.quiz-page .canvas-wrapper {
-    border: 4px solid rgba(255,255,255,.78);
-    border-radius: 18px;
+    border: 6px solid #102e93;
+    border-radius: 24px;
     background: rgba(246, 252, 255, .94);
-    box-shadow: 0 10px 20px rgba(19, 35, 105, .25) !important;
+    box-shadow: 0 7px 0 #102e93, 0 15px 24px rgba(19, 35, 105, .3) !important;
 }
 
 body.quiz-page .quiz-question-container {
