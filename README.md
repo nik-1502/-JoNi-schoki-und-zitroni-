@@ -1,42 +1,29 @@
-# WebApp Sync (Render + Postgres)
+﻿# WebApp Sync (GitHub Pages + Supabase)
 
-Diese Version synchronisiert Texte, Quiz-Antworten und Zeichnungen zwischen Geraeten ueber einen zentralen Server.
+GitHub Pages liefert HTML, CSS, JavaScript und Bilder aus. Der Browser liest und
+schreibt Texte, Quiz-Antworten und Zeichnungen direkt ueber die Supabase REST API.
+Die Daten werden in `shared_state` nach Raum-Code getrennt.
 
-## Voraussetzungen
+## Veroeffentlichung
 
-- Node.js 18+
-- PostgreSQL (z. B. Supabase)
-- Environment Variables:
-  - `DATABASE_URL`
+Aenderungen committen und auf den fuer GitHub Pages konfigurierten Branch pushen.
+Die Website benoetigt keinen zusaetzlichen Node.js-Webservice.
 
-## Lokal starten
+## Lokale Vorschau
+
+Mit Python im Projektverzeichnis:
 
 ```bash
-npm install
-set DATABASE_URL=postgres://USER:PASS@HOST:5432/DB
-npm start
+python -m http.server 3000 --bind 127.0.0.1
 ```
 
-Browser: `http://localhost:3000`
+Anschliessend `http://localhost:3000` oeffnen. Auch die lokale Vorschau verwendet
+die in `script.js` konfigurierte Supabase-Verbindung.
 
-## Render Deploy
+## Bestehende alternative Serverimplementierung
 
-1. Repository nach GitHub pushen.
-2. In Render einen **Web Service** erstellen.
-3. Build Command: `npm install`
-4. Start Command: `npm start`
-5. Environment Variables setzen:
-   - `DATABASE_URL`
+`server.js` ist eine separate PostgreSQL-API, die das aktuelle Frontend nicht
+verwendet. Sie ist fuer GitHub Pages nicht erforderlich. `npm start` startet
+diese alternative API und benoetigt weiterhin eine gueltige `DATABASE_URL`.
 
-Danach laufen Frontend und API auf derselben Domain.
-
-## API
-
-- `GET /api/state?room=ROOM_CODE` -> Zustand eines Raums
-- `PUT /api/state/:key` mit `{ "roomKey": "ROOM_CODE", "value": "..." }` -> schreibt einen Key im Raum
-- `GET /health` -> Healthcheck inkl. DB-Check
-
-## Sicherheit
-
-- Soft-Rate-Limit fuer Writes: 300 Requests/Minute/IP.
-- Groesse pro Value ist auf 20 MB begrenzt.
+Die SQL-Dateien unter `migrations/` bleiben fuer die Datenbank erhalten.

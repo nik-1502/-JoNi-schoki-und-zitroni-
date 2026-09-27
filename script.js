@@ -1,7 +1,7 @@
 ﻿// --- SERVER KONFIGURATION ---
 // Damit die Synchronisation über Geräte hinweg funktioniert:
-// Synchronisierung laeuft ueber die API unter /api/state.
-// Frontend und API werden gemeinsam vom Render-Webservice ausgeliefert.
+// GitHub Pages liefert die Website aus.
+// Die Synchronisierung verwendet direkt die Supabase REST API (siehe Cloud).
 const ROOM_STORAGE_KEY = 'webapp_room_key';
 const GLOBAL_STORAGE_KEYS = new Set([ROOM_STORAGE_KEY, 'deviceId']);
 
