@@ -2466,7 +2466,8 @@ html.play-intro-root body.play-intro-page {
     z-index: 2;
     top: calc(env(safe-area-inset-top, 0px) + 18px);
     width: clamp(145px, 39vw, 330px);
-    height: auto;
+    height: clamp(48.33px, 13vw, 110px);
+    object-fit: fill;
     user-select: none;
     pointer-events: none;
 }
