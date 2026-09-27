@@ -78,7 +78,7 @@
             const AFTER_HEART_LOSS = 24 * 60 * 60 * 1000;
             const INITIAL_TIME = 24 * 60 * 60 * 1000;
             const keys = {
-                hearts: 'monster.hearts.v1', stars: 'monster.stars.v1', nextLoss: 'monster.nextHeartLossAt.v1'
+                hearts: 'monster.hearts.v1', stars: 'monster.stars.v1', nextLoss: 'monster.nextHeartLossAt.v1', version: 'monster.state.version'
             };
             const heartCount = document.querySelector('.monster-status-heart .monster-status-count');
             const starCount = document.querySelector('.monster-status-star .monster-status-count');
@@ -88,9 +88,16 @@
                 const value = Number(localStorage.getItem(key));
                 return Number.isFinite(value) ? value : fallback;
             };
+            const isFreshState = localStorage.getItem(keys.version) !== '2';
             let hearts = Math.max(0, read(keys.hearts, 3));
             let stars = Math.max(0, read(keys.stars, 2));
             let nextLoss = read(keys.nextLoss, Date.now() + INITIAL_TIME);
+            if (isFreshState) {
+                hearts = 3;
+                stars = 2;
+                nextLoss = Date.now() + INITIAL_TIME;
+                localStorage.setItem(keys.version, '2');
+            }
 
             const persist = () => {
                 localStorage.setItem(keys.hearts, String(hearts));
