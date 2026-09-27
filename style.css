@@ -2547,6 +2547,10 @@ html.play-intro-root body.play-intro-page {
     transform: translateY(1px);
 }
 
+.monster-status-star .monster-status-plus {
+    right: 10%;
+}
+
 .monster-action {
     position: fixed;
     z-index: 2;
