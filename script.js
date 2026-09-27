@@ -59,8 +59,11 @@ const Cloud = {
             this.bindRoomSwitchButtons();
             return;
         }
-        await this.ensureRoomKey();
+        // Die Raumabfrage wird ausschließlich beim Play-Start auf der Startseite
+        // geöffnet. Malen und Quiz übernehmen den bereits gespeicherten Raum.
+        this.roomKey = this.getStoredRoomKey();
         this.bindRoomSwitchButtons();
+        if (!this.roomKey || this.roomKey.length < 5) return;
         await this.pullFromServer();
         this.startPolling();
     },
@@ -185,6 +188,10 @@ const Cloud = {
         this.pendingWrites.set(key, { value: strValue, at: Date.now(), localOnly: false });
         localStorage.setItem(key, strValue);
         this.notify(key, strValue);
+        if (!this.roomKey && this.getStoredRoomKey().length < 5) {
+            this.pendingWrites.set(key, { value: strValue, at: Date.now(), localOnly: true });
+            return Promise.resolve(false);
+        }
         return fetch(`${this.supabaseRestBase}/shared_state?on_conflict=room_key,key`, {
             method: 'POST',
             headers: this.requestHeaders({

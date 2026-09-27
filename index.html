@@ -95,14 +95,67 @@
 
             const playButton = document.getElementById('home-play-button');
             if (playButton) {
-                let lastTouchNavigation = 0;
-                playButton.addEventListener('touchend', (event) => {
-                    const now = Date.now();
-                    if (now - lastTouchNavigation < 500) return;
-                    lastTouchNavigation = now;
+                let navigating = false;
+                const roomPromptNeeded = () => {
+                    const stored = String(localStorage.getItem('webapp_room_key') || '').trim();
+                    const standalone = Boolean(window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches);
+                    const prompted = standalone
+                        ? localStorage.getItem('webapp_room_prompted_v2') === 'true'
+                        : sessionStorage.getItem('webapp_room_prompted_session_v1') === 'true';
+                    return stored.length < 5 || !prompted;
+                };
+                const askForRoom = () => new Promise((resolve) => {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'room-code-overlay home-room-overlay';
+                    overlay.innerHTML = `
+                        <div class="room-code-modal" role="dialog" aria-modal="true" aria-labelledby="home-room-title">
+                            <h2 id="home-room-title">Raum wählen</h2>
+                            <p>Erstelle einen neuen Raum oder tritt einem bestehenden Raum bei.</p>
+                            <div class="room-code-actions">
+                                <button type="button" class="room-mode-button is-active">Neuen Raum erstellen</button>
+                                <button type="button" class="room-mode-button">Raum beitreten</button>
+                            </div>
+                            <label class="room-code-label" for="home-play-room-input">Room-Code</label>
+                            <input id="home-play-room-input" class="room-code-input" type="text" minlength="5" autocomplete="off" placeholder="Mindestens 5 Zeichen">
+                            <div class="room-code-error" aria-live="polite"></div>
+                            <button type="button" class="room-code-submit">Weiter</button>
+                        </div>`;
+                    const input = overlay.querySelector('#home-play-room-input');
+                    const error = overlay.querySelector('.room-code-error');
+                    const finish = () => {
+                        const room = input.value.trim();
+                        if (room.length < 5) {
+                            error.textContent = 'Bitte gib mindestens 5 Zeichen ein.';
+                            input.focus();
+                            return;
+                        }
+                        const standalone = Boolean(window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches);
+                        localStorage.setItem('webapp_room_key', room);
+                        if (standalone) localStorage.setItem('webapp_room_prompted_v2', 'true');
+                        else sessionStorage.setItem('webapp_room_prompted_session_v1', 'true');
+                        overlay.remove();
+                        resolve(true);
+                    };
+                    overlay.querySelector('.room-code-submit').addEventListener('click', finish);
+                    input.addEventListener('keydown', (event) => { if (event.key === 'Enter') finish(); });
+                    overlay.addEventListener('click', (event) => {
+                        if (event.target === overlay) { overlay.remove(); resolve(false); }
+                    });
+                    document.body.appendChild(overlay);
+                    input.focus();
+                });
+                const openPlay = async (event) => {
+                    if (navigating) return;
+                    navigating = true;
                     event.preventDefault();
+                    if (roomPromptNeeded()) {
+                        const completed = await askForRoom();
+                        if (!completed) { navigating = false; return; }
+                    }
                     window.location.assign(playButton.href);
-                }, { passive: false });
+                };
+                playButton.addEventListener('click', openPlay);
+                playButton.addEventListener('touchend', openPlay, { passive: false });
             }
 
             const archiveButton = document.getElementById('global-archive-btn');
