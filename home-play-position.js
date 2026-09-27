@@ -1,4 +1,7 @@
 (() => {
+    // Set before body parsing so the unpositioned layout is never painted.
+    document.documentElement.classList.add('home-layout-pending');
+
     const positionPlayButton = () => {
         const hero = document.querySelector('.home-page .hero-container');
         const characters = document.getElementById('home-characters-image');
@@ -44,11 +47,17 @@
     window.addEventListener('resize', schedulePosition);
     window.addEventListener('pageshow', positionPlayButton);
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         const characters = document.getElementById('home-characters-image');
         if (characters && !characters.complete) {
             characters.addEventListener('load', schedulePosition, { once: true });
         }
-        positionPlayButton();
+        try {
+            // Font metrics affect the title and the hero's original layout position.
+            if (document.fonts) await document.fonts.ready;
+            positionPlayButton();
+        } finally {
+            document.documentElement.classList.remove('home-layout-pending');
+        }
     });
 })();

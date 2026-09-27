@@ -1640,6 +1640,11 @@ body.home-page .hero-container {
     transform: translateY(var(--home-hero-offset-y, 0px));
 }
 
+html.home-layout-pending .hero-container,
+html.home-layout-pending .home-play-button {
+    visibility: hidden;
+}
+
 body.home-page #home-characters-image {
     transform: translateY(12px);
 }
