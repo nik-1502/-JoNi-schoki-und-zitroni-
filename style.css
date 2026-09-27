@@ -2835,17 +2835,20 @@ html.play-intro-root body.play-intro-page {
     inset: 0;
     display: grid;
     place-items: center;
-    padding-top: 3%;
+    padding: 0;
+    line-height: 1;
 }
 
 .monster-play-close {
     position: absolute;
     z-index: 2;
     inset: 0;
-    display: grid;
-    place-items: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
     color: #fff;
-    font: 400 clamp(48px, 13vw, 110px)/.8 Arial, sans-serif;
+    font: 400 clamp(48px, 13vw, 110px)/1 Arial, sans-serif;
     text-shadow: 0 3px 5px rgba(24, 50, 120, .8);
     opacity: 0;
     pointer-events: none;
