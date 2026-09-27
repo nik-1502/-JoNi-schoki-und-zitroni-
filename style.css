@@ -2664,7 +2664,7 @@ html.play-intro-root body.play-intro-page {
 .monster-status {
     position: fixed;
     z-index: 2;
-    top: calc(env(safe-area-inset-top, 0px) + 18px);
+    top: calc(env(safe-area-inset-top, 0px) + 8px);
     width: clamp(145px, 39vw, 330px);
     height: auto;
     aspect-ratio: 3 / 1;
