@@ -2392,13 +2392,29 @@ body.play-intro-page {
     position: relative;
 }
 
+/* Paint the root canvas too, including areas outside iOS's fixed viewport. */
+html.play-intro-root {
+    background-image: url('images/monster hintergrund/3ffaf038-3d5d-4c0d-b9e8-0d93c2edc2b9.png');
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100lvh;
+}
+
+html.play-intro-root body.play-intro-page {
+    background: transparent;
+}
+
 .play-intro-background {
     position: fixed;
     z-index: 0;
-    /* viewport-fit=cover includes the system safe areas already. */
-    inset: 0;
+    /* iOS standalone can size the fixed viewport shorter than the screen. */
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 100%;
+    height: calc(100% + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px));
+    min-height: 100lvh;
     max-width: none;
     object-fit: cover;
     object-position: center center;
