@@ -2493,15 +2493,6 @@ html.play-intro-root body.play-intro-page {
     object-fit: contain;
 }
 
-.monster-status-star-icon {
-    z-index: 1;
-    left: 14%;
-    top: 10%;
-    width: 24%;
-    height: 80%;
-    object-fit: contain;
-}
-
 .monster-status-heart {
     left: 22%;
     transform: translateX(-50%);
