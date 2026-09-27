@@ -2503,6 +2503,16 @@ html.play-intro-root body.play-intro-page {
     transform: translateX(-50%);
 }
 
+.monster-status-star-icon {
+    position: absolute;
+    z-index: 1;
+    left: 14%;
+    top: 10%;
+    width: 24%;
+    height: 80%;
+    object-fit: contain;
+}
+
 .monster-action {
     position: fixed;
     z-index: 2;
