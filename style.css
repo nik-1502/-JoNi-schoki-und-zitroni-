@@ -2725,6 +2725,10 @@ html.play-intro-root body.play-intro-page {
     transform: translateY(-50%) scale(.92);
 }
 
+.monster-status-plus.is-pressed {
+    transform: translateY(-50%) scale(.92);
+}
+
 .monster-status-star .monster-status-plus {
     right: 11%;
 }
@@ -2759,6 +2763,10 @@ html.play-intro-root body.play-intro-page {
 }
 
 .monster-action:active {
+    transform: translateX(-50%) translateY(3px) scale(.94);
+}
+
+.monster-action.is-pressed {
     transform: translateX(-50%) translateY(3px) scale(.94);
 }
 
@@ -2803,6 +2811,11 @@ html.play-intro-root body.play-intro-page {
 
 .monster-bubble:active {
     transform: scale(.94);
+}
+
+.monster-bubble.is-pressed {
+    transform: scale(.93);
+    filter: brightness(.92);
 }
 
 .monster-bubble img {
