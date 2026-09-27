@@ -414,6 +414,23 @@ body.home-page .global-archive-button:hover {
     background: var(--primary-color);
 }
 
+.home-settings-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.home-settings-cancel {
+    min-height: 42px;
+    border: 0;
+    border-radius: 8px;
+    color: #333;
+    background: #eef1f5;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
 .room-code-label {
     display: block;
     margin-bottom: 6px;

@@ -53,6 +53,46 @@
     </div>
     <script>
         (() => {
+            const settingsButton = document.querySelector('.home-settings-button');
+            if (settingsButton) {
+                settingsButton.addEventListener('click', () => {
+                    document.querySelector('.home-settings-overlay')?.remove();
+                    const overlay = document.createElement('div');
+                    overlay.className = 'room-code-overlay home-settings-overlay';
+                    const currentRoom = String(localStorage.getItem('webapp_room_key') || '').trim();
+                    overlay.innerHTML = `
+                        <div class="room-code-modal" role="dialog" aria-modal="true" aria-labelledby="home-settings-title">
+                            <h2 id="home-settings-title">Einstellungen</h2>
+                            <p>Hier kannst du den gemeinsamen Raum wechseln.</p>
+                            <label class="room-code-label" for="home-room-input">Room-Code</label>
+                            <input id="home-room-input" class="room-code-input" type="text" minlength="5" autocomplete="off" placeholder="Mindestens 5 Zeichen" value="${currentRoom.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}">
+                            <div class="room-code-error" aria-live="polite"></div>
+                            <div class="home-settings-actions">
+                                <button type="button" class="room-code-submit home-settings-save">Raum wechseln</button>
+                                <button type="button" class="home-settings-cancel">Abbrechen</button>
+                            </div>
+                        </div>`;
+                    const input = overlay.querySelector('#home-room-input');
+                    const error = overlay.querySelector('.room-code-error');
+                    overlay.querySelector('.home-settings-cancel').addEventListener('click', () => overlay.remove());
+                    overlay.addEventListener('click', (event) => { if (event.target === overlay) overlay.remove(); });
+                    overlay.querySelector('.home-settings-save').addEventListener('click', () => {
+                        const room = input.value.trim();
+                        if (room.length < 5) {
+                            error.textContent = 'Bitte gib mindestens 5 Zeichen ein.';
+                            input.focus();
+                            return;
+                        }
+                        localStorage.setItem('webapp_room_key', room);
+                        sessionStorage.removeItem('webapp_room_prompted_session_v1');
+                        localStorage.removeItem('webapp_room_prompted_v2');
+                        overlay.remove();
+                    });
+                    document.body.appendChild(overlay);
+                    input.focus();
+                });
+            }
+
             const playButton = document.getElementById('home-play-button');
             if (playButton) {
                 let lastTouchNavigation = 0;
