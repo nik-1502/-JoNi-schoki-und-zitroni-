@@ -2466,7 +2466,9 @@ html.play-intro-root body.play-intro-page {
     z-index: 2;
     top: calc(env(safe-area-inset-top, 0px) + 18px);
     width: clamp(145px, 39vw, 330px);
-    height: clamp(48.33px, 13vw, 110px);
+    height: auto;
+    aspect-ratio: 3 / 1;
+    box-sizing: border-box;
     object-fit: fill;
     user-select: none;
     pointer-events: none;
@@ -2482,6 +2484,7 @@ html.play-intro-root body.play-intro-page {
     inset: 0;
     width: 100%;
     height: 100%;
+    object-fit: fill;
 }
 
 .monster-status-heart-icon {
