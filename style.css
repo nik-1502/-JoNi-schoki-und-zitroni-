@@ -2517,6 +2517,26 @@ html.play-intro-root body.play-intro-page {
     transform: rotate(0deg);
 }
 
+.monster-status-plus {
+    position: absolute;
+    z-index: 3;
+    top: 50%;
+    right: 5%;
+    width: 23%;
+    aspect-ratio: 1;
+    transform: translateY(-50%);
+    padding: 0;
+    border: 2px solid rgba(255, 255, 255, .72);
+    border-radius: 50%;
+    background: linear-gradient(145deg, #b9dfff, #72a9e8);
+    color: #fff;
+    font: 700 clamp(22px, 5vw, 42px)/1 Arial, sans-serif;
+    text-shadow: 0 2px 3px rgba(45, 94, 160, .7);
+    box-shadow: inset 0 2px 4px rgba(255,255,255,.7), 0 2px 4px rgba(37, 74, 138, .35);
+    pointer-events: auto;
+    cursor: pointer;
+}
+
 .monster-action {
     position: fixed;
     z-index: 2;
