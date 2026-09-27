@@ -2542,6 +2542,11 @@ html.play-intro-root body.play-intro-page {
     cursor: pointer;
 }
 
+.monster-status-plus span {
+    display: block;
+    transform: translateY(1px);
+}
+
 .monster-action {
     position: fixed;
     z-index: 2;
