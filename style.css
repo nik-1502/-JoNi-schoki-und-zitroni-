@@ -2485,7 +2485,8 @@ html.play-intro-root body.play-intro-page {
 }
 
 .monster-status-heart-icon {
-    left: 8%;
+    z-index: 1;
+    left: 14%;
     top: 10%;
     width: 24%;
     height: 80%;
@@ -2493,7 +2494,8 @@ html.play-intro-root body.play-intro-page {
 }
 
 .monster-status-star-icon {
-    left: 8%;
+    z-index: 1;
+    left: 14%;
     top: 10%;
     width: 24%;
     height: 80%;
