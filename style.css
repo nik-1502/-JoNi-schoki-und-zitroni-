@@ -499,6 +499,11 @@ body.paint-page .name-button {
     height: auto; /* Höhe passt sich der Breite an */
     aspect-ratio: 1 / 1; /* Quadratisch */
     overflow: hidden; /* Damit die Ecken auch beim Canvas rund bleiben */
+    transition: transform .12s ease;
+}
+
+.canvas-wrapper:not(.fullscreen):active {
+    transform: scale(.98);
 }
 
 body.home-page .canvas-wrapper {
@@ -2690,6 +2695,7 @@ html.play-intro-root body.play-intro-page {
     box-shadow: none;
     pointer-events: auto;
     cursor: pointer;
+    transition: transform .12s ease;
 }
 
 .monster-status-count {
@@ -2739,6 +2745,7 @@ html.play-intro-root body.play-intro-page {
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    transition: transform .12s ease;
 }
 
 .monster-action-feed {
@@ -2749,6 +2756,10 @@ html.play-intro-root body.play-intro-page {
 .monster-action-play {
     left: 78%;
     transform: translateX(-50%);
+}
+
+.monster-action:active {
+    transform: translateX(-50%) translateY(3px) scale(.94);
 }
 
 .monster-play-menu {
@@ -2784,6 +2795,11 @@ html.play-intro-root body.play-intro-page {
     text-align: center;
     font: 700 clamp(16px, 4vw, 31px)/1 Fredoka, sans-serif;
     text-shadow: 0 2px 3px rgba(24, 77, 150, .75);
+    transition: transform .12s ease;
+}
+
+.monster-bubble:active {
+    transform: scale(.94);
 }
 
 .monster-bubble img {
