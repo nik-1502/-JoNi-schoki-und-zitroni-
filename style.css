@@ -2341,6 +2341,36 @@ body.quiz-page #quiz-done-btn {
     box-shadow: 0 5px 0 #102e93, inset 0 2px rgba(255,255,255,.7);
 }
 
+/* Tagesquiz übernimmt exakt die Geometrie der Mal-Seite – nur in Lila. */
+body.quiz-page .quiz-daily-header {
+    width: 100%;
+    max-width: 800px;
+    min-height: 108px;
+    padding: 15px 30px;
+    border: 5px solid #281037;
+    border-radius: 28px;
+    background: linear-gradient(180deg, #7240c1, #4c2b9b);
+    box-shadow: 0 9px 0 #281037, 0 15px 25px rgba(30,7,42,.28), inset 0 3px rgba(255,255,255,.5);
+}
+
+body.quiz-page .quiz-daily-header h1 {
+    font-size: clamp(1.6rem, 6vw, 2.4rem);
+    line-height: 1.2;
+}
+
+body.quiz-page .name-button {
+    border: 5px solid #281037;
+    border-radius: 20px;
+    background: linear-gradient(180deg, #b94fe1, #7240c1);
+    box-shadow: 0 6px 0 #281037, 0 11px 18px rgba(30,7,42,.24), inset 0 2px rgba(255,255,255,.45);
+}
+
+body.quiz-page .canvas-wrapper {
+    border: 6px solid #281037;
+    border-radius: 24px;
+    box-shadow: 0 7px 0 #281037, 0 15px 24px rgba(30,7,42,.28) !important;
+}
+
 /* Tier-des-Tages-Look nach Petrol-/Mint-Referenz – Geometrie bleibt erhalten. */
 body.paint-page:not(.mode-fullscreen) {
     isolation: isolate;
