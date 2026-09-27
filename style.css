@@ -2591,8 +2591,12 @@ html.play-intro-root body.play-intro-page {
 }
 
 .monster-status-plus span {
-    display: block;
-    transform: translateY(1px);
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    line-height: 1;
+    transform: none;
 }
 
 .monster-status-star .monster-status-plus {
