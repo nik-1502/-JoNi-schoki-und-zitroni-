@@ -2465,19 +2465,19 @@ html.play-intro-root body.play-intro-page {
     position: fixed;
     z-index: 2;
     top: calc(env(safe-area-inset-top, 0px) + 18px);
-    width: clamp(116px, 30vw, 244px);
+    width: clamp(145px, 39vw, 330px);
     height: auto;
     user-select: none;
     pointer-events: none;
 }
 
 .monster-status-heart {
-    left: 21%;
+    left: 22%;
     transform: translateX(-50%);
 }
 
 .monster-status-star {
-    left: 79%;
+    left: 78%;
     transform: translateX(-50%);
 }
 
