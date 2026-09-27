@@ -2542,6 +2542,19 @@ html.play-intro-root body.play-intro-page {
     cursor: pointer;
 }
 
+.monster-status-count {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding-right: 5%;
+    color: #fff;
+    font: 700 clamp(22px, 5vw, 38px)/1 Fredoka, sans-serif;
+    text-shadow: 0 2px 3px rgba(45, 94, 160, .55);
+    pointer-events: none;
+}
+
 .monster-status-plus span {
     display: block;
     transform: translateY(1px);
