@@ -19,6 +19,10 @@
     <a class="page-back-button" href="index.html?v=home-20260927-18" aria-label="Zurück zur Startseite">&#8249;</a>
     <img class="play-intro-background" src="images/monster%20hintergrund/himmlische_wolkenbuehne_iphone15_1179x2556.png" alt="">
 
+    <div class="monster-time-bar" aria-label="Versorgungszeit">
+        <div class="monster-time-bar-fill"></div>
+    </div>
+
     <img class="play-intro-monster" src="images/monster/e2762cc8-425d-4e20-8b0a-ccc5d8492a5c-sonnenuntergang.png" alt="Monster">
 
     <div class="monster-status monster-status-heart" role="img" aria-label="Herzen">
@@ -64,6 +68,65 @@
                 const open = document.body.classList.toggle('monster-menu-open');
                 toggle.setAttribute('aria-expanded', String(open));
                 toggle.setAttribute('aria-label', open ? 'Spiele schließen' : 'Spiele öffnen');
+            });
+        })();
+    </script>
+    <script>
+        (() => {
+            const MAX_TIME = 48 * 60 * 60 * 1000;
+            const FEED_AMOUNT = 8 * 60 * 60 * 1000;
+            const AFTER_HEART_LOSS = 24 * 60 * 60 * 1000;
+            const keys = {
+                hearts: 'monster.hearts.v1', stars: 'monster.stars.v1', nextLoss: 'monster.nextHeartLossAt.v1'
+            };
+            const heartCount = document.querySelector('.monster-status-heart .monster-status-count');
+            const starCount = document.querySelector('.monster-status-star .monster-status-count');
+            const fill = document.querySelector('.monster-time-bar-fill');
+            const feedButton = document.querySelector('.monster-action-feed');
+            const read = (key, fallback) => {
+                const value = Number(localStorage.getItem(key));
+                return Number.isFinite(value) ? value : fallback;
+            };
+            let hearts = Math.max(0, read(keys.hearts, 3));
+            let stars = Math.max(0, read(keys.stars, 2));
+            let nextLoss = read(keys.nextLoss, Date.now() + 24 * 60 * 60 * 1000);
+
+            const persist = () => {
+                localStorage.setItem(keys.hearts, String(hearts));
+                localStorage.setItem(keys.stars, String(stars));
+                localStorage.setItem(keys.nextLoss, String(nextLoss));
+            };
+            const catchUp = () => {
+                let now = Date.now();
+                while (now >= nextLoss) {
+                    hearts = Math.max(0, hearts - 1);
+                    nextLoss += AFTER_HEART_LOSS;
+                }
+                persist();
+            };
+            const update = (animate = false) => {
+                const remaining = Math.max(0, nextLoss - Date.now());
+                const percent = Math.min(100, remaining / MAX_TIME * 100);
+                fill.style.height = `${percent}%`;
+                fill.classList.toggle('is-pink', remaining < 24 * 60 * 60 * 1000 && remaining >= 16 * 60 * 60 * 1000);
+                fill.classList.toggle('is-orange', remaining < 16 * 60 * 60 * 1000 && remaining >= 8 * 60 * 60 * 1000);
+                fill.classList.toggle('is-red', remaining < 8 * 60 * 60 * 1000);
+                fill.classList.toggle('is-purple', remaining >= 24 * 60 * 60 * 1000);
+                feedButton.disabled = remaining >= 40 * 60 * 60 * 1000 || stars <= 0;
+                feedButton.classList.toggle('is-disabled', feedButton.disabled);
+                heartCount.textContent = hearts;
+                starCount.textContent = stars;
+            };
+            catchUp();
+            update();
+            setInterval(() => { catchUp(); update(); }, 30000);
+            feedButton.addEventListener('click', () => {
+                const remaining = Math.max(0, nextLoss - Date.now());
+                if (stars <= 0 || remaining >= 40 * 60 * 60 * 1000) return;
+                stars -= 1;
+                nextLoss = Date.now() + Math.min(remaining + FEED_AMOUNT, MAX_TIME);
+                persist();
+                update(true);
             });
         })();
     </script>

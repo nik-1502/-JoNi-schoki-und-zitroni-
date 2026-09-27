@@ -2474,6 +2474,45 @@ html.play-intro-root body.play-intro-page {
     pointer-events: none;
 }
 
+.monster-time-bar {
+    position: fixed;
+    z-index: 2;
+    left: 7%;
+    top: 27%;
+    width: clamp(10px, 2.8vw, 20px);
+    height: 38vh;
+    min-height: 180px;
+    max-height: 360px;
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,.55);
+    border-radius: 999px;
+    background: rgba(255,255,255,.22);
+    box-shadow: inset 0 1px 4px rgba(255,255,255,.35);
+    pointer-events: none;
+}
+
+.monster-time-bar-fill {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 0;
+    border-radius: inherit;
+    background: #9b6de3;
+    transition: height 450ms ease, background-color 450ms ease;
+}
+
+.monster-time-bar-fill.is-pink { background: #ed6da9; }
+.monster-time-bar-fill.is-orange { background: #ed9a51; }
+.monster-time-bar-fill.is-red { background: #df5d67; }
+.monster-time-bar-fill.is-purple { background: #9b6de3; }
+
+.monster-action.is-disabled {
+    opacity: .58;
+    filter: saturate(.72) brightness(.94);
+    pointer-events: none;
+}
+
 .monster-status-frame,
 .monster-status-heart-icon {
     position: absolute;
