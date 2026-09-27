@@ -2168,6 +2168,28 @@ body.quiz-page .page-back-button {
     box-shadow: 0 4px 10px rgba(27, 7, 37, 0.20);
 }
 
+body.quiz-page .quiz-back-button {
+    width: 54px;
+    height: 54px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: none;
+}
+
+body.quiz-page .quiz-back-button img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+body.quiz-page .quiz-back-button:active {
+    background: transparent;
+    box-shadow: none;
+}
+
 body.quiz-page .floating-refresh-btn {
     color: #fff;
     background: rgba(125, 54, 148, 0.72);
