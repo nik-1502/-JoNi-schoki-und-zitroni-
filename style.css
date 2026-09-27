@@ -1679,6 +1679,8 @@ body.home-page .home-play-button {
     border-radius: 0;
     background: transparent !important;
     box-shadow: none;
+    visibility: visible !important;
+    opacity: 1 !important;
     transform: translateY(var(--home-play-offset-y, 0px));
     transition: transform .12s ease;
 }
@@ -1689,6 +1691,8 @@ body.home-page .home-play-button:hover {
 
 body.home-page .home-play-button img {
     display: block;
+    visibility: visible !important;
+    opacity: 1 !important;
     width: clamp(270px, 78vw, 350px);
     max-width: none;
     height: auto;
