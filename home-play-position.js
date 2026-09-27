@@ -12,10 +12,11 @@
 
         // Measure in document coordinates: restored scroll must not move the layout.
         const scrollY = window.scrollY;
+        const contentOffset = parseFloat(getComputedStyle(document.body).getPropertyValue('--home-content-offset-y')) || 0;
         const previousHeroOffset = parseFloat(hero.style.getPropertyValue('--home-hero-offset-y')) || 0;
         const previousPlayOffset = parseFloat(playButton.style.getPropertyValue('--home-play-offset-y')) || 0;
         const initialCharactersRect = characters.getBoundingClientRect();
-        const heroOffset = window.innerHeight * 0.40
+        const heroOffset = window.innerHeight * 0.40 + contentOffset
             - (initialCharactersRect.top + scrollY - previousHeroOffset + initialCharactersRect.height / 2);
         hero.style.setProperty('--home-hero-offset-y', `${heroOffset}px`);
 
@@ -23,7 +24,7 @@
         const playRect = playButton.getBoundingClientRect();
         const playGraphicRect = playGraphic.getBoundingClientRect();
         const charactersBottom = charactersRect.bottom + scrollY;
-        const freeHeight = Math.max(0, window.innerHeight - charactersBottom);
+        const freeHeight = Math.max(0, window.innerHeight - (charactersBottom - contentOffset));
         const distanceToCenter = Math.max(
             playGraphicRect.height / 2 + 8,
             freeHeight * 0.18
