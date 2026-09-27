@@ -15,7 +15,7 @@
     <meta http-equiv="Expires" content="0">
     <title>Herz in Menschenform</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=home-20260927-18">
+    <link rel="stylesheet" href="style.css?v=home-20260927-19">
     <link rel="apple-touch-icon" href="images/home-Icon.png">
     <script src="theme-color.js?v=20260926-9" defer></script>
     <script src="home-play-position.js?v=20260927-13"></script>
@@ -29,9 +29,9 @@
     <button type="button" class="home-settings-button" aria-label="Einstellungen" title="Einstellungen">
         <img src="images/enstellungen/36b071ba-8621-47b5-9633-60f98277fb8d.png" alt="">
     </button>
-    <a href="paint.html?archive=1" id="global-archive-btn" class="global-archive-button home-archive-button" aria-label="Archiv" title="Archiv">
+    <button type="button" id="global-archive-btn" class="global-archive-button home-archive-button" aria-label="Archiv" title="Archiv">
         <img src="images/archiv/a823a529-0bd4-49de-ac47-d2585187c8b9.png" alt="">
-    </a>
+    </button>
     <div class="container">
         
         <div class="dashboard">
@@ -51,5 +51,62 @@
 
         </div>
     </div>
+    <script>
+        (() => {
+            const archiveButton = document.getElementById('global-archive-btn');
+            if (!archiveButton) return;
+
+            const readArchiveItems = () => {
+                const items = [];
+                const seen = new Set();
+                for (let i = 0; i < localStorage.length; i += 1) {
+                    const key = localStorage.key(i) || '';
+                    if (!/^draw_archive(?:_stable_(?:home|daily)|_daily)?_(?:niklas|jovelyn)$/.test(key)) continue;
+                    try {
+                        const list = JSON.parse(localStorage.getItem(key) || '[]');
+                        if (!Array.isArray(list)) continue;
+                        list.forEach((item) => {
+                            if (!item || !item.id || !item.dataURL || seen.has(item.id)) return;
+                            seen.add(item.id);
+                            items.push({ ...item, sourceKey: key });
+                        });
+                    } catch (_) {}
+                }
+                return items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            };
+
+            const close = (modal) => modal?.remove();
+            archiveButton.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                document.querySelector('.home-archive-modal')?.remove();
+                const modal = document.createElement('div');
+                modal.className = 'home-archive-modal';
+                modal.innerHTML = `
+                    <div class="home-archive-dialog" role="dialog" aria-modal="true" aria-labelledby="home-archive-title">
+                        <div class="home-archive-header">
+                            <h2 id="home-archive-title">Archiv</h2>
+                            <button type="button" class="home-archive-close" aria-label="Archiv schließen">×</button>
+                        </div>
+                        <div class="home-archive-list"></div>
+                    </div>`;
+                const list = modal.querySelector('.home-archive-list');
+                const items = readArchiveItems();
+                if (!items.length) {
+                    list.innerHTML = '<p class="home-archive-empty">Noch keine gespeicherten Bilder.</p>';
+                } else {
+                    list.innerHTML = items.map((item) => `
+                        <button type="button" class="home-archive-card">
+                            <img src="${item.dataURL}" alt="">
+                            <span>${String(item.name || 'Bild').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}</span>
+                        </button>`).join('');
+                }
+                modal.addEventListener('click', (event) => {
+                    if (event.target === modal || event.target.closest('.home-archive-close')) close(modal);
+                });
+                document.body.appendChild(modal);
+            });
+        })();
+    </script>
 </body>
 </html>

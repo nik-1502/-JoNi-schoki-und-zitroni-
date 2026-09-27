@@ -1774,6 +1774,94 @@ body.home-page .home-archive-button:active {
     box-shadow: none;
 }
 
+body.home-page .home-archive-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(15, 31, 72, .48);
+    backdrop-filter: blur(6px);
+}
+
+body.home-page .home-archive-dialog {
+    width: min(560px, 100%);
+    max-height: min(76vh, 680px);
+    overflow: auto;
+    padding: 22px;
+    border: 3px solid rgba(255, 255, 255, .8);
+    border-radius: 28px;
+    background: linear-gradient(145deg, #f2fbff, #b8ddff);
+    box-shadow: 0 14px 36px rgba(20, 63, 125, .34), inset 0 2px rgba(255, 255, 255, .9);
+}
+
+body.home-page .home-archive-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+body.home-page .home-archive-header h2 {
+    margin: 0;
+    color: #153c87;
+    font-size: clamp(1.6rem, 6vw, 2.2rem);
+}
+
+body.home-page .home-archive-close {
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 50%;
+    color: #fff;
+    background: #477fd1;
+    font-size: 30px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+body.home-page .home-archive-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 14px;
+}
+
+body.home-page .home-archive-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border: 2px solid rgba(255,255,255,.85);
+    border-radius: 16px;
+    background: rgba(255,255,255,.42);
+    color: #153c87;
+    cursor: pointer;
+}
+
+body.home-page .home-archive-card img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 11px;
+}
+
+body.home-page .home-archive-card span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .9rem;
+}
+
+body.home-page .home-archive-empty {
+    margin: 18px 0 8px;
+    color: #234b8d;
+    text-align: center;
+}
+
 body.home-page .archive-layout-spacer {
     height: 36px;
     min-height: 36px;
