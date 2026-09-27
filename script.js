@@ -2503,6 +2503,9 @@ function initPaintApp() {
     addTouchBtn(saveBtn, saveData);
     if (archiveBtn) addTouchBtn(archiveBtn, (e) => { e.stopPropagation(); openSaveGalleryModal(); });
     if (globalArchiveBtn) addTouchBtn(globalArchiveBtn, (e) => { e.stopPropagation(); openGlobalArchiveModal(); });
+    if (new URLSearchParams(window.location.search).get('archive') === '1') {
+        openGlobalArchiveModal();
+    }
     addTouchBtn(clearBtn, clearCanvas);
     
     if (refreshBtn) {

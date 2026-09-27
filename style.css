@@ -23,6 +23,24 @@ body {
 }
 
 /* Seiten-spezifische Hintergründe */
+html.home-root,
+html.home-root body.home-page {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+html.home-root body.home-page {
+    min-height: 0;
+    height: 100dvh;
+}
+
+body.home-page > .container,
+body.home-page .hero-container,
+body.home-page .home-play-button {
+    flex-shrink: 0;
+}
+
 body.home-page {
     --home-content-offset-y: 36px;
     --home-navigation-offset-y: 8px;

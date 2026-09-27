@@ -15,102 +15,13 @@
     <meta http-equiv="Expires" content="0">
     <title>Herz in Menschenform</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=home-20260927-15">
+    <link rel="stylesheet" href="style.css?v=home-20260927-16">
     <link rel="apple-touch-icon" href="images/home-Icon.png">
     <script src="theme-color.js?v=20260926-9" defer></script>
     <script src="home-play-position.js?v=20260927-13"></script>
     <style>
-        /* Fullscreen-Leisten auch auf Laptop/iPad sichtbar machen */
-        .fullscreen-top-bar {
-            position: fixed; top: 20px; left: 0; width: 100%;
-            display: flex; justify-content: center; gap: 8px; z-index: 200;
-            pointer-events: auto;
-            padding: 0 10px; box-sizing: border-box;
-        }
-        .fullscreen-top-bar button { pointer-events: auto; }
-
-        .fullscreen-bottom-bar {
-            position: fixed; bottom: 20px; left: 0; width: 100%;
-            display: flex; justify-content: center; flex-wrap: nowrap; gap: 8px; z-index: 200;
-            pointer-events: auto;
-            padding: 0 10px; box-sizing: border-box;
-        }
-        .fullscreen-top-bar button,
-        .fullscreen-bottom-bar button {
-            pointer-events: auto;
-            flex: 1 1 0;
-            width: auto !important;
-            min-width: 0;
-            height: 46px;
-            margin: 0 !important;
-            padding: 0 8px !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            font-size: 14px;
-            line-height: 1.1;
-        }
-
         @media (max-width: 768px) {
-            body:not(.mode-fullscreen) #color-btn { display: none !important; }
-            body:not(.mode-fullscreen) #color-panel { display: none !important; }
-            body:not(.mode-fullscreen) #brush-btn { display: none !important; }
-            body:not(.mode-fullscreen) #brush-panel { display: none !important; }
-            .canvas-wrapper {
-                height: auto !important;
-                aspect-ratio: 1 / 1 !important;
-            }
-            .chat-input {
-                height: auto !important;
-                aspect-ratio: 1 / 1 !important;
-                text-align: center !important;
-            }
-            .field-with-dot {
-                flex-direction: column !important;
-            }
-            .field-with-dot .status-dot {
-                order: 2 !important;
-                margin: 10px auto 0 auto !important;
-            }
-            .field-with-dot .canvas-wrapper {
-                order: 1 !important;
-                width: 100% !important;
-            }
-            /* Fullscreen Layout für Mobile */
-            .fullscreen-top-bar {
-                position: fixed; top: 20px; left: 0; width: 100%;
-                display: flex; justify-content: center; gap: 8px; z-index: 200;
-                pointer-events: auto; /* Damit Klicks durchgehen, Buttons aktivieren pointer-events wieder */
-                padding: 0 10px; box-sizing: border-box;
-            }
-            .fullscreen-top-bar button { pointer-events: auto; }
-            
-            .fullscreen-bottom-bar {
-                position: fixed; bottom: 20px; left: 0; width: 100%;
-                display: flex; justify-content: center; flex-wrap: nowrap; gap: 8px; z-index: 200;
-                pointer-events: auto;
-                padding: 0 10px; box-sizing: border-box;
-            }
-            .fullscreen-top-bar button,
-            .fullscreen-bottom-bar button { 
-                pointer-events: auto; 
-                flex: 1 1 0;
-                width: auto !important;
-                min-width: 0;
-                height: 46px;
-                margin: 0 !important;
-                padding: 0 8px !important;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                text-align: center;
-                font-size: 13px;
-                line-height: 1.1;
-            }
-            .image-wrapper button {
-                margin-bottom: 350px !important;
-            }
+            .image-wrapper button { margin-bottom: 350px !important; }
         }
     </style>
 </head>
@@ -118,9 +29,9 @@
     <button type="button" class="home-settings-button" aria-label="Einstellungen" title="Einstellungen">
         <img src="images/enstellungen/36b071ba-8621-47b5-9633-60f98277fb8d.png" alt="">
     </button>
-    <button id="global-archive-btn" class="global-archive-button home-archive-button" type="button" aria-label="Archiv" title="Archiv">
+    <a href="paint.html?archive=1" id="global-archive-btn" class="global-archive-button home-archive-button" aria-label="Archiv" title="Archiv">
         <img src="images/archiv/a823a529-0bd4-49de-ac47-d2585187c8b9.png" alt="">
-    </button>
+    </a>
     <div class="container">
         
         <div class="dashboard">
@@ -138,183 +49,7 @@
                 <img src="images/play%20button/0441997f-527a-40e0-8dc4-bd09bb24b520.png" width="2172" height="724" alt="">
             </a>
 
-            <!-- Text Bereich -->
-            <div class="row text-row">
-                <div class="col">
-                    <div class="name-button">Jovelyn</div>
-                    <textarea id="jovelyn-text" class="chat-input"></textarea>
-                </div>
-                <div class="col">
-                    <div class="name-button">Niklas</div>
-                    <textarea id="niklas-text" class="chat-input"></textarea>
-                </div>
-            </div>
-
-            <!-- Mal Bereich (Bilder) -->
-            <div class="row canvas-row" id="game-container">
-                <div class="col">
-                    <div class="field-with-dot">
-                        <span class="status-dot red" id="jovelyn-status"></span>
-                        <div class="canvas-wrapper" id="wrapper-jovelyn">
-                            <canvas id="jovelyn-canvas"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="field-with-dot">
-                        <div class="canvas-wrapper" id="wrapper-niklas">
-                            <canvas id="niklas-canvas"></canvas>
-                        </div>
-                        <span class="status-dot red" id="niklas-status"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="row global-archive-row archive-layout-spacer" aria-hidden="true"></div>
-            <button type="button" class="room-switch-button" data-room-switch>Raum wechseln</button>
         </div>
     </div>
-
-    <!-- Controls: Standardmäßig versteckt, werden per JS/CSS im Fullscreen angezeigt -->
-    <!-- Alte .controls Klasse behalten wir für Desktop-Kompatibilität, aber im Mobile-Fullscreen nutzen wir die neuen Container -->
-    <div class="controls" style="display: none;"></div>
-
-    <!-- Neue Struktur für Fullscreen -->
-    <div class="fullscreen-top-bar" style="display: none;">
-        <button id="save-btn" class="control-button">Speichern</button>
-        <button id="archive-btn" class="control-button">Archiv</button>
-        <button id="clear-btn" class="control-button">Löschen</button>
-        <button id="refresh-btn" class="control-button">◆</button>
-        <button id="close-fullscreen-btn" class="control-button">Fertig</button>
-    </div>
-
-    <div class="fullscreen-bottom-bar" style="display: none;">
-        <button id="color-btn" class="control-button">Farbe</button>
-        <button id="brush-btn" class="control-button">Pinsel</button>
-        <button id="fill-btn" class="control-button">Füllen</button>
-        <button id="eraser-btn" class="control-button">Radierer</button>
-        <button id="undo-btn" class="control-button">Zurück</button>
-        <button id="redo-btn" class="control-button">Vor</button>
-        <!-- Löschen Button optional, falls noch gewünscht: <button id="clear-btn" class="control-button">Löschen</button> -->
-    </div>
-
-    <!-- Panels (Pinsel/Farbe) bleiben gleich, werden per JS gesteuert -->
-    <div id="brush-panel" class="panel hidden">
-        <!-- Inhalt wird per JS gefüllt oder ist statisch in script.js referenziert, hier Struktur beibehalten -->
-        <div class="panel-header"><h3>Pinsel</h3><button id="brush-back-btn" class="back-button">Schließen</button></div>
-        <div class="panel-content">
-            <div class="setting"><label for="grid-toggle">Raster:</label><input type="checkbox" id="grid-toggle" style="width: 24px; height: 24px;"></div>
-            <div class="setting"><label>Rastergröße:</label><input type="range" id="grid-size" min="8" max="80" value="24"><span id="grid-size-value">24</span></div>
-            <div class="setting"><label>Größe:</label><input type="range" id="brush-size" min="1" max="100" value="5"><span id="brush-size-value">5</span></div>
-            <div class="setting"><label>Transparenz:</label><input type="range" id="brush-opacity" min="0.1" max="1" step="0.1" value="1"><span id="brush-opacity-value">1.0</span></div>
-        </div>
-    </div>
-    <div id="eraser-panel" class="panel hidden">
-        <div class="panel-header"><h3>Radierer</h3><button id="eraser-back-btn" class="back-button">Schließen</button></div>
-        <div class="panel-content">
-            <div class="setting"><label>Größe:</label><input type="range" id="eraser-size" min="1" max="100" value="20"><span id="eraser-size-value">20</span></div>
-            <div class="setting"><label>Transparenz:</label><input type="range" id="eraser-opacity" min="0.1" max="1" step="0.1" value="1"><span id="eraser-opacity-value">1.0</span></div>
-        </div>
-    </div>
-    <div id="color-panel" class="panel hidden">
-        <div class="panel-header"><h3>Farbe</h3><button id="color-back-btn" class="back-button">Schließen</button></div>
-        <div class="panel-content">
-            <div class="setting" style="justify-content: center; margin-bottom: 15px;"><label for="custom-color">Eigene Farbe:</label><input type="color" id="custom-color" value="#000000"></div>
-            <div id="color-palette"></div>
-        </div>
-    </div>
-
-    <script src="script.js?v=20260730-supabase2"></script>
-    <script>
-        // Kleines Script, um die Sichtbarkeit der neuen Bars zu steuern, da wir script.js nicht bearbeiten
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.attributeName === "class") {
-                    const isFullscreen = document.body.classList.contains('mode-fullscreen');
-                    const topBar = document.querySelector('.fullscreen-top-bar');
-                    const bottomBar = document.querySelector('.fullscreen-bottom-bar');
-                    if (topBar && bottomBar) {
-                        topBar.style.display = isFullscreen ? 'flex' : 'none';
-                        bottomBar.style.display = isFullscreen ? 'flex' : 'none';
-                    }
-                    // Panels müssen im Fullscreen auch sichtbar sein, wenn aktiviert
-                    if (!isFullscreen) {
-                        document.getElementById('brush-panel').classList.add('hidden');
-                        document.getElementById('color-panel').classList.add('hidden');
-                        document.getElementById('eraser-panel').classList.add('hidden');
-                    }
-                }
-            });
-        });
-        observer.observe(document.body, { attributes: true });
-    </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
