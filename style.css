@@ -2247,9 +2247,13 @@ body.quiz-page .quiz-click-text {
 
 body.quiz-page .quiz-status-dot.red,
 body.quiz-page .quiz-status-dot.green {
-    background: #ffd84a;
+    background: #f08bc7;
     border: 3px solid #102e93;
     box-shadow: 0 3px 0 #102e93, 0 4px 10px rgba(19,35,105,.28);
+}
+
+body.quiz-page .container {
+    padding-top: 76px !important;
 }
 
 body.quiz-page #quiz-modal .modal-content {
