@@ -1690,14 +1690,15 @@ body.home-page h1 {
 
 .play-intro-page .monster-back-button {
     top: calc(env(safe-area-inset-top, 0px) + 70px);
-    left: calc(22% - (clamp(145px, 39vw, 330px) / 2));
-    width: 54px;
-    height: 54px;
+    left: max(8px, calc(22% - (clamp(145px, 39vw, 330px) / 2)));
+    width: 62px;
+    height: 62px;
     padding: 0;
     border: 0;
     border-radius: 50%;
     background: transparent;
     box-shadow: none;
+    z-index: 190;
 }
 
 .play-intro-page .monster-back-button img {
