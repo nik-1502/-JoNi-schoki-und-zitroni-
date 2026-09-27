@@ -53,6 +53,18 @@
     </div>
     <script>
         (() => {
+            const playButton = document.getElementById('home-play-button');
+            if (playButton) {
+                let lastTouchNavigation = 0;
+                playButton.addEventListener('touchend', (event) => {
+                    const now = Date.now();
+                    if (now - lastTouchNavigation < 500) return;
+                    lastTouchNavigation = now;
+                    event.preventDefault();
+                    window.location.assign(playButton.href);
+                }, { passive: false });
+            }
+
             const archiveButton = document.getElementById('global-archive-btn');
             if (!archiveButton) return;
 
