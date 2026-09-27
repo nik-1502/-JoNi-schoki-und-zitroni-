@@ -2497,12 +2497,12 @@ html.play-intro-root body.play-intro-page {
 }
 
 .monster-status-heart {
-    left: 18%;
+    left: 14%;
     transform: translateX(-50%);
 }
 
 .monster-status-star {
-    left: 74%;
+    left: 70%;
     transform: translateX(-50%);
 }
 
