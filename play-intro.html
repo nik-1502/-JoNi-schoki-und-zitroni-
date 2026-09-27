@@ -13,7 +13,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Spielen</title>
-    <link rel="stylesheet" href="style.css?v=monster-background-20260927-3">
+    <link rel="stylesheet" href="style.css?v=monster-menu-20260927-1">
 </head>
 <body class="play-intro-page">
     <img class="play-intro-background" src="images/monster%20hintergrund/himmlische_wolkenbuehne_iphone15_1179x2556.png" alt="">
@@ -28,9 +28,33 @@
         <img class="monster-action-icon monster-feed-icon" src="images/monster%20essen/fd5bf97a-7688-496d-b48c-2769b5bd1b07.png" alt="">
     </button>
 
-    <a class="monster-action monster-action-play" href="games.html?v=status-20260926-1" aria-label="Spielen">
+    <div class="monster-play-menu" id="monster-play-menu" aria-label="Spiele auswählen">
+        <a class="monster-bubble monster-bubble-quiz" href="quiz.html?v=monster-menu-20260927-1" aria-label="Quiz">
+            <img src="images/button%20blase/b51903ba-2fdf-46e8-a8d5-427e4231d7dc.png" alt="">
+            <span>Quiz</span>
+        </a>
+        <a class="monster-bubble monster-bubble-paint" href="paint.html?v=monster-menu-20260927-1" aria-label="Malen">
+            <img src="images/button%20blase/b51903ba-2fdf-46e8-a8d5-427e4231d7dc.png" alt="">
+            <span>Malen</span>
+        </a>
+    </div>
+
+    <button class="monster-action monster-action-play" id="monster-play-toggle" type="button" aria-label="Spiele öffnen" aria-expanded="false">
         <img class="monster-action-background" src="images/monster%20seite%20button/5ab570c9-bca5-40a3-bf0a-1363f4ce46ce.png" alt="">
         <img class="monster-action-icon monster-controller-icon" src="images/controller/4644993c-f06e-4dfb-9f8d-92e22fd33b59.png" alt="">
-    </a>
+        <span class="monster-play-close" aria-hidden="true">×</span>
+    </button>
+    <script>
+        (() => {
+            const toggle = document.getElementById('monster-play-toggle');
+            const menu = document.getElementById('monster-play-menu');
+            if (!toggle || !menu) return;
+            toggle.addEventListener('click', () => {
+                const open = document.body.classList.toggle('monster-menu-open');
+                toggle.setAttribute('aria-expanded', String(open));
+                toggle.setAttribute('aria-label', open ? 'Spiele schließen' : 'Spiele öffnen');
+            });
+        })();
+    </script>
 </body>
 </html>

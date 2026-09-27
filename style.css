@@ -2509,6 +2509,73 @@ html.play-intro-root body.play-intro-page {
     transform: translateX(-50%);
 }
 
+.monster-play-menu {
+    position: fixed;
+    z-index: 3;
+    right: calc(22% - (clamp(145px, 39vw, 330px) / 2));
+    bottom: calc(max(6.5vh, env(safe-area-inset-bottom, 0px) + 14px) + clamp(120px, 27vw, 220px));
+    width: clamp(105px, 27vw, 225px);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: clamp(2px, 1.2vw, 10px);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(12px) scale(.94);
+    transform-origin: bottom right;
+    transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.monster-menu-open .monster-play-menu {
+    pointer-events: auto;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.monster-bubble {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    color: #fff;
+    text-decoration: none;
+    text-align: center;
+    font: 700 clamp(16px, 4vw, 31px)/1 Fredoka, sans-serif;
+    text-shadow: 0 2px 3px rgba(24, 77, 150, .75);
+}
+
+.monster-bubble img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.monster-bubble span {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding-top: 3%;
+}
+
+.monster-play-close {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font: 400 clamp(48px, 13vw, 110px)/.8 Arial, sans-serif;
+    text-shadow: 0 3px 5px rgba(24, 50, 120, .8);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.monster-menu-open .monster-controller-icon { opacity: 0; }
+.monster-menu-open .monster-play-close { opacity: 1; }
+
 .monster-action-background,
 .monster-action-icon {
     position: absolute;
