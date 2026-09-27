@@ -23,7 +23,14 @@ const pool = new Pool({
 });
 
 app.use(express.json({ limit: '25mb' }));
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, {
+    setHeaders(res, filePath) {
+        // Revalidate navigation documents so installed apps see current asset URLs.
+        if (path.extname(filePath) === '.html') {
+            res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+        }
+    }
+}));
 
 function nowIso() {
     return new Date().toISOString();
