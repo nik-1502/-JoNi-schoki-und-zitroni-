@@ -1700,10 +1700,6 @@ body.home-page .home-play-button:active img {
     transform: translateY(3px) scale(.97);
 }
 
-body.home-page .home-play-button.is-pressed img {
-    transform: translateY(3px) scale(.97);
-}
-
 body.home-page .home-settings-button {
     position: absolute;
     z-index: 200;
@@ -1735,10 +1731,6 @@ body.home-page .home-settings-button img {
 body.home-page .home-settings-button:active {
     transform: translateY(3px) scale(.97);
     box-shadow: none;
-}
-
-body.home-page .home-settings-button.is-pressed {
-    transform: translateY(3px) scale(.97);
 }
 
 body.home-page .home-archive-button {
@@ -1783,10 +1775,6 @@ body.home-page .home-archive-button:hover {
 body.home-page .home-archive-button:active {
     transform: translateY(3px) scale(.97);
     box-shadow: none;
-}
-
-body.home-page .home-archive-button.is-pressed {
-    transform: translateY(3px) scale(.97);
 }
 
 body.home-page .home-archive-modal {
