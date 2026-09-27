@@ -2796,6 +2796,9 @@ html.play-intro-root body.play-intro-page {
     font: 700 clamp(16px, 4vw, 31px)/1 Fredoka, sans-serif;
     text-shadow: 0 2px 3px rgba(24, 77, 150, .75);
     transition: transform .12s ease;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .monster-bubble:active {
