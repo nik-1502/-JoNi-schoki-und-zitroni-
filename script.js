@@ -3,7 +3,8 @@
 // GitHub Pages liefert die Website aus.
 // Die Synchronisierung verwendet direkt die Supabase REST API (siehe Cloud).
 const ROOM_STORAGE_KEY = 'webapp_room_key';
-const ROOM_PROMPTED_KEY = 'webapp_room_prompted_v1';
+const ROOM_PROMPTED_KEY = 'webapp_room_prompted_v2';
+const ROOM_SESSION_KEY = 'webapp_room_prompted_session_v1';
 const SETTINGS_AUTH_KEY = 'webapp_settings_authenticated';
 const GLOBAL_STORAGE_KEYS = new Set([ROOM_STORAGE_KEY, 'deviceId']);
 
@@ -54,6 +55,10 @@ const Cloud = {
         };
     },
     init: async function() {
+        if (new URLSearchParams(window.location.search).get('archive') === '1') {
+            this.bindRoomSwitchButtons();
+            return;
+        }
         await this.ensureRoomKey();
         this.bindRoomSwitchButtons();
         await this.pullFromServer();
@@ -78,15 +83,20 @@ const Cloud = {
         const isStandalone = Boolean(window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches);
         const isSettingsAuthenticated = localStorage.getItem(SETTINGS_AUTH_KEY) === 'true';
         const promptedInStandalone = localStorage.getItem(ROOM_PROMPTED_KEY) === 'true';
+        const promptedOnWebsiteSession = sessionStorage.getItem(ROOM_SESSION_KEY) === 'true';
         const canReuseRoom = !forcePrompt && storedRoomKey.length >= 5 &&
-            (isSettingsAuthenticated || (isStandalone && promptedInStandalone));
+            (isSettingsAuthenticated || (isStandalone && promptedInStandalone) || (!isStandalone && promptedOnWebsiteSession));
         if (canReuseRoom) {
             this.roomKey = storedRoomKey;
             return storedRoomKey;
         }
         const roomKey = await this.showRoomDialog();
         this.setRoomKey(roomKey);
-        localStorage.setItem(ROOM_PROMPTED_KEY, 'true');
+        if (isStandalone) {
+            localStorage.setItem(ROOM_PROMPTED_KEY, 'true');
+        } else {
+            sessionStorage.setItem(ROOM_SESSION_KEY, 'true');
+        }
         return this.roomKey;
     },
     showRoomDialog: function() {
