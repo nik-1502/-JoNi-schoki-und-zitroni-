@@ -2113,6 +2113,52 @@ body.quiz-page .quiz-daily-header h1 {
     text-shadow: 0 3px 0 #153487, 0 6px 10px rgba(18, 38, 106, .35);
 }
 
+body.quiz-page .quiz-daily-header {
+    position: relative;
+    overflow: hidden;
+}
+
+body.quiz-page .quiz-daily-header::before,
+body.quiz-page .quiz-daily-header::after {
+    content: '✦';
+    position: absolute;
+    color: #ffe86a;
+    font-size: 2rem;
+    text-shadow: 0 2px 0 #153487;
+}
+
+body.quiz-page .quiz-daily-header::before { left: 18px; top: 12px; transform: rotate(-12deg); }
+body.quiz-page .quiz-daily-header::after { right: 18px; bottom: 10px; transform: rotate(14deg) scale(.75); }
+
+body.quiz-page .container > .row > .col {
+    position: relative;
+    padding: 8px;
+    border-radius: 28px;
+    background: rgba(20, 55, 155, .22);
+}
+
+body.quiz-page .container > .row > .col::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid rgba(255,255,255,.3);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+body.quiz-page .quiz-question-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+}
+
+body.quiz-page .quiz-click-text {
+    padding: 18px;
+    text-align: center;
+    font-size: clamp(1rem, 3.4vw, 1.35rem);
+}
+
 body.quiz-page .name-button {
     border: 5px solid #102e93;
     border-radius: 20px;
